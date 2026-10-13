@@ -1,6 +1,9 @@
 import { Bounds, Point, SceneObject, Shape, ShapeTree, blob, box, flat, footprint, line, obj, project, wallX, wallY } from '../engine/iso';
 import { depthSort } from '../engine/depth-sort';
+import { GROUND } from './city-graph';
 import { seeded } from './furniture';
+import { personShapes } from './people';
+import { SEATS, Seat, facingView } from './pedestrians';
 
 /**
  * The city block around the office: streets, sidewalks, a park, the coffee
@@ -19,7 +22,7 @@ import { seeded } from './furniture';
  * Everything outside stands on the street level, the bottom of the office plinth.
  */
 
-export const GROUND = -0.7;
+export { GROUND };
 const G = GROUND;
 const WORLD = { x0: -30, y0: -30, x1: 70, y1: 50 } as const;
 
@@ -329,103 +332,31 @@ function neighbour(x0: number, y0: number, x1: number, y1: number, h: number, ma
 // People
 // ---------------------------------------------------------------------------
 
-interface Look {
-  skin: string;
-  hair: string;
-  top: string;
-  bottom: string;
+type Facing = '+x' | '-x' | '+y' | '-y';
+
+/** Someone standing still, facing a direction. */
+function person(x: number, y: number, look: number, facing: Facing): SceneObject {
+  const [px, py] = project(x, y, G);
+  const { view, flip } = facingView(facing);
+  return obj(b(x - 0.3, y - 0.3, G, 0.6, 0.6, 2.7), personShapes(look, view, 'stand', px, py, flip));
 }
 
-const LOOKS: Look[] = [
-  { skin: 'a', hair: 'a', top: 'a', bottom: 'a' },
-  { skin: 'b', hair: 'b', top: 'b', bottom: 'b' },
-  { skin: 'c', hair: 'a', top: 'c', bottom: 'a' },
-  { skin: 'a', hair: 'c', top: 'd', bottom: 'c' },
-  { skin: 'b', hair: 'a', top: 'e', bottom: 'a' },
-  { skin: 'c', hair: 'b', top: 'f', bottom: 'b' },
-];
-
-function poly(points: number[][], ox: number, oy: number, cls: string): Shape {
-  return { kind: 'poly', points: points.map(([px, py]) => `${round(px + ox)},${round(py + oy)}`).join(' '), cls };
+function sitter(x: number, y: number, seatZ: number, look: number, facing: Facing, cls = ''): SceneObject {
+  const [px, py] = project(x, y, G + seatZ);
+  const { view, flip } = facingView(facing);
+  const shapes = personShapes(look, view, 'sit', px, py, flip).map((sh) => (cls ? { ...sh, cls: `${sh.cls} ${cls}` } : sh));
+  return obj(b(x - 0.25, y - 0.25, G, 0.5, 0.5, seatZ + 2), shapes);
 }
 
 /**
- * A person in screen units, about 1.6 m tall at office scale. Standing: the
- * origin is between the feet. Sitting: the origin is the seat; `facing`
- * (-1 or 1) is the screen side the knees point to.
+ * A seat pedestrians can take: drawn with a sitter (depth-sorted with the
+ * furniture) that the scene shows only while someone sits there.
  */
-export function figure(look: number, pose: 'stand' | 'sit', ox = 0, oy = 0, facing = -1): Shape[] {
-  const l = LOOKS[look % LOOKS.length];
-  const skin = `p m-skin-${l.skin}`;
-  const top = `p m-top-${l.top}`;
-  const bottom = `p m-bottom-${l.bottom}`;
-  const s: Shape[] = [];
-  let hip = 0;
-  if (pose === 'stand') {
-    s.push({ kind: 'ellipse', cx: round(ox + 2), cy: round(oy + 0.5), rx: 6.5, ry: 2.6, cls: 'shadow' });
-    s.push(poly([[-3.3, 0], [-0.5, 0], [-0.5, -19], [-3.3, -19]], ox, oy, `${bottom} leg leg-a`));
-    s.push(poly([[0.5, 0], [3.3, 0], [3.3, -19], [0.5, -19]], ox, oy, `${bottom} leg leg-b`));
-    hip = -18;
-  } else {
-    const f = facing;
-    s.push(poly([[-3, 0], [3, 0], [3 + 6 * f, 3], [-3 + 6 * f, 3]], ox, oy, bottom));
-    s.push(poly([[5 * f - 1.4, 2], [5 * f + 1.4, 2], [5 * f + 1.4, 11], [5 * f - 1.4, 11]], ox, oy, bottom));
-    hip = 0;
-  }
-  const h = hip;
-  s.push(poly([[-5.2, h], [5.2, h], [5.6, h - 14], [3.6, h - 17], [-3.6, h - 17], [-5.6, h - 14]], ox, oy, top));
-  s.push(poly([[-6.8, h - 14], [-5.2, h - 16], [-4.4, h - 3], [-6, h - 2.4]], ox, oy, `${top} shade`));
-  s.push(poly([[6.8, h - 14], [5.2, h - 16], [4.4, h - 3], [6, h - 2.4]], ox, oy, `${top} shade`));
-  s.push(poly([[-1.3, h - 17], [1.3, h - 17], [1.3, h - 19], [-1.3, h - 19]], ox, oy, skin));
-  s.push({ kind: 'ellipse', cx: round(ox), cy: round(oy + h - 23), rx: 4.3, ry: 4.7, cls: skin });
-  s.push({ kind: 'ellipse', cx: round(ox), cy: round(oy + h - 25.6), rx: 4.5, ry: 2.8, cls: `p m-hair-${l.hair}` });
-  return s;
+function seat(s: Seat, look: number): SceneObject {
+  return sitter(s.x, s.y, s.z, look, s.facing, `seat seat-${s.id} seat-free`);
 }
 
-function person(x: number, y: number, look: number): SceneObject {
-  const [px, py] = project(x, y, G);
-  return obj(b(x - 0.3, y - 0.3, G, 0.6, 0.6, 2.7), figure(look, 'stand', px, py));
-}
-
-function sitter(x: number, y: number, seatZ: number, look: number, facing: -1 | 1): SceneObject {
-  const [px, py] = project(x, y, G + seatZ);
-  return obj(b(x - 0.3, y - 0.3, G, 0.6, 0.6, seatZ + 2), figure(look, 'sit', px, py, facing));
-}
-
-/** A person walking a fixed route on the sidewalks (screen units). */
-export interface Walker {
-  id: string;
-  /** Figure drawn around the origin. */
-  figure: SceneObject[];
-  /** Route in screen units. */
-  route: { x: number; y: number }[];
-  /** Pause in ms on arrival at a route point (index → ms). */
-  pauses: Record<number, number>;
-  /** Where the walker is drawn without animation: on segment `seg`, fraction `t`. */
-  rest: { seg: number; t: number };
-  /** Delay before the first step, ms. */
-  delay: number;
-}
-
-function walker(id: string, look: number, route: [number, number][], rest: { seg: number; t: number }, delay = 0, pauses: Record<number, number> = {}): Walker {
-  return {
-    id,
-    figure: [obj(b(0, 0, 0, 0, 0, 0), figure(look, 'stand'))],
-    route: route.map(([x, y]) => {
-      const [sx, sy] = project(x, y, G + 0.12);
-      return { x: round(sx), y: round(sy) };
-    }),
-    pauses,
-    rest,
-    delay,
-  };
-}
-
-export function restPoint(w: Walker): { x: number; y: number } {
-  const a = w.route[w.rest.seg];
-  const c = w.route[w.rest.seg + 1];
-  return { x: round(a.x + (c.x - a.x) * w.rest.t), y: round(a.y + (c.y - a.y) * w.rest.t) };
-}
+const seatById = (id: string) => SEATS.find((s) => s.id === id)!;
 
 // ---------------------------------------------------------------------------
 // The block
@@ -442,10 +373,6 @@ export interface Exterior {
   road: SceneObject[];
   /** Beyond the roads: the far sidewalks and the park. */
   far: SceneObject[];
-  /** Walkers on the near sidewalks (between `inner` and `road`). */
-  nearWalkers: Walker[];
-  /** Walkers on the far sidewalks (between `road` and `far`). */
-  farWalkers: Walker[];
   /** The entrance plaza: selecting it enters the office at the reception. */
   entrance: string;
 }
@@ -505,21 +432,25 @@ export function buildExterior(): Exterior {
     streetLamp(21, 26.2, '+y'),
     // Side garden and coffee terrace by the lounge.
     flowerBed(30.8, 0.6, 33.8, 4.2),
-    hedge(33.9, 0.6, 34.3, 10.2, 0.6),
     bench(31.1, 6.2, '+x', 2.4),
+    seat(seatById('garden'), 6),
     streetLamp(34.1, 10.6, '+x'),
     umbrellaTable(33.3, 14),
     cafeChair(32.0, 13.7, '-x'),
-    sitter(32.3, 14, 0.7, 2, 1),
+    sitter(32.3, 14, 0.71, 2, '+x'),
+    cafeChair(33.95, 13.72, '+x'),
+    seat(seatById('cafe-1'), 7),
     umbrellaTable(33.3, 18.6),
     cafeChair(32.0, 18.3, '-x'),
     cafeChair(33.0, 19.75, '+y'),
-    sitter(32.3, 18.6, 0.7, 4, 1),
-    sitter(33.3, 20.05, 0.7, 5, -1),
+    sitter(32.3, 18.6, 0.71, 4, '+x'),
+    sitter(33.3, 20.05, 0.71, 5, '-y'),
+    cafeChair(33.95, 18.32, '+x'),
+    seat(seatById('cafe-2'), 0),
     planter(33.5, 21.9, 0.8),
     // Two colleagues talking at the corner.
-    person(31.4, 24.1, 1),
-    person(32.3, 24.7, 3),
+    person(31.4, 24.1, 1, '+x'),
+    person(32.3, 24.7, 3, '-x'),
     streetLamp(34.1, 25.9, '+x'),
   ];
 
@@ -554,9 +485,10 @@ export function buildExterior(): Exterior {
     tree(-6.5, 46, 0.9, 'column'),
     bench(13.2, 38.2, '-y', 2.2),
     bench(23.6, 38.2, '-y', 2.2),
-    sitter(14.1, 38.5, 0.55, 0, -1),
-    sitter(24.3, 38.5, 0.55, 3, 1),
-    sitter(25.1, 38.5, 0.55, 5, -1),
+    seat(seatById('park-a'), 4),
+    seat(seatById('park-b'), 2),
+    sitter(24.3, 38.5, 0.55, 3, '-y'),
+    sitter(25.1, 38.5, 0.55, 5, '-y'),
     flowerBed(5.2, 38.4, 7.6, 41.2),
     // Park beyond the side road.
     tree(48, 3.5, 1.1),
@@ -567,21 +499,10 @@ export function buildExterior(): Exterior {
     tree(55, 8, 1.1),
     tree(54, 20.5, 0.95, 'column'),
     bench(46.1, 15.6, '-x', 2.2),
-    sitter(46.4, 16.6, 0.55, 1, -1),
+    seat(seatById('side-a'), 1),
+    seat(seatById('side-b'), 3),
   ];
 
-  const nearWalkers = [
-    walker('front-east', 0, [[-24, 27.6], [64, 27.6]], { seg: 0, t: 0.27 }, 0),
-    walker('front-west', 4, [[64, 29], [20, 29], [-24, 29]], { seg: 0, t: 0.62 }, 3000, { 1: 3500 }),
-    walker('side-south', 2, [[36.4, -26], [36.4, 50]], { seg: 0, t: 0.38 }, 1500),
-    walker('arrive', 3, [[-22, 28.3], [2.5, 28.3], [2.5, 23.6], [2.5, 21.9]], { seg: 0, t: 0.55 }, 6000),
-    walker('leave', 5, [[2.5, 21.9], [2.5, 28.6], [2.6, 37.6], [2.7, 52]], { seg: 2, t: 0.12 }, 12000, { 1: 1500 }),
-  ];
-
-  const farWalkers = [
-    walker('far-west', 1, [[66, 36.3], [-26, 36.3]], { seg: 0, t: 0.45 }, 2000),
-    walker('far-north', 3, [[44.2, 52], [44.2, 21], [44.2, -26]], { seg: 0, t: 0.5 }, 8000, { 1: 4000 }),
-  ];
 
   return {
     ground: groundLayer(),
@@ -589,8 +510,6 @@ export function buildExterior(): Exterior {
     inner: depthSort(inner),
     road: depthSort(road),
     far: depthSort(far),
-    nearWalkers,
-    farWalkers,
     entrance: footprint(-0.6, 22, 6.6, 26.5, G + 0.01),
   };
 }

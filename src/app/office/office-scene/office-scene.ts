@@ -20,9 +20,30 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { AREAS, AREA_BY_ID, AreaId, VIEWBOX } from '../scene/areas';
 import { OFFICE_MODEL } from '../scene/office-layout';
 import { IDENTITY, Insets, NO_INSETS, frameTarget, grow } from './camera';
-import { Walker, restPoint } from '../scene/exterior';
+import { obj } from '../engine/iso';
+import { Crowd } from '../scene/pedestrians';
+import { LOOKS, personShapes } from '../scene/people';
+import { CrowdView, Layer, bodyTransform, layerOf } from './crowd-view';
 import { SceneShapes } from './scene-shapes';
-import { WalkerRunner } from './walkers';
+
+/** Seconds simulated before the first frame, so the street starts mid-life. */
+const WARM_UP = 75;
+
+/** Each look drawn walking toward and away from the viewer (mirrored for left). */
+const FIGURES = LOOKS.map((_, i) => ({
+  front: [obj({ x: 0, y: 0, z: 0, w: 0, d: 0, h: 0 }, personShapes(i, 'front', 'stand'))],
+  back: [obj({ x: 0, y: 0, z: 0, w: 0, d: 0, h: 0 }, personShapes(i, 'back', 'stand'))],
+}));
+
+/** The street as it is on the first frame (also the still picture for reduced motion). */
+function crowdAt(layer: Layer) {
+  return START.bodies
+    .filter((b) => layerOf(b.x, b.y) === layer)
+    .sort((a, b) => a.x + a.y - (b.x + b.y))
+    .map((b) => ({ id: b.id, look: b.look, view: b.view, flip: b.flip, alpha: b.alpha, transform: bodyTransform(b) }));
+}
+const START = new Crowd().warmUp(WARM_UP);
+const CROWD_START = { back: crowdAt('back'), near: crowdAt('near'), far: crowdAt('far') };
 
 /**
  * The interactive isometric office. The focus (area, project) lives in the
@@ -53,10 +74,13 @@ export class OfficeScene {
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
-  private readonly walkerEls = viewChildren('walker', { read: ElementRef<SVGGElement> });
+  private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
+  private readonly crowdLayers = viewChildren('crowdLayer', { read: ElementRef<SVGGElement> });
 
   protected readonly model = OFFICE_MODEL;
   protected readonly ext = OFFICE_MODEL.exterior;
+  protected readonly crowd = CROWD_START;
+  protected readonly figures = FIGURES;
   protected readonly areas = AREAS;
   protected readonly viewBox = `0 0 ${VIEWBOX.w} ${VIEWBOX.h}`;
   protected readonly hovered = signal<AreaId | null>(null);
@@ -99,12 +123,6 @@ export class OfficeScene {
     return (p.y / VIEWBOX.h) * 100;
   }
 
-  /** Where a walker is drawn before (or without) animation. */
-  protected restTransform(w: Walker): string {
-    const p = restPoint(w);
-    return `translate(${p.x} ${p.y})`;
-  }
-
   protected areaPath(id: AreaId): string {
     return this.lang.path(AREA_BY_ID[id].route);
   }
@@ -126,7 +144,7 @@ export class OfficeScene {
       // Enable camera transitions only after the first framing, so the page
       // does not animate on load.
       requestAnimationFrame(() => requestAnimationFrame(() => this.ready.set(true)));
-      this.startWalkers();
+      this.startCrowd();
     });
   }
 
@@ -134,20 +152,21 @@ export class OfficeScene {
    * People walk only when motion is welcome, and stand still while an area
    * is open so nothing competes with the content.
    */
-  private startWalkers(): void {
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const els = this.walkerEls().map((e) => e.nativeElement);
-    if (still || !els.length || typeof els[0].animate !== 'function') return;
-    const walkers = [...this.ext.nearWalkers, ...this.ext.farWalkers];
-    const runners = els.map((el) => new WalkerRunner(el, walkers.find((w) => w.id === el.dataset['walker'])!));
-    runners.forEach((r) => r.start());
-    const pause = effect(() => {
-      const paused = !!this.active();
-      runners.forEach((r) => r.setPaused(paused));
-    }, { injector: this.injector });
+  private startCrowd(): void {
+    const [back, near, far] = this.crowdLayers().map((e) => e.nativeElement);
+    const view = new CrowdView(new Crowd().warmUp(WARM_UP), { back, near, far }, this.svg().nativeElement);
+    view.render();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const running = effect(
+      () => {
+        if (this.active()) view.stop();
+        else view.start();
+      },
+      { injector: this.injector },
+    );
     this.destroyRef.onDestroy(() => {
-      pause.destroy();
-      runners.forEach((r) => r.stop());
+      running.destroy();
+      view.stop();
     });
   }
 

@@ -223,19 +223,20 @@
     animation-delay: -5s;
   }
 
-  .walker.is-walking .leg {
-    transform-box: fill-box;
-    transform-origin: 50% 0;
-    animation: stride 460ms ease-in-out infinite alternate;
+  .m-bag { --c: var(--o-bag); }
+  .m-bag-strap { --c: color-mix(in oklab, var(--o-bag), #000 20%); }
+
+  // A seat shows its sitter only while someone sits there.
+  .seat {
+    transition: opacity 500ms ease;
   }
-  .walker.is-walking .leg-b {
-    animation-delay: -460ms;
+  .seat-free {
+    opacity: 0;
   }
 }
 
 .has-focus .scene {
-  .sway,
-  .leg {
+  .sway {
     animation-play-state: paused;
   }
 }
@@ -249,18 +250,11 @@
   }
 }
 
-@keyframes stride {
-  from {
-    transform: skewX(16deg);
-  }
-  to {
-    transform: skewX(-16deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .scene .sway,
-  .scene .walker .leg {
+  .scene .sway {
     animation: none;
+  }
+  .scene .seat {
+    transition: none;
   }
 }

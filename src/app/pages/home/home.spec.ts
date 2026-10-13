@@ -113,7 +113,7 @@ describe('Home (office)', () => {
     const harness = await setup(false);
     const router = TestBed.inject(Router);
     await harness.navigateByUrl('/');
-    expect(el(harness).querySelectorAll('.walker').length).toBeGreaterThan(4);
+    expect(el(harness).querySelectorAll('[data-ped]').length).toBeGreaterThan(10);
     el(harness).querySelector<SVGElement>('.entrance')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await harness.fixture.whenStable();
     expect(router.url).toBe('/about');

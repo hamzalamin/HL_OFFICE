@@ -1,10 +1,20 @@
 <div #viewport class="viewport" [class.ready]="ready()" [class.has-focus]="!!active()" [class.has-emphasis]="!!emphasis()">
   <div class="camera" [attr.style]="cameraStyle()">
     <div class="stage">
-      <svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
+      <svg #svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
         <!-- Outside, behind the building -->
         <g class="exterior" [appSceneShapes]="ext.ground"></g>
         <g class="exterior" [appSceneShapes]="ext.back"></g>
+        <g #crowdLayer class="walkers">
+          @for (p of crowd.back; track p.id) {
+            <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
+              <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
+                <g class="ped-front" [style.display]="p.view === 'front' ? null : 'none'" [appSceneShapes]="figures[p.look].front"></g>
+                <g class="ped-back" [style.display]="p.view === 'back' ? null : 'none'" [appSceneShapes]="figures[p.look].back"></g>
+              </g>
+            </g>
+          }
+        </g>
 
         <g class="shell" [appSceneShapes]="model.shell"></g>
         @for (g of model.groups; track g.key) {
@@ -26,18 +36,28 @@
           }
         }
 
-        <!-- Outside, in front of the building: each layer of walkers sits
-             between the objects behind and in front of its sidewalks. -->
+        <!-- Outside, in front of the building. People move between the three
+             crowd layers as they walk (see crowd-view.ts). -->
         <g class="exterior" [appSceneShapes]="ext.inner"></g>
-        <g class="walkers">
-          @for (w of ext.nearWalkers; track w.id) {
-            <g #walker class="walker" [attr.data-walker]="w.id" [attr.transform]="restTransform(w)" [appSceneShapes]="w.figure"></g>
+        <g #crowdLayer class="walkers">
+          @for (p of crowd.near; track p.id) {
+            <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
+              <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
+                <g class="ped-front" [style.display]="p.view === 'front' ? null : 'none'" [appSceneShapes]="figures[p.look].front"></g>
+                <g class="ped-back" [style.display]="p.view === 'back' ? null : 'none'" [appSceneShapes]="figures[p.look].back"></g>
+              </g>
+            </g>
           }
         </g>
         <g class="exterior" [appSceneShapes]="ext.road"></g>
-        <g class="walkers">
-          @for (w of ext.farWalkers; track w.id) {
-            <g #walker class="walker" [attr.data-walker]="w.id" [attr.transform]="restTransform(w)" [appSceneShapes]="w.figure"></g>
+        <g #crowdLayer class="walkers">
+          @for (p of crowd.far; track p.id) {
+            <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
+              <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
+                <g class="ped-front" [style.display]="p.view === 'front' ? null : 'none'" [appSceneShapes]="figures[p.look].front"></g>
+                <g class="ped-back" [style.display]="p.view === 'back' ? null : 'none'" [appSceneShapes]="figures[p.look].back"></g>
+              </g>
+            </g>
           }
         </g>
         <g class="exterior" [appSceneShapes]="ext.far"></g>

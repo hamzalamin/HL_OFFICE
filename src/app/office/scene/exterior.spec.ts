@@ -1,5 +1,5 @@
 import { AREA_BY_ID } from './areas';
-import { GROUND, buildExterior, restPoint } from './exterior';
+import { GROUND, buildExterior } from './exterior';
 
 describe('exterior', () => {
   const ext = buildExterior();
@@ -24,19 +24,10 @@ describe('exterior', () => {
 
   it('puts the entrance at the reception, facing the street', () => {
     const [x0, , x1, y1] = AREA_BY_ID.reception.floor;
-    const arrive = ext.nearWalkers.find((w) => w.id === 'arrive')!;
-    expect(arrive.route.length).toBeGreaterThan(2);
     expect(ext.entrance.split(' ').length).toBe(4);
     expect(x0).toBeLessThan(2.5);
     expect(x1).toBeGreaterThan(2.5);
     expect(y1).toBe(22);
-  });
-
-  it('draws walkers at a resting point on their route', () => {
-    for (const w of [...ext.nearWalkers, ...ext.farWalkers]) {
-      const p = restPoint(w);
-      expect(Number.isFinite(p.x) && Number.isFinite(p.y), w.id).toBe(true);
-    }
     expect(GROUND).toBeLessThan(0);
   });
 });
