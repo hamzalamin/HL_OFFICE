@@ -109,6 +109,16 @@ describe('Home (office)', () => {
     expect(el(harness).querySelector('[data-area-link]')?.getAttribute('href')).toBe('/fr/about');
   });
 
+  it('renders the street around the office, with a way in', async () => {
+    const harness = await setup(false);
+    const router = TestBed.inject(Router);
+    await harness.navigateByUrl('/');
+    expect(el(harness).querySelectorAll('.walker').length).toBeGreaterThan(4);
+    el(harness).querySelector<SVGElement>('.entrance')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/about');
+  });
+
   it('still reports unknown pages', async () => {
     const harness = await setup(false);
     await harness.navigateByUrl('/basement');

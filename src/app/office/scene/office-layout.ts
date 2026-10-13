@@ -1,6 +1,7 @@
 import { Bounds, Point, SceneObject, footprint, project, screenRect } from '../engine/iso';
 import { depthSort } from '../engine/depth-sort';
 import { AREAS, AreaDef, AreaId, OFFICE } from './areas';
+import { Exterior, buildExterior } from './exterior';
 import * as F from './furniture';
 
 /**
@@ -100,20 +101,21 @@ function furnish(id: AreaId): SceneObject[] {
         F.mug(26.6, 17.2, 0.75, 'mug-accent'),
         F.sofa(28, 15.4, 1.5, 1.5, 'w', 'fabric-teal'),
         F.sofa(28, 17.4, 1.5, 1.5, 'w', 'fabric-teal'),
-        F.plant(29.1, 11.4, 'tall'),
+        F.plant(28.8, 11.4, 'tall'),
         F.plant(23.2, 20.6, 'snake'),
       ];
     case 'reception':
       return [
-        F.rug(0.1, 17.8, 2, 20.9, 'mat', false),
-        F.doorOnX(18, 20.7, 4),
+        // The entrance is in the front, facing the street (see exterior.ts).
+        F.rug(1.2, 20.3, 3.8, 21.7, 'mat', false),
+        F.windowOnX(17.4, 20.6, 1.3, 4.6, 2),
         F.plant(4.3, 16.4, 'bush'),
         F.monitor(6.4, 17.22, 1.26, 'n', 'standby', 1.1),
         ...F.receptionCounter(4.2, 17.2, 4.6, 1.4),
         F.papers(4.8, 17.85, 1.85, 0.55, 0.45, 3),
         F.plant(9.1, 16.6, 'tall'),
         F.sofa(4.3, 20.4, 3.4, 1.3, 'n', 'fabric-blue'),
-        F.plant(0.4, 21.1, 'tall'),
+        F.plant(0.25, 20.4, 'tall'),
       ];
   }
 }
@@ -162,6 +164,8 @@ export interface OfficeModel {
   overview: { x: number; y: number; w: number; h: number };
   /** Project boards, in content order: project N is shown on board N. */
   projectSlots: ProjectSlot[];
+  /** The city block around the building. */
+  exterior: Exterior;
 }
 
 function polygon(points: Point[]): string {
@@ -222,7 +226,7 @@ export function buildOffice(): OfficeModel {
   // office itself gets as much of the screen as possible.
   const overview = screenRect({ x: -0.45, y: -0.45, z: -0.2, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: 5.2 });
 
-  return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot) };
+  return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot), exterior: buildExterior() };
 }
 
 export const OFFICE_MODEL: OfficeModel = buildOffice();

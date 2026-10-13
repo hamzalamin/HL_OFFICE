@@ -90,8 +90,42 @@
 
 // Quietly step back the rest of the office while one area is in focus.
 .has-focus .area:not(.is-active),
-.has-focus .decor {
+.has-focus .decor,
+.has-focus .exterior,
+.has-focus .walkers {
   opacity: 0.5;
+}
+
+.exterior,
+.walkers {
+  transition: opacity 320ms ease;
+}
+
+.walkers {
+  pointer-events: none;
+}
+
+// The entrance plaza: the way in from the street.
+.entrance {
+  cursor: pointer;
+  fill: var(--color-accent);
+  fill-opacity: 0;
+  stroke: var(--color-accent);
+  stroke-opacity: 0;
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  transition:
+    fill-opacity 200ms ease,
+    stroke-opacity 200ms ease;
+
+  &.is-emphasis {
+    fill-opacity: 0.1;
+    stroke-opacity: 0.85;
+  }
+}
+
+.has-focus .entrance {
+  pointer-events: none;
 }
 
 // ---------------------------------------------------------------------------
@@ -355,6 +389,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ready .camera,
+  .exterior,
+  .walkers,
+  .entrance,
   .area,
   .area-items,
   .area-floor,

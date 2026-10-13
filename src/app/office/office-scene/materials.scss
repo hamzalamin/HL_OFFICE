@@ -132,4 +132,135 @@
   .m-board-title { --c: color-mix(in oklab, var(--o-dark), #fff 30%); }
   .m-board-text { --c: color-mix(in oklab, var(--o-dark), #fff 70%); }
   .m-board-chip { --c: color-mix(in oklab, var(--o-accent), #fff 70%); }
+
+  // Outside
+  .m-grass { --c: var(--o-grass); }
+  .m-paving { --c: var(--o-paving); }
+  .m-plaza { --c: var(--o-plaza); }
+  .m-path { --c: var(--o-path); }
+  .m-sidewalk { --c: var(--o-sidewalk); }
+  .m-asphalt { --c: var(--o-asphalt); }
+  .m-road-line { --c: var(--o-road-line); }
+  .m-deck { --c: var(--o-deck); }
+  .m-water { --c: var(--o-water); }
+  .m-hedge { --c: var(--o-hedge); }
+  .m-bed { --c: var(--o-bed); }
+  .m-trunk { --c: var(--o-trunk); }
+  .m-conifer { --c: var(--o-conifer); }
+  .m-conifer-dark { --c: color-mix(in oklab, var(--o-conifer), #000 18%); }
+  .m-conifer-light { --c: color-mix(in oklab, var(--o-conifer), #fff 18%); }
+  .m-planter { --c: var(--o-planter); }
+  .m-lamp { --c: var(--o-lamp); }
+  .m-lamp-light { --c: var(--o-lamp-light); }
+  .m-sign { --c: var(--o-sign); }
+  .m-sign-text { --c: color-mix(in oklab, var(--o-dark), #fff 45%); }
+  .m-facade { --c: var(--o-facade); }
+  .m-facade-b { --c: var(--o-facade-b); }
+  .m-facade-glass { --c: var(--o-facade-glass); }
+  .m-umbrella { --c: var(--o-umbrella); }
+  .m-umbrella-alt { --c: var(--o-umbrella-alt); }
+  .m-chair { --c: var(--o-chair); }
+  .m-car-a { --c: var(--o-car-a); }
+  .m-car-b { --c: var(--o-car-b); }
+  .m-car-c { --c: var(--o-car-c); }
+  .m-car-d { --c: var(--o-car-d); }
+  .m-car-e { --c: var(--o-car-e); }
+  .m-car-glass { --c: var(--o-car-glass); }
+  .m-headlight { --c: var(--o-lamp-light); }
+  .m-tyre { --c: var(--o-tyre); }
+  .m-flower-a { --c: var(--o-flower-a); }
+  .m-flower-b { --c: var(--o-flower-b); }
+  .m-flower-c { --c: var(--o-flower-c); }
+  .m-flower-d { --c: var(--o-flower-d); }
+  .m-skin-a { --c: var(--o-skin-a); }
+  .m-skin-b { --c: var(--o-skin-b); }
+  .m-skin-c { --c: var(--o-skin-c); }
+  .m-hair-a { --c: var(--o-hair-a); }
+  .m-hair-b { --c: var(--o-hair-b); }
+  .m-hair-c { --c: var(--o-hair-c); }
+  .m-top-a { --c: var(--o-top-a); }
+  .m-top-b { --c: var(--o-top-b); }
+  .m-top-c { --c: var(--o-top-c); }
+  .m-top-d { --c: var(--o-top-d); }
+  .m-top-e { --c: var(--o-top-e); }
+  .m-top-f { --c: var(--o-top-f); }
+  .m-bottom-a { --c: var(--o-bottom-a); }
+  .m-bottom-b { --c: var(--o-bottom-b); }
+  .m-bottom-c { --c: var(--o-bottom-c); }
+
+  .p.shade {
+    fill: color-mix(in oklab, var(--c), #000 14%);
+  }
+  .shadow {
+    fill: var(--o-shadow);
+  }
+  .wheel {
+    fill: none;
+    stroke: var(--o-tyre);
+    stroke-width: 1.4;
+  }
+  .bike-frame {
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+  .bike-a {
+    stroke: var(--o-accent);
+  }
+  .bike-b {
+    stroke: var(--o-fabric-terracotta);
+  }
+
+  // Living details. Small, slow, and paused whenever an area is open.
+  .sway {
+    animation: sway 7s ease-in-out infinite alternate;
+  }
+  .s1 {
+    animation-duration: 8.5s;
+    animation-delay: -3s;
+  }
+  .s2 {
+    animation-duration: 6.2s;
+    animation-delay: -5s;
+  }
+
+  .walker.is-walking .leg {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: stride 460ms ease-in-out infinite alternate;
+  }
+  .walker.is-walking .leg-b {
+    animation-delay: -460ms;
+  }
+}
+
+.has-focus .scene {
+  .sway,
+  .leg {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: translateX(-0.8px);
+  }
+  to {
+    transform: translateX(0.8px);
+  }
+}
+
+@keyframes stride {
+  from {
+    transform: skewX(16deg);
+  }
+  to {
+    transform: skewX(-16deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene .sway,
+  .scene .walker .leg {
+    animation: none;
+  }
 }

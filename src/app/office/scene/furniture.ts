@@ -9,7 +9,7 @@ import { Bounds, Material, SceneObject, Shape, ShapeTree, blob, box, flat, obj, 
 type Facing = 'n' | 's' | 'e' | 'w'; // n = toward -y, s = toward +y, e = toward +x, w = toward -x
 
 /** Deterministic pseudo-random generator so server and browser render identical markup. */
-function seeded(seed: number): () => number {
+export function seeded(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
     s = (s + 0x6d2b79f5) >>> 0;
