@@ -1,0 +1,92 @@
+<section class="panel" [attr.aria-labelledby]="'area-heading'">
+  <header class="panel-head">
+    <p class="eyebrow">{{ position() }}</p>
+    <a class="close btn btn-ghost btn-icon" [routerLink]="lang.path('/')" [attr.aria-label]="lang.t().office.close">
+      <app-icon name="close" />
+    </a>
+  </header>
+
+  <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
+  <p class="section-name">{{ strings().section }}</p>
+  <p class="blurb">{{ strings().blurb }}</p>
+
+  <div class="preview">
+    @switch (area()) {
+      @case ('reception') {
+        @let p = content.profile();
+        @if (content.visible(p.name)) {
+          <p class="preview-title"><app-text [value]="p.name" /></p>
+        }
+        @if (content.visible(p.title)) {
+          <p class="preview-sub"><app-text [value]="p.title" /></p>
+        }
+        @if (content.visible(p.introduction)) {
+          <p><app-text [value]="p.introduction" /></p>
+        }
+      }
+      @case ('workstation') {
+        <ul class="chips">
+          @for (g of content.content().skills; track $index) {
+            @if (content.visible(g.name)) {
+              <li><app-text [value]="g.name" /></li>
+            }
+          }
+        </ul>
+      }
+      @case ('projects') {
+        @if (content.projects().length) {
+          <ul class="link-list">
+            @for (p of content.projects(); track p.slug) {
+              <li>
+                <a [routerLink]="lang.path('/projects/' + p.slug)">
+                  <app-text [value]="p.name" />
+                  <app-icon name="arrow-right" />
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      }
+      @case ('library') {
+        <ul class="plain-list">
+          @for (e of content.content().education; track $index) {
+            @if (content.visible(e.degree)) {
+              <li><app-text [value]="e.degree" /></li>
+            }
+          }
+        </ul>
+      }
+      @case ('lounge') {
+        @let c = content.content().contact;
+        @if (content.visible(c.message)) {
+          <p><app-text [value]="c.message" /></p>
+        }
+        @if (content.visible(c.email)) {
+          <p class="preview-sub"><app-text [value]="c.email" /></p>
+        }
+      }
+    }
+  </div>
+
+  <div class="actions">
+    @for (link of links(); track link.key; let first = $first) {
+      <a class="btn" [class.btn-primary]="first" [class.btn-secondary]="!first" [routerLink]="lang.path(link.path)">
+        {{ lang.t().nav[link.key] }}
+        @if (first) {
+          <app-icon name="arrow-right" />
+        }
+      </a>
+    }
+  </div>
+
+  <nav class="stepper" [attr.aria-label]="lang.t().office.mapLabel">
+    <a class="btn btn-ghost" [routerLink]="lang.path('/')" [queryParams]="{ area: prev() }">
+      <app-icon name="arrow-left" />
+      <span class="visually-hidden">{{ lang.t().office.previous }}: </span>{{ lang.t().areas[prev()].name }}
+    </a>
+    <a class="btn btn-ghost" [routerLink]="lang.path('/')" [queryParams]="{ area: next() }">
+      <span class="visually-hidden">{{ lang.t().office.next }}: </span>{{ lang.t().areas[next()].name }}
+      <app-icon name="arrow-right" />
+    </a>
+  </nav>
+</section>

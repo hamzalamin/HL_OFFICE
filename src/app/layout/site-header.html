@@ -1,0 +1,83 @@
+<a class="skip-link" href="#main">{{ lang.t().site.skipToContent }}</a>
+
+<header class="header">
+  <a class="brand" [routerLink]="lang.path('/')">
+    <span class="brand-mark" aria-hidden="true">
+      @if (initials()) {
+        {{ initials() }}
+      } @else {
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2.5l8.5 4.9v9.2L12 21.5l-8.5-4.9V7.4z" class="cube-top" />
+          <path d="M12 12v9.5l-8.5-4.9V7.4z" class="cube-left" />
+          <path d="M12 12v9.5l8.5-4.9V7.4z" class="cube-right" />
+        </svg>
+      }
+    </span>
+    <span class="brand-name">{{ brand() }}</span>
+  </a>
+
+  <nav class="nav" [attr.aria-label]="lang.t().site.mainNav">
+    <ul>
+      @for (item of items; track item.key) {
+        <li>
+          <a
+            [routerLink]="lang.path(item.path)"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="activeOptions(item)"
+            >{{ lang.t().nav[item.key] }}</a
+          >
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="actions">
+    <a
+      class="lang-switch"
+      [routerLink]="lang.switchUrl(lang.lang() === 'en' ? 'fr' : 'en')"
+      [attr.hreflang]="lang.lang() === 'en' ? 'fr' : 'en'"
+      [attr.lang]="lang.lang() === 'en' ? 'fr' : 'en'"
+      [attr.title]="lang.t().site.otherLanguage"
+    >
+      <app-icon name="globe" />
+      <span class="lang-code">{{ lang.lang() === 'en' ? 'FR' : 'EN' }}</span>
+      <span class="visually-hidden">{{ lang.t().site.otherLanguage }}</span>
+    </a>
+    <a class="btn btn-primary cv-btn" [routerLink]="lang.path('/cv')" routerLinkActive="is-active">
+      <app-icon name="file" />
+      {{ lang.t().nav.cv }}
+    </a>
+    <button
+      type="button"
+      class="btn btn-ghost btn-icon menu-btn"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="mobile-menu"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <app-icon [name]="menuOpen() ? 'close' : 'menu'" />
+      <span class="visually-hidden">{{ menuOpen() ? lang.t().site.closeMenu : lang.t().site.openMenu }}</span>
+    </button>
+  </div>
+</header>
+
+<div id="mobile-menu" class="mobile-menu" [class.is-open]="menuOpen()" [attr.inert]="menuOpen() ? null : ''">
+  <nav [attr.aria-label]="lang.t().site.mainNav">
+    <ul>
+      @for (item of items; track item.key) {
+        <li>
+          <a
+            [routerLink]="lang.path(item.path)"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="activeOptions(item)"
+            >{{ lang.t().nav[item.key] }}</a
+          >
+        </li>
+      }
+      <li>
+        <a [routerLink]="lang.path('/cv')" routerLinkActive="is-active" ariaCurrentWhenActive="page">{{ lang.t().nav.cv }}</a>
+      </li>
+    </ul>
+  </nav>
+</div>

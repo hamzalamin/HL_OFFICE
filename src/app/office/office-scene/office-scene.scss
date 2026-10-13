@@ -1,0 +1,237 @@
+@property --k {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.camera {
+  --k: 1;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform-origin: 0 0;
+}
+
+.ready .camera {
+  transition:
+    transform var(--camera-duration) var(--ease-camera),
+    --k var(--camera-duration) var(--ease-camera);
+}
+
+.stage {
+  position: relative;
+  width: min(100cqw, 100cqh * 4 / 3);
+  aspect-ratio: 4 / 3;
+}
+
+.scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// ---------------------------------------------------------------------------
+// Areas
+// ---------------------------------------------------------------------------
+
+.area {
+  cursor: pointer;
+  transition: opacity 320ms ease;
+}
+
+.area-floor {
+  fill: var(--color-accent);
+  fill-opacity: 0;
+  stroke: var(--color-accent);
+  stroke-opacity: 0;
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  transition:
+    fill-opacity 200ms ease,
+    stroke-opacity 200ms ease;
+}
+
+.area-items {
+  transition: transform 260ms var(--ease-out);
+}
+
+.area.is-emphasis .area-floor {
+  fill-opacity: 0.1;
+  stroke-opacity: 0.85;
+}
+
+.area.is-emphasis .area-items {
+  transform: translateY(-3px);
+}
+
+.area.is-active .area-floor {
+  fill-opacity: 0.12;
+  stroke-opacity: 1;
+  stroke-dasharray: none;
+}
+
+// Quietly step back the rest of the office while one area is in focus.
+.has-focus .area:not(.is-active),
+.has-focus .decor {
+  opacity: 0.5;
+}
+
+// ---------------------------------------------------------------------------
+// Labels (HTML, positioned over the drawing; counter-scaled against zoom)
+// ---------------------------------------------------------------------------
+
+.labels ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pin {
+  position: absolute;
+  transform: translate(-50%, -100%) scale(calc(1 / var(--k)));
+  transform-origin: 50% 100%;
+  z-index: 1;
+
+  &.is-emphasis,
+  &.is-active {
+    z-index: 2;
+  }
+
+  // Short stem from label to area.
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    width: 1.5px;
+    height: 10px;
+    background: var(--pin-stem);
+    transform: translateX(-50%);
+  }
+}
+
+.has-focus .pin:not(.is-active) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.pin a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.3rem;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: var(--pin-bg);
+  color: var(--color-text);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-pin);
+  border: 1px solid var(--color-border);
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 200ms var(--ease-out),
+    box-shadow 200ms ease;
+}
+
+.pin-index {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-text {
+  display: grid;
+  line-height: 1.15;
+}
+
+.pin-name {
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.pin-section {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.pin.is-emphasis a,
+.pin.is-active a,
+.pin a:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  transform: translateY(-2px);
+
+  .pin-index {
+    background: color-mix(in oklab, var(--color-on-accent), transparent 78%);
+    color: var(--color-on-accent);
+  }
+  .pin-section {
+    color: color-mix(in oklab, var(--color-on-accent), transparent 22%);
+  }
+}
+
+.pin a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+// Small screens: compact numbered markers; names are in the directory below.
+@container (max-width: 560px) {
+  .pin a {
+    padding: 0.2rem;
+    gap: 0;
+  }
+  .pin-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .pin-index {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ready .camera,
+  .area,
+  .area-items,
+  .area-floor,
+  .pin a {
+    transition: none;
+  }
+  .area.is-emphasis .area-items {
+    transform: none;
+  }
+}

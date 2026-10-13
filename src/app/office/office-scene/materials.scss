@@ -1,0 +1,135 @@
+// Office materials. Each `m-*` class sets a base colour (--c); face classes
+// derive light and shade from it, so the light direction stays consistent.
+// Light comes from the upper left: tops are brightest, +x faces darkest.
+
+.scene {
+  --edge-mix: 26%;
+
+  polygon,
+  ellipse {
+    stroke-linejoin: round;
+  }
+
+  .f-t {
+    fill: color-mix(in oklab, var(--c), #fff 14%);
+    stroke: color-mix(in oklab, var(--c), #000 18%);
+    stroke-width: 0.5;
+  }
+  .f-l {
+    fill: color-mix(in oklab, var(--c), #000 4%);
+    stroke: color-mix(in oklab, var(--c), #000 var(--edge-mix));
+    stroke-width: 0.5;
+  }
+  .f-r {
+    fill: color-mix(in oklab, var(--c), #000 18%);
+    stroke: color-mix(in oklab, var(--c), #000 34%);
+    stroke-width: 0.5;
+  }
+  .p {
+    fill: var(--c);
+  }
+  .seam {
+    stroke: var(--o-floor-seam);
+    stroke-width: 0.6;
+  }
+  .stem {
+    stroke: var(--o-leaf-dark);
+    stroke-width: 1.4;
+  }
+
+  // Building
+  .m-floor { --c: var(--o-floor); }
+  .m-slab { --c: var(--o-slab); }
+  .m-wall { --c: var(--o-wall); }
+  .m-wall-in-x { --c: var(--o-wall-x); }
+  .m-wall-in-y { --c: var(--o-wall-y); }
+  .m-skirting-x { --c: color-mix(in oklab, var(--o-wall-x), #000 12%); }
+  .m-skirting-y { --c: color-mix(in oklab, var(--o-wall-y), #000 10%); }
+  .m-window-frame { --c: var(--o-frame-light); }
+  .m-sky { --c: var(--o-sky); }
+  .m-sky-low { --c: var(--o-sky-low); }
+  .m-door-frame { --c: var(--o-dark); }
+  .m-door-glass { --c: var(--o-door-glass); }
+  .m-frame { --c: var(--o-frame); }
+  .m-glass {
+    --c: var(--o-glass);
+  }
+  .glass {
+    fill-opacity: 0.32;
+    stroke-opacity: 0.6;
+  }
+
+  // Floors and textiles
+  .m-carpet-eng { --c: var(--o-carpet-eng); }
+  .m-rug-desk { --c: var(--o-rug-desk); }
+  .m-rug-desk-inner { --c: color-mix(in oklab, var(--o-rug-desk), #fff 18%); }
+  .m-rug-lounge { --c: var(--o-rug-lounge); }
+  .m-rug-lounge-inner { --c: color-mix(in oklab, var(--o-rug-lounge), #fff 16%); }
+  .m-rug-library { --c: var(--o-rug-library); }
+  .m-rug-library-inner { --c: color-mix(in oklab, var(--o-rug-library), #fff 14%); }
+  .m-mat { --c: var(--o-mat); }
+  .m-fabric-dark { --c: var(--o-fabric-dark); }
+  .m-fabric-blue { --c: var(--o-fabric-blue); }
+  .m-fabric-teal { --c: var(--o-fabric-teal); }
+  .m-fabric-sand { --c: var(--o-fabric-sand); }
+  .m-fabric-terracotta { --c: var(--o-fabric-terracotta); }
+
+  // Furniture
+  .m-wood { --c: var(--o-wood); }
+  .m-wood-dark { --c: var(--o-wood-dark); }
+  .m-desk { --c: var(--o-desk); }
+  .m-white { --c: var(--o-white); }
+  .m-counter { --c: var(--o-counter); }
+  .m-stone { --c: var(--o-stone); }
+  .m-metal { --c: var(--o-metal); }
+  .m-metal-dark { --c: color-mix(in oklab, var(--o-metal), #000 30%); }
+  .m-dark { --c: var(--o-dark); }
+  .m-cabinet-door { --c: #000; fill-opacity: 0.07; }
+  .m-cabinet-door-x { --c: #000; fill-opacity: 0.06; }
+  .m-shade { --c: var(--o-shade); }
+  .m-cork { --c: var(--o-cork); }
+  .m-note-a { --c: #f3d36b; }
+  .m-note-b { --c: #f2b8a2; }
+  .m-note-c { --c: #bfe0d3; }
+  .m-accent { --c: var(--o-accent); }
+  .m-accent-band { --c: var(--o-accent); }
+  .m-mug { --c: var(--o-white); }
+  .m-mug-accent { --c: var(--o-accent); }
+  .m-paper { --c: var(--o-paper); }
+  .m-indicator { --c: var(--o-indicator); }
+
+  // Plants
+  .m-pot { --c: var(--o-pot); }
+  .m-soil { --c: var(--o-soil); }
+  .m-leaf { --c: var(--o-leaf); }
+  .m-leaf-dark { --c: var(--o-leaf-dark); }
+  .m-leaf-light { --c: var(--o-leaf-light); }
+
+  // Books
+  .m-book-1 { --c: var(--o-book-1); }
+  .m-book-2 { --c: var(--o-book-2); }
+  .m-book-3 { --c: var(--o-book-3); }
+  .m-book-4 { --c: var(--o-book-4); }
+  .m-book-5 { --c: var(--o-book-5); }
+  .m-book-6 { --c: var(--o-book-6); }
+
+  // Screens and boards
+  .m-screen { --c: var(--o-screen); }
+  .m-screen-bar { --c: color-mix(in oklab, var(--o-screen), #fff 14%); }
+  .m-screen-soft { --c: color-mix(in oklab, var(--o-screen), #fff 22%); }
+  .m-screen-card { --c: color-mix(in oklab, var(--o-screen), #fff 36%); }
+  .m-screen-hi { --c: var(--o-screen-hi); }
+  .m-whiteboard { --c: var(--o-whiteboard); }
+  .m-ink-blue { --c: color-mix(in oklab, var(--o-fabric-blue), #fff 55%); }
+  .m-ink-dark { --c: color-mix(in oklab, var(--o-dark), #fff 70%); }
+  .m-ink-soft { --c: color-mix(in oklab, var(--o-dark), #fff 78%); }
+  .m-ink-line { --c: color-mix(in oklab, var(--o-dark), #fff 45%); }
+  .m-ink-accent { --c: color-mix(in oklab, var(--o-accent), #fff 55%); }
+  .m-board-bg { --c: var(--o-paper); }
+  .m-board-a { --c: color-mix(in oklab, var(--o-accent), #fff 40%); }
+  .m-board-b { --c: color-mix(in oklab, var(--o-fabric-terracotta), #fff 40%); }
+  .m-board-c { --c: color-mix(in oklab, var(--o-fabric-blue), #fff 40%); }
+  .m-board-title { --c: color-mix(in oklab, var(--o-dark), #fff 30%); }
+  .m-board-text { --c: color-mix(in oklab, var(--o-dark), #fff 70%); }
+  .m-board-chip { --c: color-mix(in oklab, var(--o-accent), #fff 70%); }
+}

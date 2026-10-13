@@ -1,0 +1,68 @@
+@let t = lang.t();
+@let p = content.profile();
+
+<section class="office" [class.has-panel]="!!activeArea()" [attr.aria-label]="t.home.eyebrow">
+  <app-office-scene class="scene" [active]="activeArea()" [insets]="sceneInsets()" [overviewInsets]="overviewInsets()" />
+
+  @if (introOpen()) {
+    <div class="intro" #intro>
+      <p class="eyebrow">{{ t.home.eyebrow }}</p>
+      <h1>
+        @if (content.visible(p.name)) {
+          <app-text [value]="p.name" />
+        } @else {
+          {{ t.home.titleFallback }}
+        }
+      </h1>
+      @if (content.visible(p.title)) {
+        <p class="title"><app-text [value]="p.title" /></p>
+      }
+      <p class="lead"><app-text [value]="p.introduction" [fallback]="t.home.introFallback" /></p>
+
+      <div class="cta">
+        <button type="button" class="btn btn-primary" (click)="explore()">
+          <app-icon name="compass" />
+          {{ t.home.explore }}
+        </button>
+      </div>
+
+      <ul class="quick-links">
+        <li><a [routerLink]="lang.path('/projects')">{{ t.nav.projects }}</a></li>
+        <li><a [routerLink]="lang.path('/cv')">{{ t.nav.cv }}</a></li>
+        <li><a [routerLink]="lang.path('/contact')">{{ t.nav.contact }}</a></li>
+      </ul>
+    </div>
+  } @else {
+    <div class="hint" role="status">
+      <app-icon name="compass" />
+      <span>{{ t.home.hint }}</span>
+      <button type="button" class="btn btn-ghost hint-btn" (click)="introOpen.set(true)">{{ t.home.showIntro }}</button>
+    </div>
+  }
+
+  @if (activeArea(); as area) {
+    <app-area-panel class="panel" [area]="area" />
+  }
+</section>
+
+<section class="directory" aria-labelledby="directory-title">
+  <div class="directory-head">
+    <h2 id="directory-title">{{ t.home.directoryTitle }}</h2>
+    <p>{{ t.home.directoryText }}</p>
+  </div>
+  <ol class="directory-list">
+    @for (area of areas; track area.id; let i = $index) {
+      <li>
+        <a class="directory-card" [routerLink]="lang.path(area.route)">
+          <span class="directory-index" aria-hidden="true">{{ i + 1 }}</span>
+          <span class="directory-body">
+            <span class="directory-name">{{ t.areas[area.id].name }}</span>
+            <span class="directory-section">{{ t.areas[area.id].section }}</span>
+            <span class="directory-blurb">{{ t.areas[area.id].blurb }}</span>
+          </span>
+          <app-icon name="arrow-right" />
+        </a>
+      </li>
+    }
+  </ol>
+</section>

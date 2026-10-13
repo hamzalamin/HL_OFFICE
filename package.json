@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:portfolio": "node dist/portfolio/server/server.mjs"
+    "preview": "npx -y http-server dist/portfolio/browser -p 4300 -c-1 --proxy http://localhost:4300?"
   },
   "private": true,
   "packageManager": "npm@11.18.0",
@@ -20,7 +20,6 @@
     "@angular/platform-server": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@angular/ssr": "^22.2.2",
-    "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -28,7 +27,7 @@
     "@angular/build": "^22.2.2",
     "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^22.2.0",
-    "@types/express": "^5.0.1",
+    "@playwright/test": "^1.64.0",
     "@types/node": "^22.12.0",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",

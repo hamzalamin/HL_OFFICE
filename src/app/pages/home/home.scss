@@ -1,0 +1,325 @@
+:host {
+  display: block;
+}
+
+.office {
+  position: relative;
+  height: calc(100svh - var(--header-h));
+  min-height: 560px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 60% at 55% 55%, #fbfaf7 0%, transparent 70%),
+    var(--color-bg);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+}
+
+// Introduction card --------------------------------------------------------
+
+.intro {
+  position: absolute;
+  top: clamp(1rem, 4vh, 2.5rem);
+  left: clamp(1rem, 3vw, 2.5rem);
+  width: min(400px, 34vw);
+  padding: 1.5rem 1.5rem 1.25rem;
+  background: color-mix(in oklab, var(--color-surface), transparent 6%);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  display: grid;
+  gap: 0.75rem;
+  animation: rise 500ms var(--ease-out) both;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-strong);
+}
+
+h1 {
+  font-size: clamp(1.75rem, 2.6vw, 2.25rem);
+  font-weight: 800;
+}
+
+.title {
+  margin-top: -0.375rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--color-text-muted);
+}
+
+.lead {
+  color: var(--color-text-muted);
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--color-border);
+
+  a {
+    font-size: 0.875rem;
+    font-weight: 650;
+    text-decoration: none;
+    color: var(--color-text);
+    padding: 0.25rem 0;
+
+    &:hover {
+      color: var(--color-accent-strong);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+// Exploration hint ---------------------------------------------------------
+
+.hint {
+  position: absolute;
+  left: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vh, 2rem);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.375rem 0.375rem 1rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-pin);
+  font-size: 0.9rem;
+  font-weight: 600;
+  animation: rise 400ms var(--ease-out) both;
+
+  app-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--color-accent);
+  }
+}
+
+.hint-btn {
+  min-height: 36px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.85rem;
+  background: var(--color-surface-2);
+}
+
+// Area panel ---------------------------------------------------------------
+
+.panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  width: 400px;
+  animation: slide-in 380ms var(--ease-out) both;
+}
+
+.has-panel {
+  .intro,
+  .hint {
+    display: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+
+// Directory ----------------------------------------------------------------
+
+.directory {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1rem, 3vw, 2rem);
+}
+
+.directory-head {
+  display: grid;
+  gap: 0.375rem;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    font-weight: 750;
+  }
+  p {
+    color: var(--color-text-muted);
+  }
+}
+
+.directory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 0.75rem;
+}
+
+.directory-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  height: 100%;
+  padding: 1rem 1.125rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 200ms var(--ease-out),
+    box-shadow 200ms ease;
+
+  > app-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.2rem;
+    color: var(--color-text-muted);
+    transition: transform 200ms var(--ease-out);
+  }
+
+  &:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-pin);
+    transform: translateY(-2px);
+
+    > app-icon svg {
+      transform: translateX(3px);
+      color: var(--color-accent);
+    }
+  }
+}
+
+.directory-index {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+  font-size: 0.8125rem;
+  font-weight: 750;
+}
+
+.directory-body {
+  display: grid;
+  gap: 0.125rem;
+  flex: 1;
+}
+
+.directory-name {
+  font-weight: 750;
+}
+
+.directory-section {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--color-accent-strong);
+}
+
+.directory-blurb {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+// Small screens: the office becomes a header illustration; content flows below.
+@media (max-width: 899px) {
+  .office {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scene {
+    position: relative;
+    inset: auto;
+    height: clamp(280px, 84vw, 62svh);
+  }
+
+  .intro {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    margin: -0.5rem 1rem 0;
+    backdrop-filter: none;
+    background: var(--color-surface);
+  }
+
+  .hint {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    margin: 0 1rem;
+    border-radius: var(--radius-md);
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+  }
+
+  .panel {
+    position: fixed;
+    z-index: 40;
+    top: auto;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: auto;
+    max-height: min(58svh, 520px);
+    animation: sheet-in 360ms var(--ease-out) both;
+  }
+
+  .has-panel .intro {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .hint,
+  .panel {
+    animation: none;
+  }
+}
