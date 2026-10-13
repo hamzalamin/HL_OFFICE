@@ -154,7 +154,11 @@ export class OfficeScene {
    */
   private startCrowd(): void {
     const [back, near, far] = this.crowdLayers().map((e) => e.nativeElement);
-    const view = new CrowdView(new Crowd().warmUp(WARM_UP), { back, near, far }, this.svg().nativeElement);
+    const view = new CrowdView(new Crowd().warmUp(WARM_UP), { back, near, far }, this.svg().nativeElement, {
+      back: this.ext.back,
+      near: this.ext.inner,
+      far: this.ext.outer,
+    });
     view.render();
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     const running = effect(

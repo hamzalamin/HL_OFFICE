@@ -6,7 +6,7 @@ describe('exterior', () => {
   const insideOffice = (b: { x: number; y: number; w: number; d: number }) => b.x < 29.7 && b.x + b.w > 0.3 && b.y < 21.7 && b.y + b.d > 0.3;
 
   it('keeps every outdoor object off the office floor', () => {
-    for (const layer of [ext.back, ext.road, ext.far]) {
+    for (const layer of [ext.back, ext.outer]) {
       for (const o of layer) expect(insideOffice(o.bounds), JSON.stringify(o.bounds)).toBe(false);
     }
   });

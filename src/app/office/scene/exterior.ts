@@ -369,10 +369,8 @@ export interface Exterior {
   back: SceneObject[];
   /** Around the building, up to the near sidewalks: the cut walls, entrance, garden, terrace. */
   inner: SceneObject[];
-  /** On the roads. */
-  road: SceneObject[];
-  /** Beyond the roads: the far sidewalks and the park. */
-  far: SceneObject[];
+  /** On and beyond the roads: cars, the far sidewalks and the park. */
+  outer: SceneObject[];
   /** The entrance plaza: selecting it enters the office at the reception. */
   entrance: string;
 }
@@ -508,8 +506,7 @@ export function buildExterior(): Exterior {
     ground: groundLayer(),
     back: depthSort(back),
     inner: depthSort(inner),
-    road: depthSort(road),
-    far: depthSort(far),
+    outer: depthSort([...road, ...far]),
     entrance: footprint(-0.6, 22, 6.6, 26.5, G + 0.01),
   };
 }

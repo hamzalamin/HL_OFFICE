@@ -4,8 +4,10 @@
       <svg #svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
         <!-- Outside, behind the building -->
         <g class="exterior" [appSceneShapes]="ext.ground"></g>
-        <g class="exterior" [appSceneShapes]="ext.back"></g>
-        <g #crowdLayer class="walkers">
+        <g #crowdLayer class="exterior layer">
+          @for (o of ext.back; track $index) {
+            <g class="obj" [appSceneShapes]="[o]"></g>
+          }
           @for (p of crowd.back; track p.id) {
             <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
               <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
@@ -36,10 +38,13 @@
           }
         }
 
-        <!-- Outside, in front of the building. People move between the three
-             crowd layers as they walk (see crowd-view.ts). -->
-        <g class="exterior" [appSceneShapes]="ext.inner"></g>
-        <g #crowdLayer class="walkers">
+        <!-- Outside, in front of the building. Each layer holds its scenery
+             objects one by one; people move between layers as they walk and
+             are slotted between the objects in depth order (see crowd-view.ts). -->
+        <g #crowdLayer class="exterior layer">
+          @for (o of ext.inner; track $index) {
+            <g class="obj" [appSceneShapes]="[o]"></g>
+          }
           @for (p of crowd.near; track p.id) {
             <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
               <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
@@ -49,8 +54,10 @@
             </g>
           }
         </g>
-        <g class="exterior" [appSceneShapes]="ext.road"></g>
-        <g #crowdLayer class="walkers">
+        <g #crowdLayer class="exterior layer">
+          @for (o of ext.outer; track $index) {
+            <g class="obj" [appSceneShapes]="[o]"></g>
+          }
           @for (p of crowd.far; track p.id) {
             <g class="ped" [attr.data-ped]="p.id" [attr.transform]="p.transform" [attr.opacity]="p.alpha" [style.display]="p.alpha > 0.01 ? null : 'none'">
               <g class="ped-flip" [attr.transform]="p.flip ? 'scale(-1 1)' : null">
@@ -60,7 +67,6 @@
             </g>
           }
         </g>
-        <g class="exterior" [appSceneShapes]="ext.far"></g>
 
         <!-- The entrance plaza: the way into the office. -->
         <polygon

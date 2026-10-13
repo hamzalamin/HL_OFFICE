@@ -101,7 +101,8 @@
   transition: opacity 320ms ease;
 }
 
-.walkers {
+.walkers,
+.ped {
   pointer-events: none;
 }
 

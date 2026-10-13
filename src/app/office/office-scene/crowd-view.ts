@@ -1,4 +1,5 @@
-import { project } from '../engine/iso';
+import { compare } from '../engine/depth-sort';
+import { Bounds, SceneObject, project, screenRect } from '../engine/iso';
 import { Body, Crowd } from '../scene/pedestrians';
 import { LOOKS, View } from '../scene/people';
 
@@ -19,6 +20,33 @@ export function bodyTransform(b: Body): string {
   const [sx, sy] = project(b.x, b.y, b.z);
   const bob = Math.abs(Math.sin(b.phase)) * 0.8 * b.swing;
   return `translate(${r(sx)} ${r(sy - bob)})`;
+}
+
+type Rect = { x: number; y: number; w: number; h: number };
+
+/** The space a person takes up, for depth ordering. */
+function bodyBounds(b: { x: number; y: number; z: number }): Bounds {
+  return { x: b.x - 0.25, y: b.y - 0.25, z: b.z, w: 0.5, d: 0.5, h: 2.7 };
+}
+
+function overlaps(a: Rect, c: Rect): boolean {
+  return a.x < c.x + c.w && c.x < a.x + a.w && a.y < c.y + c.h && c.y < a.y + a.h;
+}
+
+/**
+ * Where a person goes among a layer's scenery (already in painter's order):
+ * right after the last object that overlaps them on screen and lies behind
+ * them. So a tree between the viewer and a walker hides the walker, and one
+ * behind them does not.
+ */
+export function slotAmong(b: { x: number; y: number; z: number }, objects: readonly { bounds: Bounds; rect: Rect }[]): number {
+  const bb = bodyBounds(b);
+  const br = screenRect(bb);
+  let slot = 0;
+  objects.forEach((o, i) => {
+    if (overlaps(br, o.rect) && compare(o.bounds, bb) < 0) slot = i + 1;
+  });
+  return slot;
 }
 
 const HIP = -17.5;
@@ -52,6 +80,8 @@ export class CrowdView {
   private readonly people = new Map<string, Person>();
   private readonly seatEls = new Map<string, Element[]>();
   private readonly seatShown = new Map<string, boolean>();
+  /** Each layer's scenery, in drawing order, with its elements. */
+  private readonly scenery: Record<Layer, { el: Element; bounds: Bounds; rect: Rect }[]>;
   private frame = 0;
   private last = 0;
   private running = false;
@@ -60,7 +90,13 @@ export class CrowdView {
     private readonly crowd: Crowd,
     private readonly layers: Record<Layer, SVGGElement>,
     scene: SVGSVGElement,
+    objects: Record<Layer, readonly SceneObject[]>,
   ) {
+    const scenery = (layer: Layer) => {
+      const els = layers[layer].querySelectorAll(':scope > .obj');
+      return objects[layer].map((o, i) => ({ el: els[i], bounds: o.bounds, rect: screenRect(o.bounds) }));
+    };
+    this.scenery = { back: scenery('back'), near: scenery('near'), far: scenery('far') };
     for (const el of scene.querySelectorAll<SVGGElement>('[data-ped]')) {
       const limbs = (v: SVGGElement): Limbs => ({
         near: [...v.querySelectorAll('.limb-near')],
@@ -89,7 +125,7 @@ export class CrowdView {
       const p = this.people.get(b.id);
       if (p) this.draw(p, b);
     }
-    this.sortLayers();
+    this.placeInLayers();
     this.drawSeats();
   }
 
@@ -151,17 +187,31 @@ export class CrowdView {
     }
   }
 
-  /** Back to front within each layer; the DOM is only touched when the order changes. */
-  private sortLayers(): void {
-    for (const layer of Object.values(this.layers)) {
-      const kids = [...layer.children] as SVGGElement[];
-      if (kids.length < 2) continue;
-      const depth = (el: SVGGElement) => {
-        const b = this.crowd.bodies.find((x) => x.id === el.dataset['ped']);
-        return b ? b.x + b.y : 0;
-      };
-      const sorted = [...kids].sort((m, n) => depth(m) - depth(n));
-      if (sorted.some((el, i) => el !== kids[i])) for (const el of sorted) layer.appendChild(el);
+  /**
+   * Slots every person between the scenery objects in front of and behind
+   * them; people sharing a slot go back to front. The DOM is only touched
+   * when someone's place actually changes.
+   */
+  private placeInLayers(): void {
+    for (const layer of ['back', 'near', 'far'] as const) {
+      const container = this.layers[layer];
+      const objects = this.scenery[layer];
+      const slots = new Map<number, { el: SVGGElement; depth: number }[]>();
+      for (const b of this.crowd.bodies) {
+        const p = this.people.get(b.id);
+        if (!p || p.shown.layer !== layer || b.alpha <= 0.01) continue;
+        const slot = slotAmong(b, objects);
+        slots.set(slot, [...(slots.get(slot) ?? []), { el: p.root, depth: b.x + b.y }]);
+      }
+      for (const [slot, group] of slots) {
+        group.sort((m, n) => m.depth - n.depth);
+        let next: Element | null = objects[slot]?.el ?? null;
+        for (let i = group.length - 1; i >= 0; i--) {
+          const el = group[i].el;
+          if (el.nextElementSibling !== next || el.parentNode !== container) container.insertBefore(el, next);
+          next = el;
+        }
+      }
     }
   }
 
