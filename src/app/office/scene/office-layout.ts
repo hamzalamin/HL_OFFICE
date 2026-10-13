@@ -217,7 +217,10 @@ export function buildOffice(): OfficeModel {
     areas[g.area.id] = { id: g.area.id, frame, label: { x: sx, y: sy } };
   }
 
-  const overview = screenRect({ x: -0.45, y: -0.45, z: -0.7, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: OFFICE.wallH + 0.7 });
+  // The overview frames the floor and everything on it. The empty top of the
+  // back walls and the front tip of the slab may run off-screen, so the
+  // office itself gets as much of the screen as possible.
+  const overview = screenRect({ x: -0.45, y: -0.45, z: -0.2, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: 5.2 });
 
   return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot) };
 }

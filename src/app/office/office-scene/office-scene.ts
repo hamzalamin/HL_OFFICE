@@ -72,7 +72,7 @@ export class OfficeScene {
     const size = this.size();
     if (size.w === 0) return IDENTITY;
     const id = this.active();
-    if (!id) return frameTarget(size, grow(this.model.overview, 6), NO_INSETS, { min: 0.4, max: 1.5 }, 12);
+    if (!id) return frameTarget(size, this.model.overview, NO_INSETS, { min: 0.4, max: 1.8 }, 0);
     const board = this.activeBoard();
     // A board is framed a little closer than its area, keeping its neighbours in view.
     if (board) return frameTarget(size, grow(board.slot.frame, 40), this.insets(), { min: 0.5, max: 2.2 });
