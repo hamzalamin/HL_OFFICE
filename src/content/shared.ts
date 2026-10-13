@@ -3,15 +3,33 @@
  * Write each URL, address and slug once here.
  */
 export const SHARED = {
-  email: 'YOUR_EMAIL',
-  phone: 'YOUR_PHONE',
+  email: 'hamzalamin80@gmail.com',
+  phone: '+212 639 621 650',
   links: {
-    github: 'YOUR_GITHUB_URL',
-    linkedin: 'YOUR_LINKEDIN_URL',
+    github: 'https://github.com/hamzalamin',
+    linkedin: 'https://www.linkedin.com/in/hamza-lamin-a0440a296/',
   },
   projects: {
-    one: { slug: 'project-one', repositoryUrl: 'YOUR_PROJECT_REPOSITORY_URL', demoUrl: 'YOUR_PROJECT_DEMO_URL' },
-    two: { slug: 'project-two', repositoryUrl: 'YOUR_PROJECT_REPOSITORY_URL', demoUrl: 'YOUR_PROJECT_DEMO_URL' },
-    three: { slug: 'project-three', repositoryUrl: 'YOUR_PROJECT_REPOSITORY_URL' },
+    // Repository, demo and dates still to be confirmed.
+    qatratHayat: {
+      slug: 'qatrat-hayat',
+      nativeName: { text: 'قطرة حياة', lang: 'ar', dir: 'rtl' as const },
+      repositoryUrl: 'YOUR_PROJECT_REPOSITORY_URL',
+      demoUrl: 'YOUR_PROJECT_DEMO_URL',
+      stack: ['Java', 'Spring Boot', 'Spring Security', 'JWT', 'React', 'PostgreSQL', 'Docker', 'JUnit', 'Liquibase'],
+    },
+    apiStressLab: {
+      slug: 'api-stress-lab',
+      period: '2026',
+      repositoryUrl: 'https://github.com/hamzalamin/API-StressLab',
+      documentationUrl: 'https://hamzalamin.github.io/api-stress-lab-docs/',
+      stack: ['Java 17', 'Spring Boot', 'JUnit 5', 'Maven'],
+    },
+    itlens: {
+      slug: 'itlens',
+      period: '2024',
+      repositoryUrl: 'https://github.com/hamzalamin/ITLens',
+      stack: ['Java', 'Spring Boot', 'Spring Data JPA', 'Angular'],
+    },
   },
-} as const;
+};

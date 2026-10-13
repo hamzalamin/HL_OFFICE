@@ -13,6 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { ContentService } from '../../core/content/content.service';
@@ -123,6 +124,28 @@ export class Home {
       this.destroyRef.onDestroy(() => window.removeEventListener('resize', update));
     });
     this.destroyRef.onDestroy(() => clearTimeout(this.hintTimer));
+
+    // Title and description follow the focus (also in the prerendered pages).
+    const title = inject(Title);
+    const meta = inject(Meta);
+    effect(() => {
+      const t = this.lang.t();
+      const p = this.content.profile();
+      const name = this.content.real(p.name) ?? t.home.titleFallback;
+      const area = this.activeArea();
+      const project = this.project();
+      if (project) {
+        title.setTitle(`${this.content.real(project.name) ?? t.areas.projects.name} · ${name}`);
+        meta.updateTag({ name: 'description', content: this.content.real(project.summary) ?? t.areas.projects.blurb });
+      } else if (area) {
+        title.setTitle(`${t.areas[area].section} · ${name}`);
+        meta.updateTag({ name: 'description', content: t.areas[area].blurb });
+      } else {
+        const role = this.content.real(p.title);
+        title.setTitle(role ? `${name} · ${role}` : name);
+        meta.updateTag({ name: 'description', content: this.content.real(p.introduction) ?? t.home.introFallback });
+      }
+    });
 
     // Keep keyboard focus with the interaction: into the panel when it opens or
     // changes, back to where the visitor came from when going up a level.

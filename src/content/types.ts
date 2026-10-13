@@ -22,6 +22,13 @@ export interface Profile {
   availability?: string;
   /** Path under /public, e.g. "images/portrait.webp". */
   portrait?: { src: string; alt: string };
+  /** Spoken languages, e.g. { name: 'English', level: 'Intermediate' }. */
+  languages?: SpokenLanguage[];
+}
+
+export interface SpokenLanguage {
+  name: string;
+  level: string;
 }
 
 export interface SkillGroup {
@@ -37,6 +44,8 @@ export interface Experience {
   start: string;
   /** Omit for a current position. */
   end?: string;
+  /** e.g. "Full-time (CDI)". */
+  employment?: string;
   summary?: string;
   highlights?: string[];
   technologies?: string[];
@@ -65,12 +74,21 @@ export interface Project {
   /** URL segment: /projects/<slug>. Must be identical in every language. */
   slug: string;
   name: string;
+  /** The name in its original script, e.g. Arabic, shown next to `name`. */
+  nativeName?: { text: string; lang: string; dir?: 'ltr' | 'rtl' };
+  /** e.g. "Developer tooling". */
+  category?: string;
   summary: string;
   /** Shown on the project wall and listed first. */
   featured?: boolean;
   period?: string;
   role?: string;
   problem?: string;
+  /** The approach taken, in a sentence or two. */
+  solution?: string;
+  /** Stated goals, for work that is not (yet) confirmed as implemented. */
+  objectives?: string[];
+  /** Implemented, verified features. */
   features?: string[];
   contribution?: string;
   stack?: string[];
@@ -79,6 +97,7 @@ export interface Project {
   challenges?: Challenge[];
   screenshots?: Screenshot[];
   repositoryUrl?: string;
+  documentationUrl?: string;
   demoUrl?: string;
   /** Only verified results or measurements. */
   results?: string[];

@@ -39,13 +39,16 @@ export interface UiStrings {
     empty: string;
   };
   areas: Record<AreaId, AreaStrings>;
-  reception: { seeProjects: string; viewCv: string; getInTouch: string };
+  reception: { seeProjects: string; viewCv: string; getInTouch: string; languages: string };
   workstation: { experience: string; skills: string; present: string; technologies: string };
-  projects: { pick: string; openCaseStudy: string; notFound: string };
+  projects: { pick: string; openCaseStudy: string; notFound: string; moreOnGithub: string };
   caseStudy: {
     period: string;
     role: string;
     problem: string;
+    proposedSolution: string;
+    objectives: string;
+    objectivesNote: string;
     features: string;
     contribution: string;
     stack: string;
@@ -57,6 +60,7 @@ export interface UiStrings {
     improvements: string;
     screenshots: string;
     repository: string;
+    documentation: string;
     demo: string;
     context: string;
     decision: string;
@@ -73,7 +77,7 @@ export interface UiStrings {
     certifications: string;
     credential: string;
   };
-  lounge: { email: string; copy: string; copied: string; links: string; location: string };
+  lounge: { email: string; phone: string; copy: string; copied: string; links: string; location: string };
   notFound: { title: string; text: string; back: string };
 }
 
@@ -135,17 +139,21 @@ const en: UiStrings = {
       blurb: 'Have a coffee and get in touch.',
     },
   },
-  reception: { seeProjects: 'See the projects', viewCv: 'View the CV', getInTouch: 'Get in touch' },
+  reception: { seeProjects: 'See the projects', viewCv: 'View the CV', getInTouch: 'Get in touch', languages: 'Languages' },
   workstation: { experience: 'Experience', skills: 'Skills', present: 'Present', technologies: 'Technologies' },
   projects: {
     pick: 'Select a board on the wall, or a project below.',
     openCaseStudy: 'Open the case study',
     notFound: 'This project is not on the wall. Here are the projects that are.',
+    moreOnGithub: 'More projects on GitHub',
   },
   caseStudy: {
     period: 'Period',
     role: 'Role',
     problem: 'The problem',
+    proposedSolution: 'Proposed solution',
+    objectives: 'Objectives',
+    objectivesNote: 'Stated goals of the platform.',
     features: 'Main features',
     contribution: 'My contribution',
     stack: 'Stack',
@@ -157,6 +165,7 @@ const en: UiStrings = {
     improvements: 'Possible improvements',
     screenshots: 'Screenshots',
     repository: 'Source code',
+    documentation: 'Documentation',
     demo: 'Live demo',
     context: 'Context',
     decision: 'Decision',
@@ -176,7 +185,7 @@ const en: UiStrings = {
     certifications: 'Certifications',
     credential: 'View credential',
   },
-  lounge: { email: 'Email', copy: 'Copy', copied: 'Copied', links: 'Elsewhere', location: 'Based in' },
+  lounge: { email: 'Email', phone: 'Phone', copy: 'Copy', copied: 'Copied', links: 'Elsewhere', location: 'Based in' },
   notFound: {
     title: 'This room does not exist',
     text: 'The page you are looking for could not be found.',
@@ -242,17 +251,21 @@ const fr: UiStrings = {
       blurb: 'Prenez un café et prenons contact.',
     },
   },
-  reception: { seeProjects: 'Voir les projets', viewCv: 'Consulter le CV', getInTouch: 'Prendre contact' },
+  reception: { seeProjects: 'Voir les projets', viewCv: 'Consulter le CV', getInTouch: 'Prendre contact', languages: 'Langues' },
   workstation: { experience: 'Expérience', skills: 'Compétences', present: 'Aujourd’hui', technologies: 'Technologies' },
   projects: {
     pick: 'Sélectionnez un tableau au mur, ou un projet ci-dessous.',
     openCaseStudy: 'Ouvrir l’étude de cas',
     notFound: 'Ce projet n’est pas au mur. Voici ceux qui y sont.',
+    moreOnGithub: 'Plus de projets sur GitHub',
   },
   caseStudy: {
     period: 'Période',
     role: 'Rôle',
     problem: 'Le problème',
+    proposedSolution: 'Solution proposée',
+    objectives: 'Objectifs',
+    objectivesNote: 'Objectifs annoncés de la plateforme.',
     features: 'Fonctionnalités principales',
     contribution: 'Ma contribution',
     stack: 'Stack',
@@ -264,6 +277,7 @@ const fr: UiStrings = {
     improvements: 'Améliorations possibles',
     screenshots: 'Captures d’écran',
     repository: 'Code source',
+    documentation: 'Documentation',
     demo: 'Démo en ligne',
     context: 'Contexte',
     decision: 'Décision',
@@ -283,7 +297,7 @@ const fr: UiStrings = {
     certifications: 'Certifications',
     credential: 'Voir le certificat',
   },
-  lounge: { email: 'E-mail', copy: 'Copier', copied: 'Copié', links: 'Ailleurs', location: 'Basé à' },
+  lounge: { email: 'E-mail', phone: 'Téléphone', copy: 'Copier', copied: 'Copié', links: 'Ailleurs', location: 'Basé à' },
   notFound: {
     title: 'Cette pièce n’existe pas',
     text: 'La page demandée est introuvable.',

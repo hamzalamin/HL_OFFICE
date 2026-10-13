@@ -81,6 +81,8 @@ export class AreaPanel {
   protected readonly cv = computed(() => this.c().cv);
   protected readonly contact = computed(() => this.c().contact);
   protected readonly links = computed(() => this.contact().links.filter((l) => this.content.visible(l.url)));
+  /** The GitHub profile, for visitors who want to see more work. */
+  protected readonly githubProfile = computed(() => this.content.real(this.contact().links.find((l) => l.kind === 'github')?.url));
 
   /** Whether the area has anything to show besides its description. */
   protected readonly isEmpty = computed(() => {
@@ -129,6 +131,10 @@ export class AreaPanel {
 
   protected areaPath(id: AreaId): string {
     return this.lang.path(AREA_BY_ID[id].route);
+  }
+
+  protected telHref(phone: string): string {
+    return 'tel:' + phone.replace(/[^\d+]/g, '');
   }
 
   protected projectPath(slug: string): string {

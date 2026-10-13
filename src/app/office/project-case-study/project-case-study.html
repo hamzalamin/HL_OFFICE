@@ -2,6 +2,12 @@
 @let p = project();
 @let v = content;
 
+@if (p.nativeName; as n) {
+  <p class="native" [attr.lang]="n.lang" [attr.dir]="n.dir ?? null">{{ n.text }}</p>
+}
+@if (v.visible(p.category)) {
+  <p class="category"><app-text [value]="p.category" /></p>
+}
 @if (v.visible(p.summary)) {
   <p class="lead"><app-text [value]="p.summary" /></p>
 }
@@ -23,13 +29,16 @@
   </dl>
 }
 
-@if (v.real(p.repositoryUrl) || v.real(p.demoUrl)) {
+@if (v.real(p.repositoryUrl) || v.real(p.demoUrl) || v.real(p.documentationUrl)) {
   <div class="actions">
     @if (v.real(p.demoUrl); as url) {
       <a class="btn btn-primary" [href]="url" target="_blank" rel="noopener">{{ t.demo }} <app-icon name="external" /></a>
     }
     @if (v.real(p.repositoryUrl); as url) {
       <a class="btn btn-secondary" [href]="url" target="_blank" rel="noopener">{{ t.repository }} <app-icon name="external" /></a>
+    }
+    @if (v.real(p.documentationUrl); as url) {
+      <a class="btn btn-secondary" [href]="url" target="_blank" rel="noopener">{{ t.documentation }} <app-icon name="external" /></a>
     }
   </div>
 }
@@ -46,6 +55,21 @@
 @if (v.visible(p.problem)) {
   <h3>{{ t.problem }}</h3>
   <p><app-text [value]="p.problem" /></p>
+}
+
+@if (v.visible(p.solution)) {
+  <h3>{{ t.proposedSolution }}</h3>
+  <p><app-text [value]="p.solution" /></p>
+}
+
+@if (v.visible(p.objectives)) {
+  <h3>{{ t.objectives }}</h3>
+  <p class="note">{{ t.objectivesNote }}</p>
+  <ul class="bullets">
+    @for (o of p.objectives; track $index) {
+      <li><app-text [value]="o" /></li>
+    }
+  </ul>
 }
 
 @if (v.visible(p.features)) {

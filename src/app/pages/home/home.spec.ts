@@ -46,7 +46,7 @@ describe('Home (office)', () => {
     const harness = await setup(true);
     await harness.navigateByUrl('/');
     const scene = el(harness).querySelector('app-office-scene');
-    for (const url of ['/about', '/projects', '/projects/project-one', '/contact', '/']) {
+    for (const url of ['/about', '/projects', '/projects/qatrat-hayat', '/contact', '/']) {
       await harness.navigateByUrl(url);
       expect(el(harness).querySelector('app-office-scene'), url).toBe(scene);
     }
@@ -54,10 +54,10 @@ describe('Home (office)', () => {
 
   it('opens a project case study on its own URL, next to its board', async () => {
     const harness = await setup(true);
-    await harness.navigateByUrl('/projects/project-one');
+    await harness.navigateByUrl('/projects/qatrat-hayat');
     expect(el(harness).querySelector('app-project-case-study')).not.toBeNull();
     expect(el(harness).querySelector('app-area-panel .back')?.getAttribute('href')).toBe('/projects');
-    expect(el(harness).querySelector('.board.is-active')?.getAttribute('data-board')).toBe('project-one');
+    expect(el(harness).querySelector('.board.is-active')?.getAttribute('data-board')).toBe('qatrat-hayat');
   });
 
   it('falls back to the project wall for an unknown project', async () => {
@@ -70,7 +70,7 @@ describe('Home (office)', () => {
   it('goes up one level with Escape: case study, project wall, overview', async () => {
     const harness = await setup(true);
     const router = TestBed.inject(Router);
-    await harness.navigateByUrl('/projects/project-one');
+    await harness.navigateByUrl('/projects/qatrat-hayat');
     escape();
     await harness.fixture.whenStable();
     expect(router.url).toBe('/projects');
@@ -89,17 +89,40 @@ describe('Home (office)', () => {
 
   it('never shows placeholder identifiers to visitors in production mode', async () => {
     const harness = await setup(false);
-    for (const url of ['/', '/about', '/experience', '/projects', '/engineering', '/cv', '/contact']) {
+    for (const url of ['/', '/about', '/experience', '/projects', '/engineering', '/cv', '/contact', '/projects/qatrat-hayat', '/projects/api-stress-lab', '/fr/projects/qatrat-hayat', '/fr/about']) {
       await harness.navigateByUrl(url);
       expect(el(harness).textContent, url).not.toMatch(/YOUR_[A-Z_]+/);
     }
-    expect(el(harness).querySelector('h1')?.textContent).toContain('Software development portfolio');
+    expect(el(harness).querySelector('h1')?.textContent).toContain('Hamza Lamin');
   });
 
-  it('shows placeholders as badges while previewing', async () => {
+  it('shows details still to confirm as badges while previewing', async () => {
     const harness = await setup(true);
-    await harness.navigateByUrl('/');
-    expect(el(harness).querySelector('h1 .placeholder-badge')?.textContent).toContain('YOUR_NAME');
+    await harness.navigateByUrl('/projects/qatrat-hayat');
+    expect(el(harness).querySelector('app-project-case-study .placeholder-badge')?.textContent).toContain('YOUR_PROJECT');
+  });
+
+  it('opens a real project from its URL, with only verified links', async () => {
+    const harness = await setup(false);
+    await harness.navigateByUrl('/projects/api-stress-lab');
+    expect(heading(harness)).toContain('API Stress Lab');
+    const links = [...el(harness).querySelectorAll('app-project-case-study a')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['https://github.com/hamzalamin/API-StressLab', 'https://hamzalamin.github.io/api-stress-lab-docs/']);
+
+    await harness.navigateByUrl('/projects/qatrat-hayat');
+    expect(heading(harness)).toContain('Qatrat Hayat');
+    expect(el(harness).querySelector('[lang="ar"]')?.textContent).toContain('قطرة حياة');
+    expect(el(harness).querySelectorAll('app-project-case-study a').length).toBe(0);
+  });
+
+  it('switches the content with the language', async () => {
+    const harness = await setup(false);
+    await harness.navigateByUrl('/experience');
+    expect(el(harness).querySelector('.timeline .item-title')?.textContent).toContain('Software Developer');
+    await harness.navigateByUrl('/fr/experience');
+    expect(el(harness).querySelector('.timeline .item-title')?.textContent).toContain('Développeur logiciel');
+    await harness.navigateByUrl('/fr/projects/itlens');
+    expect(el(harness).textContent).toContain('Développée selon les principes du développement piloté par les tests.');
   });
 
   it('serves the French interface under /fr', async () => {

@@ -57,6 +57,17 @@
                 <p><app-text [value]="para" /></p>
               }
             }
+            @if (pr.languages?.length) {
+              <h3>{{ t.reception.languages }}</h3>
+              <dl class="languages">
+                @for (l of pr.languages; track l.name) {
+                  <div>
+                    <dt>{{ l.name }}</dt>
+                    <dd>{{ l.level }}</dd>
+                  </div>
+                }
+              </dl>
+            }
           }
 
           @case ('workstation') {
@@ -71,6 +82,9 @@
                       <app-text [value]="e.organization" />
                       @if (content.visible(e.location)) {
                         · <app-text [value]="e.location" />
+                      }
+                      @if (content.visible(e.employment)) {
+                        · <app-text [value]="e.employment" />
                       }
                     </p>
                     <p class="item-date">
@@ -133,7 +147,15 @@
                   <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-project-link]="p.slug">
                     <span class="project-index" aria-hidden="true">{{ i + 1 }}</span>
                     <span class="project-body">
-                      <span class="item-title"><app-text [value]="p.name" /></span>
+                      <span class="item-title">
+                        <app-text [value]="p.name" />
+                        @if (p.nativeName; as n) {
+                          <span class="native" [attr.lang]="n.lang" [attr.dir]="n.dir ?? null">{{ n.text }}</span>
+                        }
+                      </span>
+                      @if (content.visible(p.category)) {
+                        <span class="project-category"><app-text [value]="p.category" /></span>
+                      }
                       @if (content.visible(p.summary)) {
                         <span class="project-summary"><app-text [value]="p.summary" /></span>
                       }
@@ -143,6 +165,12 @@
                 </li>
               }
             </ol>
+            @if (githubProfile(); as url) {
+              <a class="more-link" [href]="url" target="_blank" rel="noopener me">
+                {{ t.projects.moreOnGithub }}
+                <app-icon name="external" />
+              </a>
+            }
           }
 
           @case ('engineering') {
@@ -264,6 +292,15 @@
                     {{ copied() ? t.lounge.copied : t.lounge.copy }}
                   </button>
                 }
+              </div>
+            }
+            @if (content.real(ct.phone); as phone) {
+              <div class="contact-row">
+                <app-icon name="phone" />
+                <div class="contact-body">
+                  <p class="item-sub">{{ t.lounge.phone }}</p>
+                  <a class="contact-value" [href]="telHref(phone)">{{ phone }}</a>
+                </div>
               </div>
             }
             @if (links().length) {
