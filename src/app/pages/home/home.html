@@ -1,13 +1,26 @@
 @let t = lang.t();
 @let p = content.profile();
 
-<section class="office" [class.has-panel]="!!activeArea()" [attr.aria-label]="t.home.eyebrow">
-  <app-office-scene class="scene" [active]="activeArea()" [insets]="sceneInsets()" [overviewInsets]="overviewInsets()" />
+<section class="office" [class.has-panel]="!!activeArea()" [style.--panel-w.px]="panelWidth()" [attr.aria-label]="t.home.eyebrow">
+  <app-office-scene class="scene" [active]="activeArea()" [project]="project()?.slug ?? null" [insets]="sceneInsets()" />
 
-  @if (introOpen()) {
-    <div class="intro" #intro>
+  <!-- Welcome popup: opens by itself on the first visit only. Kept in the DOM
+       (closed) so the heading and introduction stay part of the page. -->
+  <dialog
+    #welcome
+    class="welcome"
+    aria-labelledby="welcome-title"
+    (close)="onWelcomeClosed()"
+    (click)="onDialogClick($event)"
+  >
+    <div class="welcome-card">
+      <button type="button" class="btn btn-ghost btn-icon welcome-close" (click)="closeWelcome()">
+        <app-icon name="close" />
+        <span class="visually-hidden">{{ t.office.close }}</span>
+      </button>
+
       <p class="eyebrow">{{ t.home.eyebrow }}</p>
-      <h1>
+      <h1 id="welcome-title">
         @if (content.visible(p.name)) {
           <app-text [value]="p.name" />
         } @else {
@@ -27,42 +40,39 @@
       </div>
 
       <ul class="quick-links">
-        <li><a [routerLink]="lang.path('/projects')">{{ t.nav.projects }}</a></li>
-        <li><a [routerLink]="lang.path('/cv')">{{ t.nav.cv }}</a></li>
-        <li><a [routerLink]="lang.path('/contact')">{{ t.nav.contact }}</a></li>
+        <li><a [routerLink]="areaPath('projects')" (click)="closeWelcome('none')">{{ t.home.quick.projects }}</a></li>
+        <li><a [routerLink]="areaPath('library')" (click)="closeWelcome('none')">{{ t.home.quick.cv }}</a></li>
+        <li><a [routerLink]="areaPath('lounge')" (click)="closeWelcome('none')">{{ t.home.quick.contact }}</a></li>
       </ul>
     </div>
-  } @else {
-    <div class="hint" role="status">
-      <app-icon name="compass" />
-      <span>{{ t.home.hint }}</span>
-      <button type="button" class="btn btn-ghost hint-btn" (click)="introOpen.set(true)">{{ t.home.showIntro }}</button>
-    </div>
-  }
+  </dialog>
+
+  <!-- Collapsed welcome: a small button that reopens the popup. -->
+  <div class="welcome-dock" [class.is-expanded]="hintExpanded()" [class.is-hidden]="welcomeOpen()">
+    <button
+      #welcomeButton
+      type="button"
+      class="welcome-button"
+      [attr.aria-label]="t.home.showIntro"
+      aria-haspopup="dialog"
+      (click)="openWelcome()"
+    >
+      <app-icon name="info" />
+    </button>
+    <span class="welcome-hint" role="status">
+      @if (hintExpanded()) {
+        {{ t.home.hint }}
+      }
+    </span>
+    <span class="welcome-tooltip" aria-hidden="true">{{ t.home.showIntro }}</span>
+  </div>
 
   @if (activeArea(); as area) {
-    <app-area-panel class="panel" [area]="area" />
+    <app-area-panel class="panel" animate.leave="panel-leave" [area]="area" [project]="project()" [projectMissing]="projectMissing()" />
   }
-</section>
 
-<section class="directory" aria-labelledby="directory-title">
-  <div class="directory-head">
-    <h2 id="directory-title">{{ t.home.directoryTitle }}</h2>
-    <p>{{ t.home.directoryText }}</p>
-  </div>
-  <ol class="directory-list">
-    @for (area of areas; track area.id; let i = $index) {
-      <li>
-        <a class="directory-card" [routerLink]="lang.path(area.route)">
-          <span class="directory-index" aria-hidden="true">{{ i + 1 }}</span>
-          <span class="directory-body">
-            <span class="directory-name">{{ t.areas[area.id].name }}</span>
-            <span class="directory-section">{{ t.areas[area.id].section }}</span>
-            <span class="directory-blurb">{{ t.areas[area.id].blurb }}</span>
-          </span>
-          <app-icon name="arrow-right" />
-        </a>
-      </li>
-    }
-  </ol>
+  <!-- Small screens: the directory sits under the drawing. -->
+  <nav class="mobile-directory" [attr.aria-label]="t.office.mapLabel">
+    <app-office-directory />
+  </nav>
 </section>

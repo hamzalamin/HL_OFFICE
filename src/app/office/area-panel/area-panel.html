@@ -1,92 +1,316 @@
-<section class="panel" [attr.aria-labelledby]="'area-heading'">
+@let t = lang.t();
+
+<section class="panel" [class.is-case]="!!project()" aria-labelledby="area-heading">
   <header class="panel-head">
-    <p class="eyebrow">{{ position() }}</p>
-    <a class="close btn btn-ghost btn-icon" [routerLink]="lang.path('/')" [attr.aria-label]="lang.t().office.close">
+    @if (project()) {
+      <a class="back" [routerLink]="areaPath('projects')">
+        <app-icon name="arrow-left" />
+        {{ backToWall() }}
+      </a>
+    } @else {
+      <p class="eyebrow">{{ position() }}</p>
+    }
+    <a class="close btn btn-ghost btn-icon" [routerLink]="lang.path('/')" [attr.aria-label]="t.office.close" [attr.title]="t.office.close">
       <app-icon name="close" />
     </a>
   </header>
 
-  <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
-  <p class="section-name">{{ strings().section }}</p>
-  <p class="blurb">{{ strings().blurb }}</p>
+  <div class="body" #body>
+    @if (project(); as p) {
+      <h2 id="area-heading" #heading tabindex="-1"><app-text [value]="p.name" /></h2>
+      <app-project-case-study [project]="p" />
+    } @else {
+      <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
+      <p class="section-name">{{ strings().section }}</p>
+      <p class="blurb">{{ strings().blurb }}</p>
 
-  <div class="preview">
-    @switch (area()) {
-      @case ('reception') {
-        @let p = content.profile();
-        @if (content.visible(p.name)) {
-          <p class="preview-title"><app-text [value]="p.name" /></p>
-        }
-        @if (content.visible(p.title)) {
-          <p class="preview-sub"><app-text [value]="p.title" /></p>
-        }
-        @if (content.visible(p.introduction)) {
-          <p><app-text [value]="p.introduction" /></p>
-        }
-      }
-      @case ('workstation') {
-        <ul class="chips">
-          @for (g of content.content().skills; track $index) {
-            @if (content.visible(g.name)) {
-              <li><app-text [value]="g.name" /></li>
+      @if (isEmpty()) {
+        <p class="empty">{{ t.office.empty }}</p>
+      } @else {
+        @switch (area()) {
+          @case ('reception') {
+            <!-- Reception: introduction and professional profile -->
+            @let pr = profile();
+            <div class="card profile">
+              @if (content.visible(pr.name)) {
+                <p class="card-title"><app-text [value]="pr.name" /></p>
+              }
+              @if (content.visible(pr.title)) {
+                <p class="card-sub"><app-text [value]="pr.title" /></p>
+              }
+              @if (content.visible(pr.location) || content.visible(pr.availability)) {
+                <p class="meta">
+                  @if (content.visible(pr.location)) {
+                    <span><app-text [value]="pr.location" /></span>
+                  }
+                  @if (content.visible(pr.availability)) {
+                    <span class="status"><app-text [value]="pr.availability" /></span>
+                  }
+                </p>
+              }
+              @if (content.visible(pr.introduction)) {
+                <p class="lead"><app-text [value]="pr.introduction" /></p>
+              }
+            </div>
+            @for (para of pr.about; track $index) {
+              @if (content.visible(para)) {
+                <p><app-text [value]="para" /></p>
+              }
             }
           }
-        </ul>
-      }
-      @case ('projects') {
-        @if (content.projects().length) {
-          <ul class="link-list">
-            @for (p of content.projects(); track p.slug) {
-              <li>
-                <a [routerLink]="lang.path('/projects/' + p.slug)">
-                  <app-text [value]="p.name" />
-                  <app-icon name="arrow-right" />
-                </a>
-              </li>
+
+          @case ('workstation') {
+            <!-- Workstation: experience, then skills -->
+            @if (experience().length) {
+              <h3>{{ t.workstation.experience }}</h3>
+              <ol class="timeline">
+                @for (e of experience(); track $index) {
+                  <li>
+                    <p class="item-title"><app-text [value]="e.role" /></p>
+                    <p class="item-sub">
+                      <app-text [value]="e.organization" />
+                      @if (content.visible(e.location)) {
+                        · <app-text [value]="e.location" />
+                      }
+                    </p>
+                    <p class="item-date">
+                      <app-text [value]="e.start" /> –
+                      @if (e.end) {
+                        <app-text [value]="e.end" />
+                      } @else {
+                        {{ t.workstation.present }}
+                      }
+                    </p>
+                    @if (content.visible(e.summary)) {
+                      <p><app-text [value]="e.summary" /></p>
+                    }
+                    @if (content.visible(e.highlights)) {
+                      <ul class="bullets">
+                        @for (h of e.highlights; track $index) {
+                          <li><app-text [value]="h" /></li>
+                        }
+                      </ul>
+                    }
+                    @if (content.visible(e.technologies)) {
+                      <ul class="chips" [attr.aria-label]="t.workstation.technologies">
+                        @for (tech of e.technologies; track $index) {
+                          <li><app-text [value]="tech" /></li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ol>
             }
-          </ul>
-        }
-      }
-      @case ('library') {
-        <ul class="plain-list">
-          @for (e of content.content().education; track $index) {
-            @if (content.visible(e.degree)) {
-              <li><app-text [value]="e.degree" /></li>
+            @if (skills().length) {
+              <h3>{{ t.workstation.skills }}</h3>
+              <dl class="skills">
+                @for (g of skills(); track $index) {
+                  <div>
+                    <dt><app-text [value]="g.name" /></dt>
+                    <dd>
+                      <ul class="chips">
+                        @for (s of g.skills; track $index) {
+                          <li><app-text [value]="s" /></li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+              </dl>
             }
           }
-        </ul>
+
+          @case ('projects') {
+            <!-- Project wall: one board per project -->
+            @if (projectMissing()) {
+              <p class="notice" role="status">{{ t.projects.notFound }}</p>
+            }
+            <p class="hint">{{ t.projects.pick }}</p>
+            <ol class="project-list">
+              @for (p of content.projects(); track p.slug; let i = $index) {
+                <li>
+                  <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-project-link]="p.slug">
+                    <span class="project-index" aria-hidden="true">{{ i + 1 }}</span>
+                    <span class="project-body">
+                      <span class="item-title"><app-text [value]="p.name" /></span>
+                      @if (content.visible(p.summary)) {
+                        <span class="project-summary"><app-text [value]="p.summary" /></span>
+                      }
+                      <span class="project-open">{{ t.projects.openCaseStudy }} <app-icon name="arrow-right" /></span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ol>
+          }
+
+          @case ('engineering') {
+            <!-- Meeting room: decisions and challenges across projects -->
+            <p class="hint">{{ t.engineering.intro }}</p>
+            @for (d of discussions(); track d.project.slug) {
+              <article class="discussion">
+                <p class="discussion-source">
+                  {{ t.engineering.fromProject }}
+                  <a [routerLink]="projectPath(d.project.slug)"><app-text [value]="d.project.name" /></a>
+                </p>
+                @for (dec of d.decisions; track $index) {
+                  <div class="card">
+                    <p class="item-title"><app-text [value]="dec.title" /></p>
+                    <dl class="facts">
+                      @if (content.visible(dec.context)) {
+                        <dt>{{ t.caseStudy.context }}</dt>
+                        <dd><app-text [value]="dec.context" /></dd>
+                      }
+                      <dt>{{ t.caseStudy.decision }}</dt>
+                      <dd><app-text [value]="dec.decision" /></dd>
+                      @if (content.visible(dec.tradeoffs)) {
+                        <dt>{{ t.caseStudy.tradeoffs }}</dt>
+                        <dd><app-text [value]="dec.tradeoffs" /></dd>
+                      }
+                    </dl>
+                  </div>
+                }
+                @for (ch of d.challenges; track $index) {
+                  <div class="card">
+                    <p class="item-title"><app-text [value]="ch.challenge" /></p>
+                    <dl class="facts">
+                      <dt>{{ t.caseStudy.solution }}</dt>
+                      <dd><app-text [value]="ch.solution" /></dd>
+                    </dl>
+                  </div>
+                }
+              </article>
+            }
+          }
+
+          @case ('library') {
+            <!-- Library: the CV document, education, certificates -->
+            <div class="document">
+              <app-icon name="file" />
+              <div class="document-body">
+                <p class="item-title">{{ t.library.cvTitle }}</p>
+                @if (content.visible(cv().updated)) {
+                  <p class="item-date">{{ t.library.updated }} <app-text [value]="cv().updated" /></p>
+                }
+                @if (content.real(cv().file); as file) {
+                  <a class="btn btn-primary" [href]="'/' + file" download>
+                    {{ t.library.download }}
+                  </a>
+                } @else {
+                  <p class="item-sub">{{ t.library.cvPending }}</p>
+                }
+              </div>
+            </div>
+
+            @if (education().length) {
+              <h3>{{ t.library.education }}</h3>
+              <ol class="timeline">
+                @for (e of education(); track $index) {
+                  <li>
+                    <p class="item-title"><app-text [value]="e.degree" /></p>
+                    <p class="item-sub"><app-text [value]="e.institution" /></p>
+                    @if (content.visible(e.start) || content.visible(e.end)) {
+                      <p class="item-date"><app-text [value]="e.start" /> – <app-text [value]="e.end" /></p>
+                    }
+                    @if (content.visible(e.description)) {
+                      <p><app-text [value]="e.description" /></p>
+                    }
+                  </li>
+                }
+              </ol>
+            }
+
+            @if (certifications().length) {
+              <h3>{{ t.library.certifications }}</h3>
+              <ul class="plain-list">
+                @for (c of certifications(); track $index) {
+                  <li>
+                    <p class="item-title"><app-text [value]="c.name" /></p>
+                    <p class="item-sub">
+                      <app-text [value]="c.issuer" />
+                      @if (content.visible(c.date)) {
+                        · <app-text [value]="c.date" />
+                      }
+                    </p>
+                    @if (content.real(c.credentialUrl); as url) {
+                      <a [href]="url" target="_blank" rel="noopener">{{ t.library.credential }} <app-icon name="external" /></a>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          }
+
+          @case ('lounge') {
+            <!-- Lounge: contact details -->
+            @let ct = contact();
+            @if (content.visible(ct.message)) {
+              <p class="lead"><app-text [value]="ct.message" /></p>
+            }
+            @if (content.visible(ct.email)) {
+              <div class="contact-row">
+                <app-icon name="mail" />
+                <div class="contact-body">
+                  <p class="item-sub">{{ t.lounge.email }}</p>
+                  @if (content.real(ct.email); as email) {
+                    <a class="contact-value" [href]="'mailto:' + email">{{ email }}</a>
+                  } @else {
+                    <p class="contact-value"><app-text [value]="ct.email" /></p>
+                  }
+                </div>
+                @if (content.real(ct.email); as email) {
+                  <button type="button" class="btn btn-secondary copy" (click)="copyEmail(email)">
+                    {{ copied() ? t.lounge.copied : t.lounge.copy }}
+                  </button>
+                }
+              </div>
+            }
+            @if (links().length) {
+              <h3>{{ t.lounge.links }}</h3>
+              <ul class="link-list">
+                @for (l of links(); track $index) {
+                  <li>
+                    @if (content.real(l.url); as url) {
+                      <a [href]="url" target="_blank" rel="noopener me">
+                        {{ l.label }}
+                        <app-icon name="external" />
+                      </a>
+                    } @else {
+                      <span class="link-placeholder">{{ l.label }} <app-text [value]="l.url" /></span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            @if (content.visible(ct.location)) {
+              <p class="item-sub">{{ t.lounge.location }} <app-text [value]="ct.location" /></p>
+            }
+          }
+        }
       }
-      @case ('lounge') {
-        @let c = content.content().contact;
-        @if (content.visible(c.message)) {
-          <p><app-text [value]="c.message" /></p>
-        }
-        @if (content.visible(c.email)) {
-          <p class="preview-sub"><app-text [value]="c.email" /></p>
-        }
+
+      <!-- Essential information is always one step away, wherever you are. -->
+      @if (area() === 'reception') {
+        <div class="actions">
+          <a class="btn btn-primary" [routerLink]="areaPath('projects')">{{ t.reception.seeProjects }} <app-icon name="arrow-right" /></a>
+          <a class="btn btn-secondary" [routerLink]="areaPath('library')">{{ t.reception.viewCv }}</a>
+          <a class="btn btn-secondary" [routerLink]="areaPath('lounge')">{{ t.reception.getInTouch }}</a>
+        </div>
       }
     }
   </div>
 
-  <div class="actions">
-    @for (link of links(); track link.key; let first = $first) {
-      <a class="btn" [class.btn-primary]="first" [class.btn-secondary]="!first" [routerLink]="lang.path(link.path)">
-        {{ lang.t().nav[link.key] }}
-        @if (first) {
-          <app-icon name="arrow-right" />
-        }
+  @if (!project()) {
+    <nav class="stepper" [attr.aria-label]="t.office.mapLabel">
+      <a class="btn btn-ghost" [routerLink]="areaPath(prev())">
+        <app-icon name="arrow-left" />
+        <span class="visually-hidden">{{ t.office.previous }}: </span>{{ t.areas[prev()].name }}
       </a>
-    }
-  </div>
-
-  <nav class="stepper" [attr.aria-label]="lang.t().office.mapLabel">
-    <a class="btn btn-ghost" [routerLink]="lang.path('/')" [queryParams]="{ area: prev() }">
-      <app-icon name="arrow-left" />
-      <span class="visually-hidden">{{ lang.t().office.previous }}: </span>{{ lang.t().areas[prev()].name }}
-    </a>
-    <a class="btn btn-ghost" [routerLink]="lang.path('/')" [queryParams]="{ area: next() }">
-      <span class="visually-hidden">{{ lang.t().office.next }}: </span>{{ lang.t().areas[next()].name }}
-      <app-icon name="arrow-right" />
-    </a>
-  </nav>
+      <a class="btn btn-ghost" [routerLink]="areaPath(next())">
+        <span class="visually-hidden">{{ t.office.next }}: </span>{{ t.areas[next()].name }}
+        <app-icon name="arrow-right" />
+      </a>
+    </nav>
+  }
 </section>

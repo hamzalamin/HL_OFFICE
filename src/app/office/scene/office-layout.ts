@@ -1,4 +1,4 @@
-import { Bounds, SceneObject, footprint, project, screenRect } from '../engine/iso';
+import { Bounds, Point, SceneObject, footprint, project, screenRect } from '../engine/iso';
 import { depthSort } from '../engine/depth-sort';
 import { AREAS, AreaDef, AreaId, OFFICE } from './areas';
 import * as F from './furniture';
@@ -8,6 +8,14 @@ import * as F from './furniture';
  * computed once at module load and is pure data, so it renders identically on
  * the server (prerender) and in the browser.
  */
+
+/** Boards on the back wall of the project area, one per project: [x0, x1]. */
+const PROJECT_BOARDS = [
+  [13, 17],
+  [18, 22],
+  [23, 27],
+] as const;
+const BOARD_Z = [2.2, 4.8] as const;
 
 function furnish(id: AreaId): SceneObject[] {
   switch (id) {
@@ -36,9 +44,7 @@ function furnish(id: AreaId): SceneObject[] {
       ];
     case 'projects':
       return [
-        F.projectBoardOnY(13, 17, 2.2, 4.8, 0),
-        F.projectBoardOnY(18, 22, 2.2, 4.8, 1),
-        F.projectBoardOnY(23, 27, 2.2, 4.8, 2),
+        ...PROJECT_BOARDS.map(([x0, x1], i) => F.projectBoardOnY(x0, x1, BOARD_Z[0], BOARD_Z[1], i)),
         F.cabinet(13, 0.1, 14, 0.9, 1.3, 'wood', 's'),
         F.plant(14, 0.25, 'bush', 1.3),
         F.plant(25.4, 0.25, 'bush', 1.3),
@@ -138,12 +144,38 @@ export interface AreaGeometry {
   label: { x: number; y: number };
 }
 
+/** A project board: the camera frames it and it can be selected directly. */
+export interface ProjectSlot {
+  /** Screen-space rectangle framing the board and the monitor below it. */
+  frame: { x: number; y: number; w: number; h: number };
+  /** Board face polygon, used as the pointer target and highlight. */
+  hit: string;
+  /** Label anchor above the board, in screen units. */
+  pin: { x: number; y: number };
+}
+
 export interface OfficeModel {
   shell: SceneObject[];
   groups: RenderGroup[];
   areas: Record<AreaId, AreaGeometry>;
   /** Screen-space rectangle framing the whole office for the overview. */
   overview: { x: number; y: number; w: number; h: number };
+  /** Project boards, in content order: project N is shown on board N. */
+  projectSlots: ProjectSlot[];
+}
+
+function polygon(points: Point[]): string {
+  return points.map(([a, b]) => `${Math.round(a * 10) / 10},${Math.round(b * 10) / 10}`).join(' ');
+}
+
+function projectSlot([x0, x1]: readonly [number, number]): ProjectSlot {
+  const [z0, z1] = BOARD_Z;
+  const [px, py] = project((x0 + x1) / 2, 0, z1);
+  return {
+    frame: screenRect({ x: x0, y: 0, z: 1.2, w: x1 - x0, d: 3.8, h: z1 - 1.2 }),
+    hit: polygon([project(x0, 0.06, z0), project(x1, 0.06, z0), project(x1, 0.06, z1), project(x0, 0.06, z1)]),
+    pin: { x: px, y: py },
+  };
 }
 
 function areaBounds(a: AreaDef): Bounds {
@@ -187,7 +219,7 @@ export function buildOffice(): OfficeModel {
 
   const overview = screenRect({ x: -0.45, y: -0.45, z: -0.7, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: OFFICE.wallH + 0.7 });
 
-  return { shell, groups: depthSort(groups), areas, overview };
+  return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot) };
 }
 
 export const OFFICE_MODEL: OfficeModel = buildOffice();

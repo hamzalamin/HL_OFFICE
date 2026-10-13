@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-export type IconName = 'menu' | 'close' | 'arrow-right' | 'arrow-left' | 'compass' | 'play' | 'file' | 'globe' | 'external' | 'mail' | 'pause';
+export type IconName = 'menu' | 'close' | 'arrow-right' | 'arrow-left' | 'compass' | 'play' | 'file' | 'globe' | 'external' | 'mail' | 'pause' | 'info';
 
 /** Small inline stroke icons (24×24 grid). Decorative: always aria-hidden. */
 @Component({
@@ -42,6 +42,10 @@ export type IconName = 'menu' | 'close' | 'arrow-right' | 'arrow-left' | 'compas
         }
         @case ('external') {
           <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+        }
+        @case ('info') {
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v5M12 7.5v.01" />
         }
         @case ('mail') {
           <rect x="3" y="5" width="18" height="14" rx="2" />

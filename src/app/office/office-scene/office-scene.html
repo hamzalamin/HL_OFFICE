@@ -1,26 +1,14 @@
-<div
-  #viewport
-  class="viewport"
-  [class.ready]="ready()"
-  [class.has-focus]="!!focusArea()"
-  [class.has-emphasis]="!!emphasis()"
->
+<div #viewport class="viewport" [class.ready]="ready()" [class.has-focus]="!!active()" [class.has-emphasis]="!!emphasis()">
   <div class="camera" [attr.style]="cameraStyle()">
     <div class="stage">
-      <svg
-        class="scene"
-        [attr.viewBox]="viewBox"
-        aria-hidden="true"
-        focusable="false"
-        (click)="onSceneClick($event)"
-      >
+      <svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
         <g class="shell" [appSceneShapes]="model.shell"></g>
         @for (g of model.groups; track g.key) {
           @if (g.area; as area) {
             <g
               class="area"
               [attr.data-area]="area.id"
-              [class.is-active]="focusArea() === area.id"
+              [class.is-active]="active() === area.id"
               [class.is-emphasis]="emphasis() === area.id"
               (click)="open(area.id)"
               (pointerenter)="hovered.set(area.id)"
@@ -33,22 +21,30 @@
             <g class="decor" [appSceneShapes]="g.objects"></g>
           }
         }
+
+        <!-- Project boards: selectable on their own, drawn over the wall. -->
+        <g class="boards" [class.is-dimmed]="!!active() && active() !== 'projects'">
+          @for (b of boards(); track b.slug) {
+            <polygon
+              class="board"
+              [attr.data-board]="b.slug"
+              [attr.points]="b.slot.hit"
+              [class.is-active]="project() === b.slug"
+              [class.is-emphasis]="hoveredBoard() === b.slug"
+              (click)="openProject(b.slug)"
+              (pointerenter)="hoveredBoard.set(b.slug); hovered.set('projects')"
+              (pointerleave)="hoveredBoard.set(null); hovered.set(null)"
+            />
+          }
+        </g>
       </svg>
 
       <nav class="labels" [attr.aria-label]="lang.t().office.mapLabel">
         <ol>
           @for (area of areas; track area.id; let i = $index) {
-            <li
-              class="pin"
-              [class.is-active]="focusArea() === area.id"
-              [class.is-emphasis]="emphasis() === area.id"
-              [style.left.%]="labelLeft(area.id)"
-              [style.top.%]="labelTop(area.id)"
-            >
+            <li class="pin" [class.is-emphasis]="emphasis() === area.id" [style.left.%]="left(model.areas[area.id].label)" [style.top.%]="top(model.areas[area.id].label)">
               <a
-                [routerLink]="lang.path('/')"
-                [queryParams]="{ area: area.id }"
-                [attr.aria-current]="active() === area.id ? 'location' : null"
+                [routerLink]="areaPath(area.id)"
                 [attr.data-area-link]="area.id"
                 (pointerenter)="hovered.set(area.id)"
                 (pointerleave)="hovered.set(null)"
@@ -65,6 +61,35 @@
           }
         </ol>
       </nav>
+
+      @if (boards().length) {
+        <nav class="board-labels" [class.is-shown]="active() === 'projects'" [attr.aria-label]="lang.t().office.projectsLabel">
+          <ol>
+            @for (b of boards(); track b.slug) {
+              <li
+                class="board-pin"
+                [class.is-active]="project() === b.slug"
+                [class.is-emphasis]="hoveredBoard() === b.slug"
+                [style.left.%]="left(b.slot.pin)"
+                [style.top.%]="top(b.slot.pin)"
+              >
+                <a
+                  [routerLink]="projectPath(b.slug)"
+                  [attr.data-board-link]="b.slug"
+                  [attr.aria-current]="project() === b.slug ? 'page' : null"
+                  (pointerenter)="hoveredBoard.set(b.slug)"
+                  (pointerleave)="hoveredBoard.set(null)"
+                  (focus)="hoveredBoard.set(b.slug)"
+                  (blur)="hoveredBoard.set(null)"
+                >
+                  <span class="board-index" aria-hidden="true">{{ b.n }}</span>
+                  <span class="board-name"><app-text [value]="b.name" /></span>
+                </a>
+              </li>
+            }
+          </ol>
+        </nav>
+      }
     </div>
   </div>
 </div>

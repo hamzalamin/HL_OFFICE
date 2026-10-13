@@ -1,0 +1,92 @@
+// Typography and building blocks shared by everything shown in the panel.
+
+h3 {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.lead {
+  font-size: 1.0625rem;
+  font-weight: 550;
+}
+
+.item-title {
+  font-weight: 700;
+}
+
+.item-sub {
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.item-date {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--color-accent-strong);
+}
+
+.card {
+  display: grid;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding: 0.2rem 0.625rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+}
+
+.bullets {
+  margin: 0;
+  padding-left: 1.125rem;
+  display: grid;
+  gap: 0.25rem;
+
+  li::marker {
+    color: var(--color-accent);
+  }
+}
+
+.facts {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+
+  dt {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  dd {
+    margin: 0;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}

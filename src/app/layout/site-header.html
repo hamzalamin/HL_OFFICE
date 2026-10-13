@@ -1,7 +1,8 @@
-<a class="skip-link" href="#main">{{ lang.t().site.skipToContent }}</a>
+@let t = lang.t();
+<a class="skip-link" href="#main">{{ t.site.skipToContent }}</a>
 
 <header class="header">
-  <a class="brand" [routerLink]="lang.path('/')">
+  <a class="brand" [routerLink]="lang.path('/')" [attr.title]="t.site.overview">
     <span class="brand-mark" aria-hidden="true">
       @if (initials()) {
         {{ initials() }}
@@ -14,70 +15,44 @@
       }
     </span>
     <span class="brand-name">{{ brand() }}</span>
+    <span class="visually-hidden"> — {{ t.site.overview }}</span>
   </a>
 
-  <nav class="nav" [attr.aria-label]="lang.t().site.mainNav">
-    <ul>
-      @for (item of items; track item.key) {
-        <li>
-          <a
-            [routerLink]="lang.path(item.path)"
-            routerLinkActive="is-active"
-            ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="activeOptions(item)"
-            >{{ lang.t().nav[item.key] }}</a
-          >
-        </li>
-      }
-    </ul>
-  </nav>
-
   <div class="actions">
+    <div class="directory">
+      <button
+        #toggle
+        type="button"
+        class="btn btn-ghost directory-btn"
+        [attr.aria-expanded]="directoryOpen()"
+        aria-controls="office-directory"
+        (click)="directoryOpen.set(!directoryOpen())"
+      >
+        <app-icon name="compass" />
+        <span class="directory-label">{{ t.site.directory }}</span>
+      </button>
+      <div id="office-directory" class="directory-menu" [class.is-open]="directoryOpen()" [attr.inert]="directoryOpen() ? null : ''">
+        <p class="directory-hint">{{ t.site.directoryHint }}</p>
+        <nav [attr.aria-label]="t.office.mapLabel">
+          <app-office-directory />
+        </nav>
+      </div>
+    </div>
+
     <a
       class="lang-switch"
       [routerLink]="lang.switchUrl(lang.lang() === 'en' ? 'fr' : 'en')"
       [attr.hreflang]="lang.lang() === 'en' ? 'fr' : 'en'"
       [attr.lang]="lang.lang() === 'en' ? 'fr' : 'en'"
-      [attr.title]="lang.t().site.otherLanguage"
+      [attr.title]="t.site.otherLanguage"
     >
       <app-icon name="globe" />
       <span class="lang-code">{{ lang.lang() === 'en' ? 'FR' : 'EN' }}</span>
-      <span class="visually-hidden">{{ lang.t().site.otherLanguage }}</span>
+      <span class="visually-hidden">{{ t.site.otherLanguage }}</span>
     </a>
-    <a class="btn btn-primary cv-btn" [routerLink]="lang.path('/cv')" routerLinkActive="is-active">
+    <a class="btn btn-primary cv-btn" [routerLink]="lang.path(cvPath)" routerLinkActive="is-active" ariaCurrentWhenActive="location">
       <app-icon name="file" />
-      {{ lang.t().nav.cv }}
+      {{ t.site.cv }}
     </a>
-    <button
-      type="button"
-      class="btn btn-ghost btn-icon menu-btn"
-      [attr.aria-expanded]="menuOpen()"
-      aria-controls="mobile-menu"
-      (click)="menuOpen.set(!menuOpen())"
-    >
-      <app-icon [name]="menuOpen() ? 'close' : 'menu'" />
-      <span class="visually-hidden">{{ menuOpen() ? lang.t().site.closeMenu : lang.t().site.openMenu }}</span>
-    </button>
   </div>
 </header>
-
-<div id="mobile-menu" class="mobile-menu" [class.is-open]="menuOpen()" [attr.inert]="menuOpen() ? null : ''">
-  <nav [attr.aria-label]="lang.t().site.mainNav">
-    <ul>
-      @for (item of items; track item.key) {
-        <li>
-          <a
-            [routerLink]="lang.path(item.path)"
-            routerLinkActive="is-active"
-            ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="activeOptions(item)"
-            >{{ lang.t().nav[item.key] }}</a
-          >
-        </li>
-      }
-      <li>
-        <a [routerLink]="lang.path('/cv')" routerLinkActive="is-active" ariaCurrentWhenActive="page">{{ lang.t().nav.cv }}</a>
-      </li>
-    </ul>
-  </nav>
-</div>

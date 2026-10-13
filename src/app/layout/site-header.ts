@@ -1,30 +1,37 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, computed, effect, inject, signal } from '@angular/core';
-import { IsActiveMatchOptions, NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ContentService } from '../core/content/content.service';
 import { LanguageService } from '../core/i18n/language.service';
+import { OfficeDirectory } from '../office/office-directory/office-directory';
+import { AREA_BY_ID } from '../office/scene/areas';
 import { Icon } from './icon';
-import { NAV_ITEMS, NavItem } from './nav-items';
 
-const EXACT: IsActiveMatchOptions = { paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' };
-const SUBSET: IsActiveMatchOptions = { ...EXACT, paths: 'subset' };
-
+/**
+ * Discreet global actions only: the office itself is the navigation. The
+ * brand returns to the office overview; the directory is the conventional
+ * alternative to exploring the drawing.
+ */
 @Component({
   selector: 'app-site-header',
-  imports: [RouterLink, RouterLinkActive, Icon],
+  imports: [RouterLink, RouterLinkActive, Icon, OfficeDirectory],
   templateUrl: './site-header.html',
   styleUrl: './site-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'menuOpen.set(false)' },
+  host: {
+    '(document:keydown.escape)': 'onEscape($event)',
+    '(document:click)': 'onDocumentClick($event)',
+  },
 })
 export class SiteHeader {
   protected readonly lang = inject(LanguageService);
   private readonly content = inject(ContentService);
-  private readonly document = inject(DOCUMENT);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly toggle = viewChild.required<ElementRef<HTMLButtonElement>>('toggle');
 
-  protected readonly items = NAV_ITEMS;
-  protected readonly menuOpen = signal(false);
+  protected readonly cvPath = AREA_BY_ID.library.route;
+  protected readonly directoryOpen = signal(false);
 
   /** Brand shows the real name once provided, otherwise a neutral label. */
   protected readonly brand = computed(() => this.content.real(this.content.profile().name) ?? this.lang.t().site.brandFallback);
@@ -39,21 +46,24 @@ export class SiteHeader {
       .toUpperCase();
   });
 
-  protected activeOptions(item: NavItem): IsActiveMatchOptions {
-    return item.exact ? EXACT : SUBSET;
-  }
-
   constructor() {
     inject(Router)
       .events.pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.menuOpen.set(false));
+      .subscribe(() => this.directoryOpen.set(false));
+  }
 
-    // Prevent background scrolling while the mobile menu is open.
-    effect(() => {
-      this.document.body.style.overflow = this.menuOpen() ? 'hidden' : '';
-    });
+  /** Escape closes the directory first (and nothing else). */
+  protected onEscape(event: Event): void {
+    if (!this.directoryOpen()) return;
+    event.preventDefault();
+    this.directoryOpen.set(false);
+    this.toggle().nativeElement.focus();
+  }
+
+  protected onDocumentClick(event: MouseEvent): void {
+    if (this.directoryOpen() && !this.host.nativeElement.contains(event.target as Node)) this.directoryOpen.set(false);
   }
 }

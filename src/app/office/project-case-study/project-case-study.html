@@ -1,0 +1,145 @@
+@let t = lang.t().caseStudy;
+@let p = project();
+@let v = content;
+
+@if (v.visible(p.summary)) {
+  <p class="lead"><app-text [value]="p.summary" /></p>
+}
+
+@if (v.visible(p.period) || v.visible(p.role)) {
+  <dl class="meta-grid">
+    @if (v.visible(p.period)) {
+      <div>
+        <dt>{{ t.period }}</dt>
+        <dd><app-text [value]="p.period" /></dd>
+      </div>
+    }
+    @if (v.visible(p.role)) {
+      <div>
+        <dt>{{ t.role }}</dt>
+        <dd><app-text [value]="p.role" /></dd>
+      </div>
+    }
+  </dl>
+}
+
+@if (v.real(p.repositoryUrl) || v.real(p.demoUrl)) {
+  <div class="actions">
+    @if (v.real(p.demoUrl); as url) {
+      <a class="btn btn-primary" [href]="url" target="_blank" rel="noopener">{{ t.demo }} <app-icon name="external" /></a>
+    }
+    @if (v.real(p.repositoryUrl); as url) {
+      <a class="btn btn-secondary" [href]="url" target="_blank" rel="noopener">{{ t.repository }} <app-icon name="external" /></a>
+    }
+  </div>
+}
+
+@if (v.visible(p.stack)) {
+  <h3>{{ t.stack }}</h3>
+  <ul class="chips">
+    @for (s of p.stack; track $index) {
+      <li><app-text [value]="s" /></li>
+    }
+  </ul>
+}
+
+@if (v.visible(p.problem)) {
+  <h3>{{ t.problem }}</h3>
+  <p><app-text [value]="p.problem" /></p>
+}
+
+@if (v.visible(p.features)) {
+  <h3>{{ t.features }}</h3>
+  <ul class="bullets">
+    @for (f of p.features; track $index) {
+      <li><app-text [value]="f" /></li>
+    }
+  </ul>
+}
+
+@if (v.visible(p.contribution)) {
+  <h3>{{ t.contribution }}</h3>
+  <p><app-text [value]="p.contribution" /></p>
+}
+
+@if (v.visible(p.implementation)) {
+  <h3>{{ t.implementation }}</h3>
+  <ul class="bullets">
+    @for (i of p.implementation; track $index) {
+      <li><app-text [value]="i" /></li>
+    }
+  </ul>
+}
+
+@if (v.visible(p.decisions)) {
+  <h3>{{ t.decisions }}</h3>
+  @for (d of p.decisions; track $index) {
+    <div class="card">
+      <p class="item-title"><app-text [value]="d.title" /></p>
+      <dl class="facts">
+        @if (v.visible(d.context)) {
+          <dt>{{ t.context }}</dt>
+          <dd><app-text [value]="d.context" /></dd>
+        }
+        <dt>{{ t.decision }}</dt>
+        <dd><app-text [value]="d.decision" /></dd>
+        @if (v.visible(d.tradeoffs)) {
+          <dt>{{ t.tradeoffs }}</dt>
+          <dd><app-text [value]="d.tradeoffs" /></dd>
+        }
+      </dl>
+    </div>
+  }
+}
+
+@if (v.visible(p.challenges)) {
+  <h3>{{ t.challenges }}</h3>
+  @for (c of p.challenges; track $index) {
+    <div class="card">
+      <p class="item-title"><app-text [value]="c.challenge" /></p>
+      <dl class="facts">
+        <dt>{{ t.solution }}</dt>
+        <dd><app-text [value]="c.solution" /></dd>
+      </dl>
+    </div>
+  }
+}
+
+@if (p.screenshots?.length) {
+  <h3>{{ t.screenshots }}</h3>
+  @for (s of p.screenshots; track s.src) {
+    <figure class="shot">
+      <img [src]="'/' + s.src" [alt]="s.alt" loading="lazy" />
+      @if (s.caption) {
+        <figcaption>{{ s.caption }}</figcaption>
+      }
+    </figure>
+  }
+}
+
+@if (v.visible(p.results)) {
+  <h3>{{ t.results }}</h3>
+  <ul class="bullets">
+    @for (r of p.results; track $index) {
+      <li><app-text [value]="r" /></li>
+    }
+  </ul>
+}
+
+@if (v.visible(p.lessons)) {
+  <h3>{{ t.lessons }}</h3>
+  <ul class="bullets">
+    @for (l of p.lessons; track $index) {
+      <li><app-text [value]="l" /></li>
+    }
+  </ul>
+}
+
+@if (v.visible(p.improvements)) {
+  <h3>{{ t.improvements }}</h3>
+  <ul class="bullets">
+    @for (i of p.improvements; track $index) {
+      <li><app-text [value]="i" /></li>
+    }
+  </ul>
+}
