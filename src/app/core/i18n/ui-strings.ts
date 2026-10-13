@@ -14,14 +14,10 @@ interface AreaStrings {
 
 export interface UiStrings {
   site: {
-    brandFallback: string;
-    overview: string;
     skipToContent: string;
-    directory: string;
-    directoryHint: string;
     language: string;
-    otherLanguage: string;
-    cv: string;
+    languages: Record<Lang, string>;
+    downloadCv: string;
   };
   home: {
     eyebrow: string;
@@ -83,14 +79,10 @@ export interface UiStrings {
 
 const en: UiStrings = {
   site: {
-    brandFallback: 'Portfolio',
-    overview: 'Office overview',
     skipToContent: 'Skip to content',
-    directory: 'Directory',
-    directoryHint: 'Every area of the office and what you will find there.',
     language: 'Language',
-    otherLanguage: 'Français',
-    cv: 'CV',
+    languages: { en: 'English', fr: 'Français' },
+    downloadCv: 'Download CV',
   },
   home: {
     eyebrow: 'Welcome to the office',
@@ -194,14 +186,10 @@ const en: UiStrings = {
 
 const fr: UiStrings = {
   site: {
-    brandFallback: 'Portfolio',
-    overview: 'Vue d’ensemble du bureau',
     skipToContent: 'Aller au contenu',
-    directory: 'Plan',
-    directoryHint: 'Chaque espace du bureau et ce que vous y trouverez.',
     language: 'Langue',
-    otherLanguage: 'English',
-    cv: 'CV',
+    languages: { en: 'English', fr: 'Français' },
+    downloadCv: 'Télécharger le CV',
   },
   home: {
     eyebrow: 'Bienvenue au bureau',

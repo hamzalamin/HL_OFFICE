@@ -4,7 +4,7 @@
 
 .office {
   position: relative;
-  height: calc(100svh - var(--header-h));
+  height: 100svh;
   min-height: 560px;
   overflow: hidden;
   background:
@@ -226,7 +226,8 @@ h1 {
 
 .panel {
   position: absolute;
-  top: 1rem;
+  // Leaves the corner to the language and CV icons.
+  top: calc(0.75rem + 44px + 0.75rem);
   right: 1rem;
   bottom: 1rem;
   z-index: 10;
@@ -293,7 +294,7 @@ h1 {
 @media (max-width: 899px) {
   .office {
     height: auto;
-    min-height: calc(100svh - var(--header-h));
+    min-height: 100svh;
     overflow: visible;
     display: flex;
     flex-direction: column;
