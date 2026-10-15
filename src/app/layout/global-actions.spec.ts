@@ -6,9 +6,9 @@ import { ContentService } from '../core/content/content.service';
 import { GlobalActions } from './global-actions';
 
 describe('GlobalActions', () => {
-  async function render(cvFile?: string) {
+  async function render(cvFiles?: Record<string, string>) {
     const providers: unknown[] = [provideRouter(routes)];
-    if (cvFile) providers.push({ provide: ContentService, useValue: { content: signal({ cv: { file: cvFile } }), real: (v: unknown) => v } });
+    providers.push({ provide: ContentService, useValue: { content: signal({ cv: { files: cvFiles } }), real: (v: unknown) => v } });
     TestBed.configureTestingModule({ providers: providers as never[] });
     const fixture = TestBed.createComponent(GlobalActions);
     await fixture.whenStable();
@@ -38,11 +38,23 @@ describe('GlobalActions', () => {
     expect(menu.hasAttribute('inert')).toBe(true);
   });
 
-  it('offers the CV download only when the file exists', async () => {
-    expect((await render()).nativeElement.querySelector('[download]')).toBeNull();
+  it('offers the CV only when files exist, and asks which version', async () => {
+    expect((await render()).nativeElement.querySelector('.cv')).toBeNull();
     TestBed.resetTestingModule();
-    const link = (await render('cv/cv-en.pdf')).nativeElement.querySelector('[download]') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/cv/cv-en.pdf');
-    expect(link.getAttribute('aria-label')).toBe('Download CV');
+    const fixture = await render({ en: 'cv/HamzaLamin_SoftwareDeveloper_CV.pdf', fr: 'cv/HamzaLamin_DeveloppeurLogiciel_CV.pdf' });
+    const el = fixture.nativeElement as HTMLElement;
+    const button = el.querySelector<HTMLButtonElement>('.cv .action')!;
+    expect(button.getAttribute('aria-label')).toBe('Download CV');
+    button.click();
+    await fixture.whenStable();
+    const menu = el.querySelector('#cv-menu')!;
+    expect(menu.hasAttribute('inert')).toBe(false);
+    expect(menu.textContent).toContain('Which version would you like?');
+    const links = [...menu.querySelectorAll('a')];
+    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('download')])).toEqual([
+      ['/cv/HamzaLamin_SoftwareDeveloper_CV.pdf', 'HamzaLamin_SoftwareDeveloper_CV.pdf'],
+      ['/cv/HamzaLamin_DeveloppeurLogiciel_CV.pdf', 'HamzaLamin_DeveloppeurLogiciel_CV.pdf'],
+    ]);
+    expect(menu.querySelector('button')?.textContent).toContain('Both versions');
   });
 });

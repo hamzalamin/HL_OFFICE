@@ -178,8 +178,11 @@ export interface Contact {
 }
 
 export interface Cv {
-  /** Path under /public, e.g. "cv/cv-en.pdf". Omit until the file exists. */
-  file?: string;
+  /**
+   * The CV in each language, as paths under /public. Both versions are
+   * offered whatever the page language, so visitors can choose.
+   */
+  files?: Partial<Record<Lang, string>>;
   /** e.g. "October 2026" */
   updated?: string;
 }

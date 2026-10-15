@@ -18,6 +18,8 @@ export interface UiStrings {
     language: string;
     languages: Record<Lang, string>;
     downloadCv: string;
+    cvChoice: string;
+    cvBoth: string;
   };
   home: {
     eyebrow: string;
@@ -87,7 +89,6 @@ export interface UiStrings {
   };
   library: {
     cvTitle: string;
-    download: string;
     cvPending: string;
     updated: string;
     education: string;
@@ -104,6 +105,8 @@ const en: UiStrings = {
     language: 'Language',
     languages: { en: 'English', fr: 'Français' },
     downloadCv: 'Download CV',
+    cvChoice: 'Which version would you like?',
+    cvBoth: 'Both versions',
   },
   home: {
     eyebrow: 'Welcome to the office',
@@ -209,7 +212,6 @@ const en: UiStrings = {
   },
   library: {
     cvTitle: 'Curriculum vitae',
-    download: 'Download the CV (PDF)',
     cvPending: 'The PDF version will be available soon.',
     updated: 'Updated',
     education: 'Education',
@@ -230,6 +232,8 @@ const fr: UiStrings = {
     language: 'Langue',
     languages: { en: 'English', fr: 'Français' },
     downloadCv: 'Télécharger le CV',
+    cvChoice: 'Quelle version souhaitez-vous ?',
+    cvBoth: 'Les deux versions',
   },
   home: {
     eyebrow: 'Bienvenue au bureau',
@@ -335,7 +339,6 @@ const fr: UiStrings = {
   },
   library: {
     cvTitle: 'Curriculum vitae',
-    download: 'Télécharger le CV (PDF)',
     cvPending: 'La version PDF sera bientôt disponible.',
     updated: 'Mis à jour',
     education: 'Formation',

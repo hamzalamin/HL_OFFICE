@@ -181,8 +181,5 @@ export const CONTENT_FR: PortfolioContent = {
     ],
   },
 
-  cv: {
-    // Décommentez une fois le PDF placé dans public/cv/ :
-    // file: 'cv/cv-fr.pdf',
-  },
+  cv: { files: SHARED.cv },
 };

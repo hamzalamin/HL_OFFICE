@@ -193,10 +193,22 @@
                 @if (content.visible(cv().updated)) {
                   <p class="item-date">{{ t.library.updated }} <app-text [value]="cv().updated" /></p>
                 }
-                @if (content.real(cv().file); as file) {
-                  <a class="btn btn-primary" [href]="'/' + file" download>
-                    {{ t.library.download }}
-                  </a>
+                @if (cvFiles().length) {
+                  <p class="item-sub">{{ t.site.cvChoice }}</p>
+                  <div class="cv-options">
+                    @for (o of cvFiles(); track o.lang) {
+                      <a class="btn btn-secondary" [href]="o.href" [attr.download]="o.name" [attr.hreflang]="o.lang">
+                        <app-icon name="download" />
+                        {{ t.site.languages[o.lang] }}
+                      </a>
+                    }
+                    @if (cvFiles().length > 1) {
+                      <button type="button" class="btn btn-primary" (click)="downloadBothCvs()">
+                        <app-icon name="download" />
+                        {{ t.site.cvBoth }}
+                      </button>
+                    }
+                  </div>
                 } @else {
                   <p class="item-sub">{{ t.library.cvPending }}</p>
                 }

@@ -16,6 +16,7 @@ import { RouterLink } from '@angular/router';
 import { Experience, Project } from '../../../content';
 import { ContentService } from '../../core/content/content.service';
 import { ContentText } from '../../core/content/content-text';
+import { cvOptions, downloadAll } from '../../core/content/cv';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 import { journey, periodText } from '../career';
@@ -75,6 +76,7 @@ export class AreaPanel {
   protected readonly education = computed(() => this.c().education.filter((e) => this.content.visible(e.degree)));
   protected readonly certifications = computed(() => this.c().certifications.filter((e) => this.content.visible(e.name)));
   protected readonly cv = computed(() => this.c().cv);
+  protected readonly cvFiles = computed(() => cvOptions(this.cv()));
   protected readonly contact = computed(() => this.c().contact);
   protected readonly links = computed(() => this.contact().links.filter((l) => this.content.visible(l.url)));
   /** The GitHub profile, for visitors who want to see more work. */
@@ -127,6 +129,10 @@ export class AreaPanel {
 
   protected areaPath(id: AreaId): string {
     return this.lang.path(AREA_BY_ID[id].route);
+  }
+
+  protected downloadBothCvs(): void {
+    if (this.isBrowser) downloadAll(this.cvFiles(), document);
   }
 
   protected telHref(phone: string): string {

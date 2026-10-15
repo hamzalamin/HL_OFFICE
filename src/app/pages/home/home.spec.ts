@@ -202,6 +202,14 @@ describe('Home (office)', () => {
     });
   });
 
+  it('offers both CV versions in the library, in either language', async () => {
+    const harness = await setup(false);
+    await harness.navigateByUrl('/fr/cv');
+    const links = [...el(harness).querySelectorAll('.cv-options a')].map((x) => x.getAttribute('href'));
+    expect(links).toEqual(['/cv/HamzaLamin_SoftwareDeveloper_CV.pdf', '/cv/HamzaLamin_DeveloppeurLogiciel_CV.pdf']);
+    expect(el(harness).querySelector('.cv-options button')?.textContent).toContain('Les deux versions');
+  });
+
   it('still reports unknown pages', async () => {
     const harness = await setup(false);
     await harness.navigateByUrl('/basement');

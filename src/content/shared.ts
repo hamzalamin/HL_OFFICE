@@ -5,6 +5,11 @@
 export const SHARED = {
   email: 'hamzalamin80@gmail.com',
   phone: '+212 639 621 650',
+  /** Named for whoever downloads them: name, title, CV. */
+  cv: {
+    en: 'cv/HamzaLamin_SoftwareDeveloper_CV.pdf',
+    fr: 'cv/HamzaLamin_DeveloppeurLogiciel_CV.pdf',
+  },
   links: {
     github: 'https://github.com/hamzalamin',
     linkedin: 'https://www.linkedin.com/in/hamza-lamin-a0440a296/',

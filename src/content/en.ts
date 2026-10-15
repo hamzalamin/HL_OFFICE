@@ -181,8 +181,5 @@ export const CONTENT_EN: PortfolioContent = {
     ],
   },
 
-  cv: {
-    // Uncomment once the PDF is in public/cv/:
-    // file: 'cv/cv-en.pdf',
-  },
+  cv: { files: SHARED.cv },
 };
