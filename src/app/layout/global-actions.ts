@@ -22,7 +22,8 @@ type Menu = 'lang' | 'cv';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'onEscape($event)',
-    '(document:click)': 'onDocumentClick($event)',
+    // pointerdown, not click: iOS sends no click for taps on plain content.
+    '(document:pointerdown)': 'onOutside($event)',
   },
   template: `
     @let t = lang.t().site;
@@ -122,8 +123,7 @@ type Menu = 'lang' | 'cv';
       padding: 0;
       border-radius: 50%;
       border: 1px solid var(--color-border);
-      background: color-mix(in oklab, var(--color-surface), transparent 6%);
-      backdrop-filter: blur(6px);
+      background: color-mix(in oklab, var(--color-surface), transparent 4%);
       color: var(--color-text);
       box-shadow: var(--shadow-pin);
       cursor: pointer;
@@ -305,7 +305,7 @@ export class GlobalActions {
     (menu === 'lang' ? this.langButton() : this.cvButton())?.nativeElement.focus();
   }
 
-  protected onDocumentClick(event: MouseEvent): void {
+  protected onOutside(event: Event): void {
     if (this.open() && !this.host.nativeElement.contains(event.target as Node)) this.close();
   }
 }

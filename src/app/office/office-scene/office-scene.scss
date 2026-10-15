@@ -19,7 +19,6 @@
 }
 
 .camera {
-  --k: 1;
   position: absolute;
   inset: 0;
   display: grid;
@@ -28,11 +27,28 @@
 }
 
 .ready .camera {
-  transition:
-    transform var(--camera-duration) var(--ease-camera),
-    --k var(--camera-duration) var(--ease-camera);
+  transition: transform var(--camera-duration) var(--ease-camera);
 }
 
+// While the camera moves, the office is moved as one finished picture (the
+// browser does not redraw thousands of shapes at every zoom step), and the
+// labels wait for the camera to arrive.
+.is-moving .camera {
+  will-change: transform;
+}
+
+.labels,
+.board-labels ol {
+  transition: opacity 200ms ease;
+}
+
+.is-moving .labels,
+.is-moving .board-labels ol {
+  opacity: 0;
+  transition: none;
+}
+
+// Sized from the measured viewport (office-scene.ts); this is the fallback.
 .stage {
   position: relative;
   width: min(100cqw, 100cqh * 4 / 3);
@@ -54,7 +70,6 @@
 
 .area {
   cursor: pointer;
-  transition: opacity 320ms ease;
 }
 
 .area-floor {
@@ -94,11 +109,6 @@
 .has-focus .exterior,
 .has-focus .walkers {
   opacity: 0.5;
-}
-
-.exterior,
-.walkers {
-  transition: opacity 320ms ease;
 }
 
 .walkers,
@@ -436,8 +446,9 @@
   text-overflow: ellipsis;
 }
 
-// Small screens: compact numbered markers; names are in the directory below.
-@container (max-width: 560px) {
+// Small screens: compact numbered markers, large enough for a finger (42 px);
+// the names are in the directory below.
+.compact {
   .board-name {
     display: none;
   }
@@ -456,8 +467,14 @@
     clip-path: inset(50%);
   }
   .pin-index {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.875rem;
+  }
+  .board-index {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.8125rem;
   }
 }
 

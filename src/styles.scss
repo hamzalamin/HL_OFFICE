@@ -157,6 +157,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  // Taps register at once: no wait for a possible double-tap zoom (iOS).
+  touch-action: manipulation;
 }
 
 body {

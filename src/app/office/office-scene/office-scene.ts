@@ -77,6 +77,7 @@ export class OfficeScene {
   private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly viewport = viewChild.required<ElementRef<HTMLElement>>('viewport');
+  private readonly cameraEl = viewChild.required<ElementRef<HTMLElement>>('cameraLayer');
   private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
   private readonly crowdLayers = viewChildren('crowdLayer', { read: ElementRef<SVGGElement> });
 
@@ -91,6 +92,15 @@ export class OfficeScene {
   protected readonly hoveredFolder = signal<string | null>(null);
   protected readonly size = signal({ w: 0, h: 0 });
   protected readonly ready = signal(false);
+  /** True while the camera travels (see the .is-moving styles). */
+  protected readonly moving = signal(false);
+  /** Small viewports: compact, finger-sized markers. */
+  protected readonly compact = computed(() => this.size().w > 0 && this.size().w < 560);
+  /** The 4:3 stage letterboxed into the measured viewport. */
+  protected readonly stageWidth = computed(() => {
+    const { w, h } = this.size();
+    return w > 0 ? Math.round(Math.min(w, (h * 4) / 3)) : null;
+  });
 
   protected readonly emphasis = computed(() => this.hovered() ?? this.active());
 
@@ -131,7 +141,8 @@ export class OfficeScene {
     const size = this.size();
     if (size.w === 0) return IDENTITY;
     const id = this.active();
-    if (!id) return frameTarget(size, this.model.overview, NO_INSETS, { min: 0.4, max: 1.8 }, 0);
+    // Small screens: a little room at the top so the finger-sized markers are not cut off.
+    if (!id) return frameTarget(size, this.model.overview, this.compact() ? { ...NO_INSETS, top: 22 } : NO_INSETS, { min: 0.4, max: 1.8 }, 0);
     if (id === 'meeting' && this.activeExperience()) return frameTarget(size, grow(this.model.meeting.frame, 12), this.insets(), { min: 0.5, max: 2.4 });
     const board = this.activeBoard();
     // A board is framed a little closer than its area, keeping its neighbours in view.
@@ -141,8 +152,15 @@ export class OfficeScene {
 
   protected readonly cameraStyle = computed(() => {
     const c = this.camera();
-    return `transform: translate(${c.x}px, ${c.y}px) scale(${c.k}); --k: ${c.k}`;
+    // The zoom (--k) is set on the label layers only (see the template): set
+    // here, every shape in the scene would inherit it and be restyled.
+    return `transform: translate(${c.x}px, ${c.y}px) scale(${c.k})`;
   });
+
+  /** Hover feedback is for mouse pointers only: on touch it would stick after a tap. */
+  protected mouse(event: PointerEvent): boolean {
+    return event.pointerType === 'mouse';
+  }
 
   protected left(p: { x: number }): number {
     return (p.x / VIEWBOX.w) * 100;
@@ -181,13 +199,49 @@ export class OfficeScene {
       // Enable camera transitions only after the first framing, so the page
       // does not animate on load.
       requestAnimationFrame(() => requestAnimationFrame(() => this.ready.set(true)));
+      this.trackCameraMoves();
       this.startCrowd();
     });
   }
 
+  /** Marks the camera as moving from each new framing until its transition ends. */
+  private trackCameraMoves(): void {
+    const el = this.cameraEl().nativeElement;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const done = () => {
+      clearTimeout(timer);
+      this.moving.set(false);
+    };
+    const onEnd = (e: TransitionEvent) => e.target === el && e.propertyName === 'transform' && done();
+    el.addEventListener('transitionend', onEnd);
+    let last = '';
+    const watch = effect(
+      () => {
+        const style = this.cameraStyle();
+        if (!this.ready() || style === last) {
+          last = style;
+          return;
+        }
+        last = style;
+        const ms = parseFloat(getComputedStyle(el).transitionDuration) * 1000;
+        if (!ms) return; // Reduced motion: the camera jumps.
+        this.moving.set(true);
+        clearTimeout(timer);
+        timer = setTimeout(done, ms + 120); // In case transitionend never comes.
+      },
+      { injector: this.injector },
+    );
+    this.destroyRef.onDestroy(() => {
+      watch.destroy();
+      clearTimeout(timer);
+      el.removeEventListener('transitionend', onEnd);
+    });
+  }
+
   /**
-   * People walk only when motion is welcome, and stand still while an area
-   * is open so nothing competes with the content.
+   * People walk only on larger screens with a mouse, when motion is welcome;
+   * they stand still while an area is open or the camera moves, so nothing
+   * competes with the content. Phones keep a still, light scene.
    */
   private startCrowd(): void {
     const [back, near, far] = this.crowdLayers().map((e) => e.nativeElement);
@@ -197,10 +251,11 @@ export class OfficeScene {
       far: this.ext.outer,
     });
     view.render();
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce), (hover: none), (max-width: 899px)').matches;
+    if (still) return;
     const running = effect(
       () => {
-        if (this.active()) view.stop();
+        if (this.active() || this.moving()) view.stop();
         else view.start();
       },
       { injector: this.injector },

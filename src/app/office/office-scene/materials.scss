@@ -210,19 +210,6 @@
     stroke: var(--o-fabric-terracotta);
   }
 
-  // Living details. Small, slow, and paused whenever an area is open.
-  .sway {
-    animation: sway 7s ease-in-out infinite alternate;
-  }
-  .s1 {
-    animation-duration: 8.5s;
-    animation-delay: -3s;
-  }
-  .s2 {
-    animation-duration: 6.2s;
-    animation-delay: -5s;
-  }
-
   .m-bag { --c: var(--o-bag); }
   .m-folder { --c: color-mix(in oklab, var(--o-accent), #fff 55%); }
   .m-folder-tab { --c: var(--o-accent); }
@@ -237,25 +224,7 @@
   }
 }
 
-.has-focus .scene {
-  .sway {
-    animation-play-state: paused;
-  }
-}
-
-@keyframes sway {
-  from {
-    transform: translateX(-0.8px);
-  }
-  to {
-    transform: translateX(0.8px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .scene .sway {
-    animation: none;
-  }
   .scene .seat {
     transition: none;
   }

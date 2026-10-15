@@ -1,6 +1,13 @@
-<div #viewport class="viewport" [class.ready]="ready()" [class.has-focus]="!!active()" [class.has-emphasis]="!!emphasis()">
-  <div class="camera" [attr.style]="cameraStyle()">
-    <div class="stage">
+<div
+  #viewport
+  class="viewport"
+  [class.ready]="ready()"
+  [class.is-moving]="moving()"
+  [class.compact]="compact()"
+  [class.has-focus]="!!active()"
+>
+  <div #cameraLayer class="camera" [attr.style]="cameraStyle()">
+    <div class="stage" [style.width.px]="stageWidth()">
       <svg #svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
         <!-- Outside, behind the building -->
         <g class="exterior" [appSceneShapes]="ext.ground"></g>
@@ -27,7 +34,7 @@
               [class.is-active]="active() === area.id"
               [class.is-emphasis]="emphasis() === area.id"
               (click)="open(area.id)"
-              (pointerenter)="hovered.set(area.id)"
+              (pointerenter)="mouse($event) && hovered.set(area.id)"
               (pointerleave)="hovered.set(null)"
             >
               <polygon class="area-floor" [attr.points]="g.footprint" />
@@ -74,7 +81,7 @@
           [class.is-emphasis]="emphasis() === 'reception' && !active()"
           [attr.points]="ext.entrance"
           (click)="enter()"
-          (pointerenter)="hovered.set('reception')"
+          (pointerenter)="mouse($event) && hovered.set('reception')"
           (pointerleave)="hovered.set(null)"
         />
 
@@ -101,7 +108,7 @@
               [class.is-active]="experience() === f.id"
               [class.is-emphasis]="hoveredFolder() === f.id"
               (click)="openExperience(f.id)"
-              (pointerenter)="hoveredFolder.set(f.id); hovered.set('meeting')"
+              (pointerenter)="mouse($event) && hoveredFolder.set(f.id); mouse($event) && hovered.set('meeting')"
               (pointerleave)="hoveredFolder.set(null); hovered.set(null)"
             />
           }
@@ -117,21 +124,21 @@
               [class.is-active]="project() === b.slug"
               [class.is-emphasis]="hoveredBoard() === b.slug"
               (click)="openProject(b.slug)"
-              (pointerenter)="hoveredBoard.set(b.slug); hovered.set('projects')"
+              (pointerenter)="mouse($event) && hoveredBoard.set(b.slug); mouse($event) && hovered.set('projects')"
               (pointerleave)="hoveredBoard.set(null); hovered.set(null)"
             />
           }
         </g>
       </svg>
 
-      <nav class="labels" [attr.aria-label]="lang.t().office.mapLabel">
+      <nav class="labels" [style.--k]="camera().k" [attr.aria-label]="lang.t().office.mapLabel">
         <ol>
           @for (area of areas; track area.id; let i = $index) {
             <li class="pin" [class.is-emphasis]="emphasis() === area.id" [style.left.%]="left(model.areas[area.id].label)" [style.top.%]="top(model.areas[area.id].label)">
               <a
                 [routerLink]="areaPath(area.id)"
                 [attr.data-area-link]="area.id"
-                (pointerenter)="hovered.set(area.id)"
+                (pointerenter)="mouse($event) && hovered.set(area.id)"
                 (pointerleave)="hovered.set(null)"
                 (focus)="hovered.set(area.id)"
                 (blur)="hovered.set(null)"
@@ -148,7 +155,7 @@
       </nav>
 
       @if (folders().length) {
-        <nav class="board-labels folder-labels" [class.is-shown]="active() === 'meeting'" [attr.aria-label]="lang.t().career.folders">
+        <nav class="board-labels folder-labels" [style.--k]="camera().k" [class.is-shown]="active() === 'meeting'" [attr.aria-label]="lang.t().career.folders">
           <ol>
             @for (f of folders(); track f.id) {
               <li
@@ -162,7 +169,7 @@
                   [routerLink]="experiencePath(f.id)"
                   [attr.data-folder-link]="f.id"
                   [attr.aria-current]="experience() === f.id ? 'page' : null"
-                  (pointerenter)="hoveredFolder.set(f.id)"
+                  (pointerenter)="mouse($event) && hoveredFolder.set(f.id)"
                   (pointerleave)="hoveredFolder.set(null)"
                   (focus)="hoveredFolder.set(f.id)"
                   (blur)="hoveredFolder.set(null)"
@@ -177,7 +184,7 @@
       }
 
       @if (boards().length) {
-        <nav class="board-labels" [class.is-shown]="active() === 'projects'" [attr.aria-label]="lang.t().office.projectsLabel">
+        <nav class="board-labels" [style.--k]="camera().k" [class.is-shown]="active() === 'projects'" [attr.aria-label]="lang.t().office.projectsLabel">
           <ol>
             @for (b of boards(); track b.slug) {
               <li
@@ -191,7 +198,7 @@
                   [routerLink]="projectPath(b.slug)"
                   [attr.data-board-link]="b.slug"
                   [attr.aria-current]="project() === b.slug ? 'page' : null"
-                  (pointerenter)="hoveredBoard.set(b.slug)"
+                  (pointerenter)="mouse($event) && hoveredBoard.set(b.slug)"
                   (pointerleave)="hoveredBoard.set(null)"
                   (focus)="hoveredBoard.set(b.slug)"
                   (blur)="hoveredBoard.set(null)"

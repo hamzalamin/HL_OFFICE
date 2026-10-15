@@ -120,23 +120,22 @@ export function tree(x: number, y: number, size = 1, kind: 'round' | 'column' = 
   const shapes: ShapeTree[] = [{ kind: 'ellipse', cx: px + 10 * size, cy: py, rx: 30 * size, ry: 13 * size, cls: 'shadow' }];
   shapes.push(box(x - 0.16, y - 0.16, G, 0.32, 0.32, trunkH, 'trunk'));
   const [cx, cy] = project(x, y, G + trunkH);
-  const sway = `sway s${Math.round(x + y) % 3}`;
   if (kind === 'round') {
     const tones = ['leaf-dark', 'leaf-dark', 'leaf-dark', 'leaf', 'leaf', 'leaf', 'leaf', 'leaf-light', 'leaf-light'];
-    shapes.push(blob(x, y, G + trunkH + 1.2 * size, 24 * size, 21 * size, `p m-leaf-dark ${sway}`));
+    shapes.push(blob(x, y, G + trunkH + 1.2 * size, 24 * size, 21 * size, `p m-leaf-dark`));
     tones.forEach((tone, i) => {
       const a = r() * Math.PI * 2;
       const d = (6 + r() * 10) * size;
       const rad = (9 + r() * 7) * size;
       const ex = cx + Math.cos(a) * d * 1.3;
       const ey = cy - 26 * size + Math.sin(a) * d - i * 1.2 * size;
-      shapes.push({ kind: 'ellipse', cx: round(ex), cy: round(ey), rx: round(rad + 2), ry: round(rad), cls: `p m-${tone} ${sway}` });
+      shapes.push({ kind: 'ellipse', cx: round(ex), cy: round(ey), rx: round(rad + 2), ry: round(rad), cls: `p m-${tone}` });
     });
   } else {
     for (let i = 0; i < 6; i++) {
       const w = (11 - Math.abs(i - 2) * 1.6) * size;
       const tone = i < 2 ? 'conifer-dark' : i < 4 ? 'conifer' : 'conifer-light';
-      shapes.push({ kind: 'ellipse', cx: round(cx + (r() - 0.5) * 3), cy: round(cy - 8 * size - i * 9 * size), rx: round(w), ry: round(w * 1.25), cls: `p m-${tone} ${sway}` });
+      shapes.push({ kind: 'ellipse', cx: round(cx + (r() - 0.5) * 3), cy: round(cy - 8 * size - i * 9 * size), rx: round(w), ry: round(w * 1.25), cls: `p m-${tone}` });
     }
   }
   return obj(b(x - 0.9 * size, y - 0.9 * size, G, 1.8 * size, 1.8 * size, 6 * size), shapes);

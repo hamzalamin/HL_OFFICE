@@ -34,8 +34,7 @@
   }
 
   &::backdrop {
-    background: rgb(29 33 40 / 0.28);
-    backdrop-filter: blur(3px);
+    background: rgb(29 33 40 / 0.35);
     animation: fade-in 300ms ease both;
   }
 }
@@ -318,12 +317,14 @@ h1 {
     left: 0.75rem;
   }
 
+  // The hint would cover much of the small drawing: keep it for screen
+  // readers only (the room list below already shows what to select).
   .welcome-hint {
-    white-space: normal;
-
-    .is-expanded & {
-      max-width: calc(100vw - 48px - 2.5rem);
-    }
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
   .panel {
