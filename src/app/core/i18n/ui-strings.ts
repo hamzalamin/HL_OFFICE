@@ -40,7 +40,25 @@ export interface UiStrings {
   };
   areas: Record<AreaId, AreaStrings>;
   reception: { seeProjects: string; viewCv: string; getInTouch: string; languages: string };
-  workstation: { experience: string; skills: string; present: string; technologies: string };
+  workstation: { skills: string };
+  career: {
+    journey: string;
+    intro: string;
+    present: string;
+    parallel: string;
+    overview: string;
+    details: string;
+    detailLevel: string;
+    responsibilities: string;
+    technologies: string;
+    context: string;
+    alsoAt: string;
+    open: string;
+    backToJourney: string;
+    clientProjects: string;
+    notFound: string;
+    folders: string;
+  };
   projects: { pick: string; openCaseStudy: string; notFound: string; moreOnGithub: string };
   caseStudy: {
     period: string;
@@ -67,7 +85,6 @@ export interface UiStrings {
     tradeoffs: string;
     solution: string;
   };
-  engineering: { intro: string; fromProject: string };
   library: {
     cvTitle: string;
     download: string;
@@ -115,18 +132,18 @@ const en: UiStrings = {
     },
     workstation: {
       name: 'Workstation',
-      section: 'Experience & skills',
-      blurb: 'The desk where the daily work happens: professional experience and the technologies behind it.',
+      section: 'Skills',
+      blurb: 'The desk where the daily work happens: the technologies and practices I work with.',
     },
     projects: {
       name: 'Project wall',
       section: 'Projects',
       blurb: 'One board per project. Open a board for the full case study.',
     },
-    engineering: {
+    meeting: {
       name: 'Meeting room',
-      section: 'Architecture & decisions',
-      blurb: 'Where decisions are made: technical challenges, architecture choices and their trade-offs.',
+      section: 'Professional experience',
+      blurb: 'The career presentation: positions, internships and freelance work.',
     },
     library: {
       name: 'Library',
@@ -140,7 +157,25 @@ const en: UiStrings = {
     },
   },
   reception: { seeProjects: 'See the projects', viewCv: 'View the CV', getInTouch: 'Get in touch', languages: 'Languages' },
-  workstation: { experience: 'Experience', skills: 'Skills', present: 'Present', technologies: 'Technologies' },
+  workstation: { skills: 'Skills' },
+  career: {
+    journey: 'Professional journey',
+    intro: 'Select a folder on the table, or a role below.',
+    present: 'Present',
+    parallel: 'In parallel',
+    overview: 'Overview',
+    details: 'Responsibilities & technologies',
+    detailLevel: 'Level of detail',
+    responsibilities: 'Responsibilities',
+    technologies: 'Technologies',
+    context: 'Context',
+    alsoAt: 'Also at {org}',
+    open: 'View details',
+    backToJourney: 'Back to the journey',
+    clientProjects: 'Client projects',
+    notFound: 'This experience is not in the presentation. Here is the full journey.',
+    folders: 'Experience folders on the table',
+  },
   projects: {
     pick: 'Select a board on the wall, or a project below.',
     openCaseStudy: 'Open the case study',
@@ -171,10 +206,6 @@ const en: UiStrings = {
     decision: 'Decision',
     tradeoffs: 'Trade-offs',
     solution: 'Solution',
-  },
-  engineering: {
-    intro: 'Decisions and challenges from the projects, gathered around one table.',
-    fromProject: 'From the project',
   },
   library: {
     cvTitle: 'Curriculum vitae',
@@ -227,18 +258,18 @@ const fr: UiStrings = {
     },
     workstation: {
       name: 'Poste de travail',
-      section: 'Expérience et compétences',
-      blurb: 'Le bureau du quotidien : l’expérience professionnelle et les technologies utilisées.',
+      section: 'Compétences',
+      blurb: 'Le bureau du quotidien : les technologies et les pratiques avec lesquelles je travaille.',
     },
     projects: {
       name: 'Mur des projets',
       section: 'Projets',
       blurb: 'Un tableau par projet. Ouvrez un tableau pour l’étude de cas complète.',
     },
-    engineering: {
+    meeting: {
       name: 'Salle de réunion',
-      section: 'Architecture et décisions',
-      blurb: 'Là où se prennent les décisions : défis techniques, choix d’architecture et compromis.',
+      section: 'Expérience professionnelle',
+      blurb: 'La présentation du parcours : postes, stages et travail freelance.',
     },
     library: {
       name: 'Bibliothèque',
@@ -252,7 +283,25 @@ const fr: UiStrings = {
     },
   },
   reception: { seeProjects: 'Voir les projets', viewCv: 'Consulter le CV', getInTouch: 'Prendre contact', languages: 'Langues' },
-  workstation: { experience: 'Expérience', skills: 'Compétences', present: 'Aujourd’hui', technologies: 'Technologies' },
+  workstation: { skills: 'Compétences' },
+  career: {
+    journey: 'Parcours professionnel',
+    intro: 'Sélectionnez un dossier sur la table, ou un poste ci-dessous.',
+    present: 'Aujourd’hui',
+    parallel: 'En parallèle',
+    overview: 'Aperçu',
+    details: 'Responsabilités et technologies',
+    detailLevel: 'Niveau de détail',
+    responsibilities: 'Responsabilités',
+    technologies: 'Technologies',
+    context: 'Contexte',
+    alsoAt: 'Également chez {org}',
+    open: 'Voir le détail',
+    backToJourney: 'Retour au parcours',
+    clientProjects: 'Projets clients',
+    notFound: 'Cette expérience ne figure pas dans la présentation. Voici le parcours complet.',
+    folders: 'Dossiers d’expérience sur la table',
+  },
   projects: {
     pick: 'Sélectionnez un tableau au mur, ou un projet ci-dessous.',
     openCaseStudy: 'Ouvrir l’étude de cas',
@@ -283,10 +332,6 @@ const fr: UiStrings = {
     decision: 'Décision',
     tradeoffs: 'Compromis',
     solution: 'Solution',
-  },
-  engineering: {
-    intro: 'Les décisions et les défis des projets, réunis autour d’une même table.',
-    fromProject: 'Projet',
   },
   library: {
     cvTitle: 'Curriculum vitae',

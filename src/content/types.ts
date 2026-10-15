@@ -36,19 +36,58 @@ export interface SkillGroup {
   skills: string[];
 }
 
+/**
+ * A professional experience. The array order is the display order (newest
+ * first); both languages must use the same ids and order.
+ */
 export interface Experience {
+  /** URL segment: /experience/<id>. Must be identical in every language. */
+  id: string;
   role: string;
+  /** Employer, or the kind of work (e.g. "Freelance"). */
   organization: string;
+  /** Short label for the folder on the meeting table, e.g. "Eurafric · Intern". */
+  label: string;
   location?: string;
-  /** Free text so you control the format, e.g. "2023" or "Jan 2023". */
-  start: string;
-  /** Omit for a current position. */
-  end?: string;
-  /** e.g. "Full-time (CDI)". */
+  /** e.g. "Full-time (CDI)", "Internship". */
   employment?: string;
-  summary?: string;
-  highlights?: string[];
+  /**
+   * Confirmed dates as free text (e.g. "September 2025"; omit `end` for a
+   * current position), or `null` when the dates are not confirmed: the
+   * experience is then shown without dates, never with invented ones.
+   */
+  period: { start: string; end?: string } | null;
+  /**
+   * `timeline`: a regular position on the career timeline.
+   * `parallel`: work that ran alongside other activities (e.g. freelance
+   * during studies and internships), drawn as a separate track.
+   */
+  track: 'timeline' | 'parallel';
+  /** For parallel work: what it ran alongside, e.g. "Alongside my studies and internships". */
+  alongside?: string;
+  /** For parallel work: ids of the timeline entries it overlapped; the track is drawn beside them. */
+  overlaps?: string[];
+  /** Project or product context, e.g. "Banking settlement system". */
+  context?: string;
+  /** e.g. "3+ client projects". Never a duration. */
+  scale?: string;
+  /** One or two sentences. */
+  overview: string;
+  responsibilities: string[];
+  /** Omit when they vary or are not confirmed. */
   technologies?: string[];
+  /** Note shown instead of a technology list, e.g. "Varies by project". */
+  technologiesNote?: string;
+  /** Individual pieces of work (e.g. freelance client projects), added once confirmed. */
+  projects?: ExperienceProject[];
+}
+
+export interface ExperienceProject {
+  title: string;
+  description?: string;
+  technologies?: string[];
+  url?: string;
+  screenshots?: Screenshot[];
 }
 
 export interface EngineeringDecision {

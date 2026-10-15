@@ -13,11 +13,13 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Project } from '../../../content';
+import { Experience, Project } from '../../../content';
 import { ContentService } from '../../core/content/content.service';
 import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
+import { journey, periodText } from '../career';
+import { ExperienceDetail } from '../experience-detail/experience-detail';
 import { ProjectCaseStudy } from '../project-case-study/project-case-study';
 import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 
@@ -28,7 +30,7 @@ import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
  */
 @Component({
   selector: 'app-area-panel',
-  imports: [RouterLink, Icon, ContentText, ProjectCaseStudy],
+  imports: [RouterLink, Icon, ContentText, ProjectCaseStudy, ExperienceDetail],
   templateUrl: './area-panel.html',
   styleUrl: './area-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +41,10 @@ export class AreaPanel {
   readonly project = input<Project | null>(null);
   /** A project URL that matches no project on the wall. */
   readonly projectMissing = input(false);
+  /** Experience opened in the meeting room. */
+  readonly experience = input<Experience | null>(null);
+  /** An experience URL that matches no experience. */
+  readonly experienceMissing = input(false);
 
   protected readonly lang = inject(LanguageService);
   protected readonly content = inject(ContentService);
@@ -59,23 +65,13 @@ export class AreaPanel {
   );
   protected readonly backToWall = computed(() => this.lang.t().office.backTo.replace('{place}', this.lang.t().areas.projects.name));
   /** Changes whenever the panel shows something else. */
-  private readonly view = computed(() => `${this.area()}/${this.project()?.slug ?? ''}`);
+  private readonly view = computed(() => `${this.area()}/${this.project()?.slug ?? this.experience()?.id ?? ''}`);
 
   // Content of each area, limited to what can be shown.
   private readonly c = computed(() => this.content.content());
   protected readonly profile = computed(() => this.c().profile);
-  protected readonly experience = computed(() => this.c().experience.filter((e) => this.content.visible(e.role)));
+  protected readonly journeyRows = computed(() => journey(this.c().experience.filter((e) => this.content.visible(e.role))));
   protected readonly skills = computed(() => this.c().skills.filter((g) => this.content.visible(g.skills)));
-  protected readonly discussions = computed(() =>
-    this.content
-      .projects()
-      .map((project) => ({
-        project,
-        decisions: (project.decisions ?? []).filter((d) => this.content.visible(d.decision)),
-        challenges: (project.challenges ?? []).filter((c) => this.content.visible(c.challenge)),
-      }))
-      .filter((d) => d.decisions.length || d.challenges.length),
-  );
   protected readonly education = computed(() => this.c().education.filter((e) => this.content.visible(e.degree)));
   protected readonly certifications = computed(() => this.c().certifications.filter((e) => this.content.visible(e.name)));
   protected readonly cv = computed(() => this.c().cv);
@@ -91,11 +87,11 @@ export class AreaPanel {
       case 'reception':
         return !v(this.profile().name) && !v(this.profile().introduction) && !v(this.profile().about);
       case 'workstation':
-        return !this.experience().length && !this.skills().length;
+        return !this.skills().length;
       case 'projects':
         return !this.content.projects().length;
-      case 'engineering':
-        return !this.discussions().length;
+      case 'meeting':
+        return !this.journeyRows().rows.length && !this.journeyRows().parallel.length;
       case 'library':
         return false; // The CV is always on the shelf, even before its PDF exists.
       case 'lounge':
@@ -137,6 +133,14 @@ export class AreaPanel {
     return 'tel:' + phone.replace(/[^\d+]/g, '');
   }
 
+  protected experiencePath(id: string): string {
+    return this.lang.path('/experience/' + id);
+  }
+
+  protected periodOf(e: Experience): string {
+    return periodText(e, this.lang.t());
+  }
+
   protected projectPath(slug: string): string {
     return this.lang.path('/projects/' + slug);
   }
@@ -157,9 +161,9 @@ export class AreaPanel {
     this.heading()?.nativeElement.focus({ preventScroll: true });
   }
 
-  /** Back from a case study: return focus to that project in the list. */
-  focusProject(slug: string): boolean {
-    const link = this.host.nativeElement.querySelector<HTMLElement>(`[data-project-link="${slug}"]`);
+  /** Back from a case study or an experience: return focus to it in the list. */
+  focusItem(id: string): boolean {
+    const link = this.host.nativeElement.querySelector<HTMLElement>(`[data-item-link="${id}"]`);
     link?.focus({ preventScroll: true });
     return !!link;
   }

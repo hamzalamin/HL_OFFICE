@@ -8,8 +8,15 @@ function projectParams(): Promise<Record<string, string>[]> {
   return Promise.resolve(slugs);
 }
 
+/** Every experience gets a prerendered page in the meeting room. */
+function experienceParams(): Promise<Record<string, string>[]> {
+  return Promise.resolve(CONTENT.en.experience.filter((e) => isProvided(e.role)).map((e) => ({ experience: e.id })));
+}
+
 export const serverRoutes: ServerRoute[] = [
   { path: 'projects/:slug', renderMode: RenderMode.Prerender, getPrerenderParams: projectParams },
   { path: 'fr/projects/:slug', renderMode: RenderMode.Prerender, getPrerenderParams: projectParams },
+  { path: 'experience/:experience', renderMode: RenderMode.Prerender, getPrerenderParams: experienceParams },
+  { path: 'fr/experience/:experience', renderMode: RenderMode.Prerender, getPrerenderParams: experienceParams },
   { path: '**', renderMode: RenderMode.Prerender },
 ];

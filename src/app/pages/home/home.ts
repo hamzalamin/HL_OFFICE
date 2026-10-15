@@ -21,7 +21,7 @@ import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 import { AreaPanel } from '../../office/area-panel/area-panel';
-import { OfficeFocus, readOfficeFocus, sameFocus } from '../../office/office-focus';
+import { OfficeFocus, focusItem, readOfficeFocus, sameFocus } from '../../office/office-focus';
 import { OfficeDirectory } from '../../office/office-directory/office-directory';
 import { Insets, NO_INSETS } from '../../office/office-scene/camera';
 import { OfficeScene } from '../../office/office-scene/office-scene';
@@ -74,6 +74,12 @@ export class Home {
     return slug ? (this.content.projects().find((p) => p.slug === slug) ?? null) : null;
   });
   protected readonly projectMissing = computed(() => !!this.focus().project && !this.project());
+  /** The opened experience, if its id matches one in the presentation. */
+  protected readonly experience = computed(() => {
+    const id = this.focus().experience;
+    return id ? (this.content.content().experience.find((e) => e.id === id) ?? null) : null;
+  });
+  protected readonly experienceMissing = computed(() => !!this.focus().experience && !this.experience());
 
   /**
    * The welcome popup opens by itself on the first visit only. Once closed it
@@ -90,10 +96,10 @@ export class Home {
 
   private readonly windowSize = signal({ w: 0, h: 0 });
 
-  /** Desktop panel width: a case study gets more room than an area. */
+  /** Desktop panel width: a case study gets more room; the career timeline a little. */
   protected readonly panelWidth = computed(() => {
-    if (!this.project()) return 400;
-    return Math.round(Math.min(620, Math.max(440, 0.44 * this.windowSize().w)));
+    if (this.project()) return Math.round(Math.min(620, Math.max(440, 0.44 * this.windowSize().w)));
+    return this.activeArea() === 'meeting' ? 440 : 400;
   });
 
   /**
@@ -134,7 +140,12 @@ export class Home {
       const name = this.content.real(p.name) ?? t.home.titleFallback;
       const area = this.activeArea();
       const project = this.project();
-      if (project) {
+      const experience = this.experience();
+      if (experience) {
+        const where = experience.role.toLowerCase().includes(experience.organization.toLowerCase()) ? '' : ` · ${experience.organization}`;
+        title.setTitle(`${experience.role}${where} · ${name}`);
+        meta.updateTag({ name: 'description', content: experience.overview });
+      } else if (project) {
         title.setTitle(`${this.content.real(project.name) ?? t.areas.projects.name} · ${name}`);
         meta.updateTag({ name: 'description', content: this.content.real(project.summary) ?? t.areas.projects.blurb });
       } else if (area) {
@@ -165,8 +176,10 @@ export class Home {
     if (current.area) {
       // On small screens the scene sits at the top of the page; bring it into view.
       if (!this.wide()) window.scrollTo({ top: 0, behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-      const backFromProject = prev.project && !current.project && current.area === prev.area;
-      if (backFromProject && this.panel()?.focusProject(prev.project!)) return;
+      // Back from a case study or an experience: return to it in the list.
+      const prevItem = focusItem(prev);
+      const backFromItem = prevItem && !focusItem(current) && current.area === prev.area;
+      if (backFromItem && this.panel()?.focusItem(prevItem)) return;
       this.panel()?.focusHeading();
     } else if (prev.area) {
       this.host.nativeElement.querySelector<HTMLElement>(`[data-area-link="${prev.area}"]`)?.focus({ preventScroll: true });
@@ -226,11 +239,11 @@ export class Home {
     return this.lang.path(AREA_BY_ID[id].route);
   }
 
-  /** Escape goes up one level: case study → project wall → office overview. */
+  /** Escape goes up one level: case study or experience → its room → office overview. */
   protected onEscape(event: Event): void {
     if (event.defaultPrevented || this.welcomeOpen()) return;
     const area = this.activeArea();
     if (!area) return;
-    this.router.navigateByUrl(this.focus().project ? this.areaPath(area) : this.lang.path('/'));
+    this.router.navigateByUrl(focusItem(this.focus()) ? this.areaPath(area) : this.lang.path('/'));
   }
 }

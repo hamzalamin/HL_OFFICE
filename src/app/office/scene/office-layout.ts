@@ -18,22 +18,25 @@ const PROJECT_BOARDS = [
 ] as const;
 const BOARD_Z = [2.2, 4.8] as const;
 
+/** The meeting room's presentation screen (left wall) and the folders on its table, one per experience. */
+const SCREEN = { y0: 2.2, y1: 6.6, z0: 2, z1: 4.6 } as const;
+const TABLE_Z = 1.25;
+const FOLDERS = [3.4, 4.75, 6.1, 7.45].map((x) => ({ x, y: 3.45 }));
+
 function furnish(id: AreaId): SceneObject[] {
   switch (id) {
-    case 'engineering':
+    case 'meeting':
       return [
         F.rug(0.3, 0.3, 10.8, 8.8, 'carpet-eng', false),
         F.whiteboardOnY(1.6, 7.2, 1.9, 4.5),
-        F.displayOnX(2.2, 6.6, 2, 4.6, 'slides'),
+        F.displayOnX(SCREEN.y0, SCREEN.y1, SCREEN.z0, SCREEN.z1, 'blank'),
         F.cabinet(7.8, 0.15, 2.6, 0.9, 1.3, 'white', 's'),
         F.plant(9.6, 0.2, 'bush', 1.3),
         F.chair(3.6, 2, 's', 'fabric-blue'),
         F.chair(5.4, 2, 's', 'fabric-blue'),
         F.chair(7.2, 2, 's', 'fabric-blue'),
         F.meetingTable(3, 3, 5.6, 2.6),
-        F.laptop(4.1, 3.4, 1.25),
-        F.notebook(6.3, 3.9, 1.25),
-        F.mug(7.6, 4.2, 1.25),
+        ...FOLDERS.map((f) => F.folder(f.x, f.y, TABLE_Z)),
         F.chair(8.9, 3.9, 'w', 'fabric-blue'),
         F.chair(3.6, 5.85, 'n', 'fabric-blue'),
         F.chair(5.4, 5.85, 'n', 'fabric-blue'),
@@ -156,6 +159,22 @@ export interface ProjectSlot {
   pin: { x: number; y: number };
 }
 
+/** A folder on the meeting table: selectable, with a label anchor. */
+export interface FolderSlot {
+  hit: string;
+  pin: { x: number; y: number };
+}
+
+/** The meeting room presentation: where the slide is drawn and what the camera frames. */
+export interface MeetingRoom {
+  /** SVG transform mapping slide units (84.8 × 44.9, origin top left) onto the screen surface. */
+  slide: string;
+  slideSize: { w: number; h: number };
+  /** Screen-space rectangle framing the screen and the table, for a selected experience. */
+  frame: { x: number; y: number; w: number; h: number };
+  folders: FolderSlot[];
+}
+
 export interface OfficeModel {
   shell: SceneObject[];
   groups: RenderGroup[];
@@ -166,6 +185,25 @@ export interface OfficeModel {
   projectSlots: ProjectSlot[];
   /** The city block around the building. */
   exterior: Exterior;
+  meeting: MeetingRoom;
+}
+
+function meetingRoom(): MeetingRoom {
+  // The inner screen surface (see displayOnX): on the x = 0 wall, screen-left is the high-y end.
+  const y0 = SCREEN.y0 + 0.08;
+  const y1 = SCREEN.y1 - 0.08;
+  const z0 = SCREEN.z0 + 0.08;
+  const z1 = SCREEN.z1 - 0.08;
+  const [ox, oy] = project(0.07, y1, z1);
+  // One slide unit along the wall = 1/20 world unit: (+0.866, −0.5) on screen; vertical units stay vertical.
+  const slide = `matrix(0.866 -0.5 0 1 ${Math.round(ox * 10) / 10} ${Math.round(oy * 10) / 10})`;
+  const slideSize = { w: Math.round((y1 - y0) * 200) / 10, h: Math.round((z1 - z0) * 0.92 * 200) / 10 };
+  const folders = FOLDERS.map(({ x, y }) => {
+    const z = TABLE_Z + 0.08;
+    const [px, py] = project(x + 0.5, y + 0.35, z + 0.1);
+    return { hit: polygon([project(x, y, z), project(x + 1, y, z), project(x + 1, y + 0.7, z), project(x, y + 0.7, z)]), pin: { x: px, y: py } };
+  });
+  return { slide, slideSize, frame: screenRect({ x: 0, y: 1.6, z: 0, w: 8.8, d: 5.4, h: SCREEN.z1 + 0.3 }), folders };
 }
 
 function polygon(points: Point[]): string {
@@ -226,7 +264,7 @@ export function buildOffice(): OfficeModel {
   // office itself gets as much of the screen as possible.
   const overview = screenRect({ x: -0.45, y: -0.45, z: -0.2, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: 5.2 });
 
-  return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot), exterior: buildExterior() };
+  return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot), exterior: buildExterior(), meeting: meetingRoom() };
 }
 
 export const OFFICE_MODEL: OfficeModel = buildOffice();

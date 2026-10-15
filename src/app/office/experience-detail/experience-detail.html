@@ -1,0 +1,105 @@
+@let t = lang.t().career;
+@let e = experience();
+
+<p class="org">
+  {{ e.organization }}
+  @if (e.employment) {
+    <span class="sep" aria-hidden="true">·</span> {{ e.employment }}
+  }
+</p>
+<p class="when" [class.is-parallel]="!e.period">{{ period() }}</p>
+@if (e.scale) {
+  <p class="scale">{{ e.scale }}</p>
+}
+
+<div class="tabs" role="tablist" [attr.aria-label]="t.detailLevel" (keydown)="onTabKey($event)">
+  @for (l of levels; track l) {
+    <button
+      #tab
+      type="button"
+      role="tab"
+      class="tab"
+      [id]="'xp-tab-' + l"
+      [attr.aria-selected]="level() === l"
+      [attr.aria-controls]="'xp-panel-' + l"
+      [tabindex]="level() === l ? 0 : -1"
+      (click)="level.set(l)"
+    >
+      {{ l === 'overview' ? t.overview : t.details }}
+    </button>
+  }
+</div>
+
+@if (level() === 'overview') {
+  <div class="tabpanel" role="tabpanel" id="xp-panel-overview" aria-labelledby="xp-tab-overview">
+    @if (e.context) {
+      <p class="context"><span>{{ t.context }}</span> {{ e.context }}</p>
+    }
+    <p class="lead">{{ e.overview }}</p>
+    @if (e.technologies?.length) {
+      <ul class="chips" [attr.aria-label]="t.technologies">
+        @for (tech of e.technologies; track tech) {
+          <li>{{ tech }}</li>
+        }
+      </ul>
+    }
+  </div>
+} @else {
+  <div class="tabpanel" role="tabpanel" id="xp-panel-details" aria-labelledby="xp-tab-details">
+    <h3>{{ t.responsibilities }}</h3>
+    <ul class="bullets">
+      @for (r of e.responsibilities; track $index) {
+        <li>{{ r }}</li>
+      }
+    </ul>
+    <h3>{{ t.technologies }}</h3>
+    @if (e.technologies?.length) {
+      <ul class="chips">
+        @for (tech of e.technologies; track tech) {
+          <li>{{ tech }}</li>
+        }
+      </ul>
+    } @else if (e.technologiesNote) {
+      <p class="note">{{ e.technologiesNote }}</p>
+    }
+    @if (projects().length) {
+      <h3>{{ t.clientProjects }}</h3>
+      <ul class="projects">
+        @for (p of projects(); track p.title) {
+          <li class="card">
+            <p class="item-title">
+              @if (p.url) {
+                <a [href]="p.url" target="_blank" rel="noopener">{{ p.title }} <app-icon name="external" /></a>
+              } @else {
+                {{ p.title }}
+              }
+            </p>
+            @if (p.description) {
+              <p>{{ p.description }}</p>
+            }
+            @if (p.technologies?.length) {
+              <ul class="chips">
+                @for (tech of p.technologies; track tech) {
+                  <li>{{ tech }}</li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}
+
+@if (siblings().length) {
+  <div class="also">
+    <p class="also-title">{{ t.alsoAt.replace('{org}', e.organization) }}</p>
+    @for (s of siblings(); track s.id) {
+      <a class="also-link" [routerLink]="path(s.id)" [attr.data-item-link]="s.id">
+        <span class="item-title">{{ s.role }}</span>
+        <span class="item-date">{{ periodOf(s) }}</span>
+        <app-icon name="arrow-right" />
+      </a>
+    }
+  </div>
+}

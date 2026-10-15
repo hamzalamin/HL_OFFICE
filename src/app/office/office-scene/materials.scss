@@ -224,6 +224,8 @@
   }
 
   .m-bag { --c: var(--o-bag); }
+  .m-folder { --c: color-mix(in oklab, var(--o-accent), #fff 55%); }
+  .m-folder-tab { --c: var(--o-accent); }
   .m-bag-strap { --c: color-mix(in oklab, var(--o-bag), #000 20%); }
 
   // A seat shows its sitter only while someone sits there.

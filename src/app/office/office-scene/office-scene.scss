@@ -277,7 +277,80 @@
   outline-offset: 3px;
 }
 
-// Board labels: only inside the project area.
+// ---------------------------------------------------------------------------
+// Meeting room: slide on the screen, folders on the table
+// ---------------------------------------------------------------------------
+
+.slide {
+  pointer-events: none;
+  font-family: var(--font-sans);
+
+  text {
+    fill: #eef4f6;
+  }
+}
+
+.slide-accent {
+  fill: var(--o-screen-hi);
+}
+
+.slide-kicker {
+  font-size: 3.2px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--o-screen-hi) !important;
+}
+
+.slide-title {
+  font-weight: 750;
+}
+
+.slide-sub {
+  opacity: 0.85;
+}
+
+.slide-meta {
+  font-weight: 650;
+  opacity: 0.85;
+}
+
+.slide-dots circle {
+  fill: color-mix(in oklab, #eef4f6, transparent 65%);
+
+  &.is-on {
+    fill: var(--o-screen-hi);
+  }
+}
+
+.folder-hit {
+  cursor: pointer;
+  fill: var(--color-accent);
+  fill-opacity: 0;
+  stroke: var(--color-accent);
+  stroke-opacity: 0;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  transition:
+    fill-opacity 200ms ease,
+    stroke-opacity 200ms ease;
+
+  &.is-emphasis {
+    fill-opacity: 0.18;
+    stroke-opacity: 0.9;
+  }
+
+  &.is-active {
+    fill-opacity: 0.12;
+    stroke-opacity: 1;
+  }
+}
+
+.folders.is-dimmed {
+  opacity: 0.5;
+}
+
+// Board and folder labels: only inside their area.
 .board-labels {
   visibility: hidden;
 
@@ -397,6 +470,7 @@
   .area-items,
   .area-floor,
   .board,
+  .folder-hit,
   .pin,
   .pin a,
   .board-pin,

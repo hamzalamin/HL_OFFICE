@@ -78,6 +78,35 @@
           (pointerleave)="hovered.set(null)"
         />
 
+        <!-- Meeting room: the presentation slide on the screen, and the folders on the table. -->
+        @let sl = slide();
+        <g class="slide" [attr.transform]="model.meeting.slide" aria-hidden="true">
+          <rect class="slide-accent" x="6" y="7" width="10" height="1.4" rx="0.7" />
+          <text class="slide-kicker" x="6" y="15">{{ sl.kicker }}</text>
+          <text class="slide-title" x="6" y="24" [attr.font-size]="sl.titleSize">{{ sl.title }}</text>
+          <text class="slide-sub" x="6" y="31" [attr.font-size]="sl.subSize">{{ sl.sub }}</text>
+          <text class="slide-meta" x="6" y="38" [attr.font-size]="sl.metaSize">{{ sl.meta }}</text>
+          <g class="slide-dots">
+            @for (f of folders(); track f.id; let i = $index) {
+              <circle [attr.cx]="model.meeting.slideSize.w - 6 - (folders().length - 1 - i) * 4" cy="7.7" r="1.2" [class.is-on]="sl.selected === f.id" />
+            }
+          </g>
+        </g>
+        <g class="folders" [class.is-dimmed]="!!active() && active() !== 'meeting'">
+          @for (f of folders(); track f.id) {
+            <polygon
+              class="folder-hit"
+              [attr.data-folder]="f.id"
+              [attr.points]="f.slot.hit"
+              [class.is-active]="experience() === f.id"
+              [class.is-emphasis]="hoveredFolder() === f.id"
+              (click)="openExperience(f.id)"
+              (pointerenter)="hoveredFolder.set(f.id); hovered.set('meeting')"
+              (pointerleave)="hoveredFolder.set(null); hovered.set(null)"
+            />
+          }
+        </g>
+
         <!-- Project boards: selectable on their own, drawn over the wall. -->
         <g class="boards" [class.is-dimmed]="!!active() && active() !== 'projects'">
           @for (b of boards(); track b.slug) {
@@ -117,6 +146,35 @@
           }
         </ol>
       </nav>
+
+      @if (folders().length) {
+        <nav class="board-labels folder-labels" [class.is-shown]="active() === 'meeting'" [attr.aria-label]="lang.t().career.folders">
+          <ol>
+            @for (f of folders(); track f.id) {
+              <li
+                class="board-pin"
+                [class.is-active]="experience() === f.id"
+                [class.is-emphasis]="hoveredFolder() === f.id"
+                [style.left.%]="left(f.slot.pin)"
+                [style.top.%]="top(f.slot.pin)"
+              >
+                <a
+                  [routerLink]="experiencePath(f.id)"
+                  [attr.data-folder-link]="f.id"
+                  [attr.aria-current]="experience() === f.id ? 'page' : null"
+                  (pointerenter)="hoveredFolder.set(f.id)"
+                  (pointerleave)="hoveredFolder.set(null)"
+                  (focus)="hoveredFolder.set(f.id)"
+                  (blur)="hoveredFolder.set(null)"
+                >
+                  <span class="board-index" aria-hidden="true">{{ f.n }}</span>
+                  <span class="board-name">{{ f.label }}</span>
+                </a>
+              </li>
+            }
+          </ol>
+        </nav>
+      }
 
       @if (boards().length) {
         <nav class="board-labels" [class.is-shown]="active() === 'projects'" [attr.aria-label]="lang.t().office.projectsLabel">

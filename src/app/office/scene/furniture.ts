@@ -40,7 +40,7 @@ function facetX(x: number, y0: number, y1: number, z0: number, z1: number): Face
     wallX(x, y1 - (y1 - y0) * u1, y1 - (y1 - y0) * u0, z1 - (z1 - z0) * v1, z1 - (z1 - z0) * v0, cls);
 }
 
-export type ScreenContent = 'app' | 'board' | 'slides' | 'standby' | 'docs';
+export type ScreenContent = 'app' | 'board' | 'slides' | 'standby' | 'docs' | 'blank';
 
 /** Calm, abstract screen layouts. No fake code or numbers: just interface structure. */
 function screenContent(f: Facet, kind: ScreenContent): Shape[] {
@@ -532,6 +532,15 @@ export function deskLamp(x: number, y: number, z: number): SceneObject {
 
 export function mug(x: number, y: number, z: number, mat: Material = 'mug'): SceneObject {
   return obj(b(x, y, z, 0.22, 0.22, 0.25), box(x, y, z, 0.22, 0.22, 0.25, mat));
+}
+
+/** A closed document folder lying on a table, with the edge of a sheet showing. */
+export function folder(x: number, y: number, z: number, w = 1.0, d = 0.7): SceneObject {
+  return obj(b(x, y, z, w, d, 0.07), [
+    box(x + 0.06, y + 0.05, z, w - 0.1, d - 0.08, 0.035, 'paper'),
+    box(x, y, z + 0.035, w, d, 0.035, 'folder'),
+    flat(x + 0.12, y + 0.12, x + 0.42, y + 0.2, z + 0.071, 'p m-folder-tab'),
+  ]);
 }
 
 /** Stack of paper or a document tray. */

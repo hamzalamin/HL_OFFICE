@@ -13,6 +13,7 @@ const officeRoutes: Routes = [
   { path: '', pathMatch: 'full', children: [] },
   ...AREAS.map((a) => ({ path: a.route.slice(1), data: { area: a.id }, children: [] })),
   { path: 'projects/:slug', data: { area: 'projects' }, children: [] },
+  { path: 'experience/:experience', data: { area: 'meeting' }, children: [] },
 ];
 
 /** English at the root, French under /fr (see LanguageService). */

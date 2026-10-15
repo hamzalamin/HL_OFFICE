@@ -82,14 +82,14 @@ describe('Home (office)', () => {
   it('shows full content in place instead of linking to section pages', async () => {
     const harness = await setup(true);
     await harness.navigateByUrl('/experience');
-    expect(el(harness).querySelector('app-area-panel .timeline')).not.toBeNull();
+    expect(el(harness).querySelector('app-area-panel .journey')).not.toBeNull();
     const hrefs = [...el(harness).querySelectorAll('app-area-panel a')].map((a) => a.getAttribute('href'));
-    expect(hrefs.every((h) => h === '/' || ['/about', '/experience', '/projects', '/engineering', '/cv', '/contact'].includes(h!) || h!.startsWith('/projects/'))).toBe(true);
+    expect(hrefs.every((h) => h === '/' || ['/about', '/skills', '/projects', '/experience', '/cv', '/contact'].includes(h!) || h!.startsWith('/experience/'))).toBe(true);
   });
 
   it('never shows placeholder identifiers to visitors in production mode', async () => {
     const harness = await setup(false);
-    for (const url of ['/', '/about', '/experience', '/projects', '/engineering', '/cv', '/contact', '/projects/qatrat-hayat', '/projects/api-stress-lab', '/fr/projects/qatrat-hayat', '/fr/about']) {
+    for (const url of ['/', '/about', '/experience', '/projects', '/skills', '/cv', '/contact', '/projects/qatrat-hayat', '/projects/api-stress-lab', '/fr/projects/qatrat-hayat', '/fr/about']) {
       await harness.navigateByUrl(url);
       expect(el(harness).textContent, url).not.toMatch(/YOUR_[A-Z_]+/);
     }
@@ -118,9 +118,9 @@ describe('Home (office)', () => {
   it('switches the content with the language', async () => {
     const harness = await setup(false);
     await harness.navigateByUrl('/experience');
-    expect(el(harness).querySelector('.timeline .item-title')?.textContent).toContain('Software Developer');
+    expect(el(harness).querySelector('.journey .role-title')?.textContent).toContain('Software Developer');
     await harness.navigateByUrl('/fr/experience');
-    expect(el(harness).querySelector('.timeline .item-title')?.textContent).toContain('Développeur logiciel');
+    expect(el(harness).querySelector('.journey .role-title')?.textContent).toContain('Développeur logiciel');
     await harness.navigateByUrl('/fr/projects/itlens');
     expect(el(harness).textContent).toContain('Développée selon les principes du développement piloté par les tests.');
   });
@@ -140,6 +140,66 @@ describe('Home (office)', () => {
     el(harness).querySelector<SVGElement>('.entrance')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await harness.fixture.whenStable();
     expect(router.url).toBe('/about');
+  });
+
+  describe('meeting room: professional experience', () => {
+    it('presents the journey: employers on the timeline, freelance on its own track', async () => {
+      const harness = await setup(false);
+      await harness.navigateByUrl('/experience');
+      const panel = el(harness).querySelector('app-area-panel')!;
+      expect([...panel.querySelectorAll('.employer')].map((e) => e.textContent!.trim())).toEqual(['Eurafric Information', 'Ecowatt']);
+      const roles = [...panel.querySelectorAll('.role')].map((r) => r.getAttribute('href'));
+      expect(roles).toEqual(['/experience/eurafric-developer', '/experience/eurafric-intern', '/experience/ecowatt-intern']);
+      const parallel = panel.querySelector<HTMLElement>('.parallel')!;
+      expect(parallel.getAttribute('href')).toBe('/experience/freelance');
+      expect(parallel.textContent).toContain('Alongside my studies and internships');
+      expect(parallel.textContent).not.toMatch(/20\d\d/); // No invented dates.
+      // Drawn beside the two internships (rows 3 to 5), not the current position.
+      expect(parallel.style.gridRow.replace(/\s/g, '')).toBe('3/6');
+      expect(el(harness).querySelectorAll('.folder-hit').length).toBe(4);
+    });
+
+    it('opens an experience with an overview, then its responsibilities and technologies', async () => {
+      const harness = await setup(false);
+      await harness.navigateByUrl('/experience/eurafric-intern');
+      const panel = () => el(harness).querySelector('app-area-panel')!;
+      expect(heading(harness)).toContain('Software Developer Intern');
+      expect(panel().textContent).toContain('April 2025 – July 2025');
+      expect(panel().textContent).toContain('Banking settlement system');
+      expect(panel().querySelector('.bullets')).toBeNull();
+      panel().querySelectorAll<HTMLButtonElement>('[role="tab"]')[1].click();
+      await harness.fixture.whenStable();
+      expect(panel().querySelectorAll('.bullets li').length).toBe(5);
+      expect([...panel().querySelectorAll('.chips li')].map((c) => c.textContent!.trim())).toEqual(['Java', 'Spring Boot', 'Angular', 'Oracle', 'JWT', 'Docker']);
+      // Grouped with the later position at the same employer.
+      expect(panel().querySelector('.also-link')?.getAttribute('href')).toBe('/experience/eurafric-developer');
+    });
+
+    it('shows freelance work without dates, stack or client details', async () => {
+      const harness = await setup(false);
+      await harness.navigateByUrl('/experience/freelance');
+      const panel = () => el(harness).querySelector('app-area-panel')!;
+      expect(panel().querySelector('.when')?.textContent).toContain('Alongside my studies and internships');
+      expect(panel().querySelector('.scale')?.textContent).toContain('3+ client projects');
+      panel().querySelectorAll<HTMLButtonElement>('[role="tab"]')[1].click();
+      await harness.fixture.whenStable();
+      expect(panel().querySelector('.chips')).toBeNull();
+      expect(panel().querySelector('.note')?.textContent).toContain('Different technologies');
+      expect(panel().querySelector('.projects')).toBeNull();
+      expect(panel().textContent).not.toMatch(/20\d\d/);
+    });
+
+    it('goes back from an experience to the journey, and switches language in place', async () => {
+      const harness = await setup(false);
+      const router = TestBed.inject(Router);
+      await harness.navigateByUrl('/experience/ecowatt-intern');
+      escape();
+      await harness.fixture.whenStable();
+      expect(router.url).toBe('/experience');
+      await harness.navigateByUrl('/fr/experience/eurafric-intern');
+      expect(heading(harness)).toContain('Stagiaire développeur logiciel');
+      expect(el(harness).textContent).toContain('Avril 2025 – Juillet 2025');
+    });
   });
 
   it('still reports unknown pages', async () => {

@@ -24,6 +24,7 @@ import { obj } from '../engine/iso';
 import { Crowd } from '../scene/pedestrians';
 import { LOOKS, personShapes } from '../scene/people';
 import { CrowdView, Layer, bodyTransform, layerOf } from './crowd-view';
+import { periodText } from '../career';
 import { SceneShapes } from './scene-shapes';
 
 /** Seconds simulated before the first frame, so the street starts mid-life. */
@@ -65,6 +66,8 @@ export class OfficeScene {
   readonly active = input<AreaId | null>(null);
   /** Project currently opened (slug), framed on its board. */
   readonly project = input<string | null>(null);
+  /** Experience currently opened (id), presented on the meeting room screen. */
+  readonly experience = input<string | null>(null);
   /** Space covered by overlaying panels, so the camera frames around them. */
   readonly insets = input<Insets>(NO_INSETS);
 
@@ -85,6 +88,7 @@ export class OfficeScene {
   protected readonly viewBox = `0 0 ${VIEWBOX.w} ${VIEWBOX.h}`;
   protected readonly hovered = signal<AreaId | null>(null);
   protected readonly hoveredBoard = signal<string | null>(null);
+  protected readonly hoveredFolder = signal<string | null>(null);
   protected readonly size = signal({ w: 0, h: 0 });
   protected readonly ready = signal(false);
 
@@ -100,11 +104,35 @@ export class OfficeScene {
 
   private readonly activeBoard = computed(() => this.boards().find((b) => b.slug === this.project()) ?? null);
 
+  /** Experiences on the meeting table, one folder each, in content order. */
+  protected readonly folders = computed(() =>
+    this.content
+      .content()
+      .experience.slice(0, this.model.meeting.folders.length)
+      .map((e, i) => ({ id: e.id, label: e.label, n: i + 1, slot: this.model.meeting.folders[i] })),
+  );
+
+  private readonly activeExperience = computed(() => this.content.content().experience.find((e) => e.id === this.experience()) ?? null);
+
+  /** The slide on the meeting room screen: the journey, or the selected experience. */
+  protected readonly slide = computed(() => {
+    const t = this.lang.t();
+    const e = this.activeExperience();
+    const p = this.content.profile();
+    const s = e
+      ? { kicker: e.organization, title: e.role, sub: e.employment ?? '', meta: periodText(e, t), selected: e.id as string | null }
+      : { kicker: t.career.journey, title: this.content.real(p.name) ?? '', sub: this.content.real(p.title) ?? '', meta: '', selected: null };
+    // Fit each line on the screen: about 0.56 em per character over 72 slide units.
+    const fit = (text: string, max: number) => Math.min(max, 72 / (Math.max(1, text.length) * 0.56));
+    return { ...s, titleSize: fit(s.title, 5.6), subSize: fit(s.sub, 3.6), metaSize: fit(s.meta, 3.4) };
+  });
+
   protected readonly camera = computed(() => {
     const size = this.size();
     if (size.w === 0) return IDENTITY;
     const id = this.active();
     if (!id) return frameTarget(size, this.model.overview, NO_INSETS, { min: 0.4, max: 1.8 }, 0);
+    if (id === 'meeting' && this.activeExperience()) return frameTarget(size, grow(this.model.meeting.frame, 12), this.insets(), { min: 0.5, max: 2.4 });
     const board = this.activeBoard();
     // A board is framed a little closer than its area, keeping its neighbours in view.
     if (board) return frameTarget(size, grow(board.slot.frame, 40), this.insets(), { min: 0.5, max: 2.2 });
@@ -129,6 +157,15 @@ export class OfficeScene {
 
   protected projectPath(slug: string): string {
     return this.lang.path('/projects/' + slug);
+  }
+
+  protected experiencePath(id: string): string {
+    return this.lang.path('/experience/' + id);
+  }
+
+  /** A folder on the meeting table opens that experience, from anywhere in the office. */
+  protected openExperience(id: string): void {
+    if (this.experience() !== id) this.router.navigateByUrl(this.experiencePath(id));
   }
 
   constructor() {
@@ -192,7 +229,7 @@ export class OfficeScene {
   /** Clicking the empty floor or the background returns to the overview. */
   protected onSceneClick(event: MouseEvent): void {
     const target = event.target as Element | null;
-    if (target?.closest('.area, .board, .entrance')) return;
+    if (target?.closest('.area, .board, .folder-hit, .entrance')) return;
     if (this.active()) this.router.navigateByUrl(this.lang.path('/'));
   }
 }

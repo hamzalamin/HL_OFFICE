@@ -7,6 +7,11 @@
         <app-icon name="arrow-left" />
         {{ backToWall() }}
       </a>
+    } @else if (experience()) {
+      <a class="back" [routerLink]="areaPath('meeting')">
+        <app-icon name="arrow-left" />
+        {{ t.career.backToJourney }}
+      </a>
     } @else {
       <p class="eyebrow">{{ position() }}</p>
     }
@@ -19,6 +24,9 @@
     @if (project(); as p) {
       <h2 id="area-heading" #heading tabindex="-1"><app-text [value]="p.name" /></h2>
       <app-project-case-study [project]="p" />
+    } @else if (experience(); as x) {
+      <h2 id="area-heading" #heading tabindex="-1">{{ x.role }}</h2>
+      <app-experience-detail [experience]="x" />
     } @else {
       <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
       <p class="section-name">{{ strings().section }}</p>
@@ -71,51 +79,7 @@
           }
 
           @case ('workstation') {
-            <!-- Workstation: experience, then skills -->
-            @if (experience().length) {
-              <h3>{{ t.workstation.experience }}</h3>
-              <ol class="timeline">
-                @for (e of experience(); track $index) {
-                  <li>
-                    <p class="item-title"><app-text [value]="e.role" /></p>
-                    <p class="item-sub">
-                      <app-text [value]="e.organization" />
-                      @if (content.visible(e.location)) {
-                        · <app-text [value]="e.location" />
-                      }
-                      @if (content.visible(e.employment)) {
-                        · <app-text [value]="e.employment" />
-                      }
-                    </p>
-                    <p class="item-date">
-                      <app-text [value]="e.start" /> –
-                      @if (e.end) {
-                        <app-text [value]="e.end" />
-                      } @else {
-                        {{ t.workstation.present }}
-                      }
-                    </p>
-                    @if (content.visible(e.summary)) {
-                      <p><app-text [value]="e.summary" /></p>
-                    }
-                    @if (content.visible(e.highlights)) {
-                      <ul class="bullets">
-                        @for (h of e.highlights; track $index) {
-                          <li><app-text [value]="h" /></li>
-                        }
-                      </ul>
-                    }
-                    @if (content.visible(e.technologies)) {
-                      <ul class="chips" [attr.aria-label]="t.workstation.technologies">
-                        @for (tech of e.technologies; track $index) {
-                          <li><app-text [value]="tech" /></li>
-                        }
-                      </ul>
-                    }
-                  </li>
-                }
-              </ol>
-            }
+            <!-- Workstation: the technologies and practices -->
             @if (skills().length) {
               <h3>{{ t.workstation.skills }}</h3>
               <dl class="skills">
@@ -144,7 +108,7 @@
             <ol class="project-list">
               @for (p of content.projects(); track p.slug; let i = $index) {
                 <li>
-                  <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-project-link]="p.slug">
+                  <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-item-link]="p.slug">
                     <span class="project-index" aria-hidden="true">{{ i + 1 }}</span>
                     <span class="project-body">
                       <span class="item-title">
@@ -173,43 +137,51 @@
             }
           }
 
-          @case ('engineering') {
-            <!-- Meeting room: decisions and challenges across projects -->
-            <p class="hint">{{ t.engineering.intro }}</p>
-            @for (d of discussions(); track d.project.slug) {
-              <article class="discussion">
-                <p class="discussion-source">
-                  {{ t.engineering.fromProject }}
-                  <a [routerLink]="projectPath(d.project.slug)"><app-text [value]="d.project.name" /></a>
-                </p>
-                @for (dec of d.decisions; track $index) {
-                  <div class="card">
-                    <p class="item-title"><app-text [value]="dec.title" /></p>
-                    <dl class="facts">
-                      @if (content.visible(dec.context)) {
-                        <dt>{{ t.caseStudy.context }}</dt>
-                        <dd><app-text [value]="dec.context" /></dd>
-                      }
-                      <dt>{{ t.caseStudy.decision }}</dt>
-                      <dd><app-text [value]="dec.decision" /></dd>
-                      @if (content.visible(dec.tradeoffs)) {
-                        <dt>{{ t.caseStudy.tradeoffs }}</dt>
-                        <dd><app-text [value]="dec.tradeoffs" /></dd>
-                      }
-                    </dl>
-                  </div>
-                }
-                @for (ch of d.challenges; track $index) {
-                  <div class="card">
-                    <p class="item-title"><app-text [value]="ch.challenge" /></p>
-                    <dl class="facts">
-                      <dt>{{ t.caseStudy.solution }}</dt>
-                      <dd><app-text [value]="ch.solution" /></dd>
-                    </dl>
-                  </div>
-                }
-              </article>
+          @case ('meeting') {
+            <!-- Meeting room: the professional journey, with parallel work on its own track -->
+            @if (experienceMissing()) {
+              <p class="notice" role="status">{{ t.career.notFound }}</p>
             }
+            <p class="hint">{{ t.career.intro }}</p>
+            @let j = journeyRows();
+            <div class="journey" [class.has-parallel]="j.parallel.length > 0">
+              @for (r of j.rows; track $index; let i = $index) {
+                @if (r.kind === 'employer') {
+                  <p class="employer" [style.grid-row]="i + 1">{{ r.organization }}</p>
+                } @else {
+                  <a
+                    class="role"
+                    [class.is-current]="!r.experience.period?.end && !!r.experience.period"
+                    [style.grid-row]="i + 1"
+                    [routerLink]="experiencePath(r.experience.id)"
+                    [attr.data-item-link]="r.experience.id"
+                  >
+                    <span class="role-title">{{ r.experience.role }}</span>
+                    @if (r.experience.employment) {
+                      <span class="role-meta">{{ r.experience.employment }}</span>
+                    }
+                    <span class="role-date">{{ periodOf(r.experience) }}</span>
+                  </a>
+                }
+              }
+              @for (pl of j.parallel; track pl.experience.id) {
+                <a
+                  class="parallel"
+                  [style.grid-row]="pl.from + ' / ' + pl.to"
+                  [routerLink]="experiencePath(pl.experience.id)"
+                  [attr.data-item-link]="pl.experience.id"
+                >
+                  <span class="parallel-kicker">{{ t.career.parallel }}</span>
+                  <span class="role-title">{{ pl.experience.role }}</span>
+                  @if (pl.experience.alongside) {
+                    <span class="role-meta">{{ pl.experience.alongside }}</span>
+                  }
+                  @if (pl.experience.scale) {
+                    <span class="parallel-scale">{{ pl.experience.scale }}</span>
+                  }
+                </a>
+              }
+            </div>
           }
 
           @case ('library') {
@@ -338,7 +310,7 @@
     }
   </div>
 
-  @if (!project()) {
+  @if (!project() && !experience()) {
     <nav class="stepper" [attr.aria-label]="t.office.mapLabel">
       <a class="btn btn-ghost" [routerLink]="areaPath(prev())">
         <app-icon name="arrow-left" />
