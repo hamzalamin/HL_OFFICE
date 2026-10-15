@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- The isometric cube of the office, in the site's colours. -->
+  <!-- HL monogram: Hamza Lamin. -->
   <rect width="64" height="64" rx="14" fill="#1d2128"/>
-  <path d="M32 11 50.2 21.5 32 32 13.8 21.5Z" fill="#ffffff"/>
-  <path d="M13.8 21.5 32 32v21L13.8 42.5Z" fill="#6fb3c2"/>
-  <path d="M32 32 50.2 21.5v21L32 53Z" fill="#0f6f84"/>
+  <path d="M10 16h6.5v32H10zM16.5 28.75h8v6.5h-8zM24.5 16H31v32h-6.5z" fill="#ffffff"/>
+  <path d="M37 16h6.5v25.5H54V48H37z" fill="#3fb6cc"/>
 </svg>
