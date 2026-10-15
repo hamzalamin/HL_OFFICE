@@ -25,3 +25,6 @@ and the site is available in English (`/`) and French (`/fr`).
 
 Values starting with `YOUR_` are placeholders: shown as dashed badges in development,
 hidden from visitors in the production build. A full content guide follows in a later phase.
+
+
+DEMO : https://hl-office-portfolio.vercel.app/
