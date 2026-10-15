@@ -21,6 +21,7 @@ import { AREAS, AREA_BY_ID, AreaId, VIEWBOX } from '../scene/areas';
 import { OFFICE_MODEL } from '../scene/office-layout';
 import { IDENTITY, Insets, NO_INSETS, frameTarget, grow } from './camera';
 import { obj } from '../engine/iso';
+import { OfficeFocus } from '../office-focus';
 import { Crowd } from '../scene/pedestrians';
 import { LOOKS, personShapes } from '../scene/people';
 import { CrowdView, Layer, bodyTransform, layerOf } from './crowd-view';
@@ -68,6 +69,11 @@ export class OfficeScene {
   readonly project = input<string | null>(null);
   /** Experience currently opened (id), presented on the meeting room screen. */
   readonly experience = input<string | null>(null);
+  /**
+   * What the camera frames, when it should move ahead of the highlighting
+   * (the page passes the new focus here first). Defaults to the inputs above.
+   */
+  readonly framed = input<OfficeFocus | null>(null);
   /** Space covered by overlaying panels, so the camera frames around them. */
   readonly insets = input<Insets>(NO_INSETS);
 
@@ -112,7 +118,6 @@ export class OfficeScene {
       .map((p, i) => ({ slug: p.slug, name: p.name, n: i + 1, slot: this.model.projectSlots[i] })),
   );
 
-  private readonly activeBoard = computed(() => this.boards().find((b) => b.slug === this.project()) ?? null);
 
   /** Experiences on the meeting table, one folder each, in content order. */
   protected readonly folders = computed(() =>
@@ -140,14 +145,32 @@ export class OfficeScene {
   protected readonly camera = computed(() => {
     const size = this.size();
     if (size.w === 0) return IDENTITY;
-    const id = this.active();
+    const f = this.framed();
+    const id = f ? f.area : this.active();
+    const project = f ? f.project : this.project();
+    const experience = f ? f.experience : this.experience();
     // Small screens: a little room at the top so the finger-sized markers are not cut off.
     if (!id) return frameTarget(size, this.model.overview, this.compact() ? { ...NO_INSETS, top: 22 } : NO_INSETS, { min: 0.4, max: 1.8 }, 0);
-    if (id === 'meeting' && this.activeExperience()) return frameTarget(size, grow(this.model.meeting.frame, 12), this.insets(), { min: 0.5, max: 2.4 });
-    const board = this.activeBoard();
-    // A board is framed a little closer than its area, keeping its neighbours in view.
-    if (board) return frameTarget(size, grow(board.slot.frame, 40), this.insets(), { min: 0.5, max: 2.2 });
-    return frameTarget(size, grow(this.model.areas[id].frame, 28), this.insets(), { min: 0.5, max: 2.4 });
+    // Inside the office every view shares one zoom level, so moving between
+    // rooms, projects and experiences only slides the camera: the browser
+    // reuses what it has drawn instead of redrawing the scene at a new size.
+    const k = this.roomZoom();
+    if (id === 'meeting' && this.content.content().experience.some((e) => e.id === experience))
+      return frameTarget(size, this.model.meeting.frame, this.insets(), undefined, 16, k);
+    const board = this.boards().find((b) => b.slug === project) ?? null;
+    if (board) return frameTarget(size, board.slot.frame, this.insets(), undefined, 16, k);
+    return frameTarget(size, this.model.areas[id].frame, this.insets(), undefined, 16, k);
+  });
+
+  /**
+   * The zoom used inside the office: what fits the meeting room beside a
+   * standard panel. It depends on the screen only, not on which panel is
+   * open, so it stays the same from room to room.
+   */
+  private readonly roomZoom = computed(() => {
+    const insets = this.insets();
+    const reference = insets.right > 0 ? { ...NO_INSETS, right: 472 } : insets;
+    return frameTarget(this.size(), grow(this.model.areas.meeting.frame, 28), reference, { min: 0.5, max: 2.4 }).k;
   });
 
   protected readonly cameraStyle = computed(() => {
@@ -214,6 +237,9 @@ export class OfficeScene {
     };
     const onEnd = (e: TransitionEvent) => e.target === el && e.propertyName === 'transform' && done();
     el.addEventListener('transitionend', onEnd);
+    // Read once, from the setting (0 with reduced motion): getComputedStyle at
+    // every move would restyle the whole scene right when the camera starts.
+    const ms = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--camera-duration')) || 0;
     let last = '';
     const watch = effect(
       () => {
@@ -223,7 +249,6 @@ export class OfficeScene {
           return;
         }
         last = style;
-        const ms = parseFloat(getComputedStyle(el).transitionDuration) * 1000;
         if (!ms) return; // Reduced motion: the camera jumps.
         this.moving.set(true);
         clearTimeout(timer);

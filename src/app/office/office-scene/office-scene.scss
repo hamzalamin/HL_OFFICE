@@ -30,10 +30,9 @@
   transition: transform var(--camera-duration) var(--ease-camera);
 }
 
-// While the camera moves, the office is moved as one finished picture (the
-// browser does not redraw thousands of shapes at every zoom step), and the
-// labels wait for the camera to arrive.
-.is-moving .camera {
+// The camera is always its own GPU layer, so a move starts at once and keeps
+// gliding while the page updates the panel; labels wait for it to arrive.
+.camera {
   will-change: transform;
 }
 

@@ -2,7 +2,7 @@
 @let p = content.profile();
 
 <section class="office" [class.has-panel]="!!activeArea()" [style.--panel-w.px]="panelWidth()" [attr.aria-label]="t.home.eyebrow">
-  <app-office-scene class="scene" [active]="activeArea()" [project]="project()?.slug ?? null" [experience]="experience()?.id ?? null" [insets]="sceneInsets()" />
+  <app-office-scene class="scene" [active]="activeArea()" [project]="project()?.slug ?? null" [experience]="experience()?.id ?? null" [framed]="focus()" [insets]="sceneInsets()" />
 
   <!-- Welcome popup: opens by itself on the first visit only. Kept in the DOM
        (closed) so the heading and introduction stay part of the page. -->

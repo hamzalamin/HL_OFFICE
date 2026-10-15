@@ -1,3 +1,4 @@
+import { InjectionToken } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { AreaId, isAreaId } from './scene/areas';
 
@@ -11,6 +12,13 @@ export interface OfficeFocus {
 }
 
 export const OVERVIEW: OfficeFocus = { area: null, project: null, experience: null };
+
+/**
+ * Frames between a new focus and the panel/highlighting following it. The
+ * camera starts first (on the GPU, where it keeps gliding while the page
+ * updates); 0 in tests so the panel updates synchronously.
+ */
+export const PANEL_DELAY_FRAMES = new InjectionToken<number>('PANEL_DELAY_FRAMES', { providedIn: 'root', factory: () => 2 });
 
 /** Reads the focus from the office route's (componentless) child route. */
 export function readOfficeFocus(office: ActivatedRouteSnapshot): OfficeFocus {

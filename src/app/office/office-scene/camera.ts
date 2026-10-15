@@ -34,6 +34,8 @@ export function frameTarget(
   insets: Insets = NO_INSETS,
   limits: { min: number; max: number } = { min: 0.5, max: 2.6 },
   padding = 16,
+  /** Use this zoom instead of fitting the target (the target is still centred). */
+  zoom?: number,
 ): CameraTransform {
   if (viewport.w <= 0 || viewport.h <= 0) return IDENTITY;
   const s0 = Math.min(viewport.w / VIEWBOX.w, viewport.h / VIEWBOX.h);
@@ -47,7 +49,7 @@ export function frameTarget(
     h: Math.max(80, viewport.h - insets.top - insets.bottom - 2 * padding),
   };
 
-  const k = clamp(Math.min(safe.w / (target.w * s0), safe.h / (target.h * s0)), limits.min, limits.max);
+  const k = zoom ?? clamp(Math.min(safe.w / (target.w * s0), safe.h / (target.h * s0)), limits.min, limits.max);
   const px = ox + (target.x + target.w / 2) * s0;
   const py = oy + (target.y + target.h / 2) * s0;
   return {

@@ -114,14 +114,18 @@ export class AreaPanel {
       const view = this.view();
       const el = this.body().nativeElement;
       if (shown !== null && shown !== view) {
-        el.scrollTop = 0;
-        const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        if (!still && el.animate) {
-          el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], {
-            duration: 260,
-            easing: 'cubic-bezier(0.22, 0.8, 0.3, 1)',
-          });
-        }
+        // Next frame, when layout is clean: touching scrollTop now would force
+        // a full layout of the page right as the camera starts to move.
+        requestAnimationFrame(() => {
+          el.scrollTop = 0;
+          const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+          if (!still && el.animate) {
+            el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], {
+              duration: 260,
+              easing: 'cubic-bezier(0.22, 0.8, 0.3, 1)',
+            });
+          }
+        });
       }
       shown = view;
     });

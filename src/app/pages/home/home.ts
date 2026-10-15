@@ -21,7 +21,7 @@ import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 import { AreaPanel } from '../../office/area-panel/area-panel';
-import { OfficeFocus, focusItem, readOfficeFocus, sameFocus } from '../../office/office-focus';
+import { OfficeFocus, PANEL_DELAY_FRAMES, focusItem, readOfficeFocus, sameFocus } from '../../office/office-focus';
 import { OfficeDirectory } from '../../office/office-directory/office-directory';
 import { Insets, NO_INSETS } from '../../office/office-scene/camera';
 import { OfficeScene } from '../../office/office-scene/office-scene';
@@ -59,7 +59,7 @@ export class Home {
   private readonly memory = inject(WelcomeMemory);
 
   /** The focus is part of the URL so it is shareable and works with back/forward. */
-  private readonly focus = toSignal(
+  protected readonly focus = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
       startWith(null),
@@ -67,19 +67,25 @@ export class Home {
     ),
     { requireSync: true, equal: sameFocus },
   );
-  protected readonly activeArea = computed(() => this.focus().area);
+  /**
+   * What the panel and the room highlighting show: the focus, a couple of
+   * frames later. The camera follows `focus` at once, so it is already
+   * gliding (on the GPU) while the page does the heavier update.
+   */
+  protected readonly shown = signal<OfficeFocus>(this.focus());
+  private readonly delayFrames = inject(PANEL_DELAY_FRAMES);
+  private delayFrame = 0;
+
+  protected readonly activeArea = computed(() => this.shown().area);
   /** The opened project, if its slug matches one on the wall. */
-  protected readonly project = computed(() => {
-    const slug = this.focus().project;
-    return slug ? (this.content.projects().find((p) => p.slug === slug) ?? null) : null;
-  });
-  protected readonly projectMissing = computed(() => !!this.focus().project && !this.project());
+  protected readonly project = computed(() => this.findProject(this.shown().project));
+  protected readonly projectMissing = computed(() => !!this.shown().project && !this.project());
   /** The opened experience, if its id matches one in the presentation. */
   protected readonly experience = computed(() => {
-    const id = this.focus().experience;
+    const id = this.shown().experience;
     return id ? (this.content.content().experience.find((e) => e.id === id) ?? null) : null;
   });
-  protected readonly experienceMissing = computed(() => !!this.focus().experience && !this.experience());
+  protected readonly experienceMissing = computed(() => !!this.shown().experience && !this.experience());
 
   /**
    * The welcome popup opens by itself on the first visit only. Once closed it
@@ -98,8 +104,10 @@ export class Home {
 
   /** Desktop panel width: a case study gets more room; the career timeline a little. */
   protected readonly panelWidth = computed(() => {
-    if (this.project()) return Math.round(Math.min(620, Math.max(440, 0.44 * this.windowSize().w)));
-    return this.activeArea() === 'meeting' ? 440 : 400;
+    // From the new focus at once, so the camera frames the final layout.
+    const f = this.focus();
+    if (this.findProject(f.project)) return Math.round(Math.min(620, Math.max(440, 0.44 * this.windowSize().w)));
+    return f.area === 'meeting' ? 440 : 400;
   });
 
   /**
@@ -116,6 +124,21 @@ export class Home {
   });
 
   constructor() {
+    // The panel and highlighting follow the focus a few frames later (at
+    // once on the server, which has no frames).
+    const frames = typeof requestAnimationFrame === 'function';
+    effect(() => {
+      const f = this.focus();
+      untracked(() => {
+        if (!this.delayFrames || !frames) return this.shown.set(f);
+        cancelAnimationFrame(this.delayFrame);
+        let left = this.delayFrames;
+        const tick = () => (--left > 0 ? (this.delayFrame = requestAnimationFrame(tick)) : this.shown.set(f));
+        this.delayFrame = requestAnimationFrame(tick);
+      });
+    });
+    this.destroyRef.onDestroy(() => frames && cancelAnimationFrame(this.delayFrame));
+
     afterNextRender(() => {
       // A shared link to a specific area should not be covered by the popup.
       if (!this.memory.hasSeen() && !this.activeArea()) this.openWelcome();
@@ -162,7 +185,7 @@ export class Home {
     // changes, back to where the visitor came from when going up a level.
     let previous: OfficeFocus | null = null;
     effect(() => {
-      const current = this.focus();
+      const current = this.shown();
       untracked(() => {
         const prev = previous;
         previous = current;
@@ -184,6 +207,10 @@ export class Home {
     } else if (prev.area) {
       this.host.nativeElement.querySelector<HTMLElement>(`[data-area-link="${prev.area}"]`)?.focus({ preventScroll: true });
     }
+  }
+
+  private findProject(slug: string | null) {
+    return slug ? (this.content.projects().find((p) => p.slug === slug) ?? null) : null;
   }
 
   protected openWelcome(): void {

@@ -3,6 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../app.routes';
 import { SHOW_PLACEHOLDERS } from '../../core/content/placeholder';
+import { PANEL_DELAY_FRAMES } from '../../office/office-focus';
 import { WELCOME_STORAGE, WelcomeStorage } from './welcome-memory';
 
 function memoryStorage(initial: Record<string, string> = {}): WelcomeStorage & { data: Record<string, string> } {
@@ -16,6 +17,8 @@ async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memory
       provideRouter(routes),
       { provide: SHOW_PLACEHOLDERS, useValue: showPlaceholders },
       { provide: WELCOME_STORAGE, useValue: storage },
+      // Tests check the panel right after navigating: no frame delay.
+      { provide: PANEL_DELAY_FRAMES, useValue: 0 },
     ],
   });
   return RouterTestingHarness.create();
