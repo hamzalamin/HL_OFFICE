@@ -1,13 +1,19 @@
 @use 'content';
 
+// A column whose content area scrolls: the panel gets a fixed height on
+// desktop and only a maximum height as a bottom sheet on phones; with flex
+// (and min-height: 0) the scrolling body fits inside either way.
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

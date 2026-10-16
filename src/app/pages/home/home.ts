@@ -119,7 +119,7 @@ export class Home {
     if (this.wide()) return { ...NO_INSETS, right: this.panelWidth() + 32 };
     const { w, h } = this.windowSize();
     const sceneH = Math.min(0.75 * w, 0.5 * h);
-    const sheetH = Math.min(0.58 * h, 520) + 8;
+    const sheetH = Math.min(0.62 * h, 560) + 8;
     return { ...NO_INSETS, bottom: Math.max(0, sceneH - (h - sheetH)) };
   });
 

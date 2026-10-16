@@ -335,7 +335,7 @@ h1 {
     right: 0.5rem;
     bottom: 0.5rem;
     width: auto;
-    max-height: min(58svh, 520px);
+    max-height: min(62svh, 560px); // Mirrors sceneInsets() in home.ts.
     animation: sheet-in 360ms var(--ease-out) both;
 
     &.panel-leave {
