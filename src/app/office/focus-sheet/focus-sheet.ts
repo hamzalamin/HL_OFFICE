@@ -19,13 +19,6 @@ import { ExperienceDetail } from '../experience-detail/experience-detail';
 import { ProjectCaseStudy } from '../project-case-study/project-case-study';
 import { AREA_BY_ID } from '../scene/areas';
 
-/**
- * Deep content (a project's case study, an experience) opens as an airy,
- * centred editorial sheet over the dimmed office, instead of being squeezed
- * beside a room. A modal <dialog>: the office behind is inert while it is
- * open, and Escape or the backdrop go back to the room (the page handles
- * Escape, so the URL stays the source of truth).
- */
 @Component({
   selector: 'app-focus-sheet',
   imports: [RouterLink, Icon, ContentText, ProjectCaseStudy, ExperienceDetail, BlogPostView],
@@ -44,7 +37,6 @@ export class FocusSheet {
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
   private readonly body = viewChild.required<ElementRef<HTMLElement>>('body');
 
-  /** The room this item belongs to: the back link and the backdrop lead there. */
   private readonly room = computed(() => (this.project() ? 'projects' : this.post() ? 'blog' : 'meeting'));
   protected readonly roomPath = computed(() => this.lang.path(AREA_BY_ID[this.room()].route));
   protected readonly backLabel = computed(() => {
@@ -63,7 +55,6 @@ export class FocusSheet {
       this.focusHeading();
     });
 
-    // Another item in the same sheet: start again at the top.
     let shown: string | null = null;
     afterRenderEffect(() => {
       const view = this.view();
@@ -72,12 +63,10 @@ export class FocusSheet {
     });
   }
 
-  /** Escape is handled by the page (one level up); keep the dialog from closing itself. */
   protected onCancel(event: Event): void {
     event.preventDefault();
   }
 
-  /** A click on the dialog element itself is a click on the backdrop: back to the room. */
   protected onClick(event: MouseEvent): void {
     if (event.target === this.dialog().nativeElement) this.router.navigateByUrl(this.roomPath());
   }

@@ -2,30 +2,18 @@ import { seeded } from './furniture';
 import { EDGE_NODES, NodeId, PAUSE_NODES, groundHeight, nodePoint, route } from './city-graph';
 import { View } from './people';
 
-/**
- * A small pedestrian simulation for the street around the office.
- *
- * People choose a destination (pass through, enter or leave the office, sit
- * at the café or on a bench, stroll in the park), follow the walking graph,
- * keep to the right, turn smoothly, slow down or step aside for others, and
- * sometimes stop to talk. Pure state: `step()` advances it, the scene reads
- * `bodies` and `seats`. Seeded, so every run (and the prerender) starts from
- * the same moment.
- */
-
 type Dir = '+x' | '-x' | '+y' | '-y';
 
 export interface Seat {
   id: string;
   x: number;
   y: number;
-  /** Seat height above the street. */
+
   z: number;
   facing: Dir;
   access: NodeId;
 }
 
-/** Seats people can take. The sitter is drawn by the scene and shown when taken. */
 export const SEATS: readonly Seat[] = [
   { id: 'garden', x: 31.45, y: 7.4, z: 0.55, facing: '+x', access: 'gardenSeat' },
   { id: 'cafe-1', x: 34.2, y: 14, z: 0.71, facing: '-x', access: 'cafe1' },
@@ -52,7 +40,7 @@ export interface Body {
   alpha: number;
   view: View;
   flip: boolean;
-  /** Walk cycle phase (radians) and how strongly limbs swing (0–1). */
+
   phase: number;
   swing: number;
 }
@@ -76,7 +64,7 @@ interface Agent {
   heading: number;
   speed: number;
   side: number;
-  /** Pairs: 0 side by side, 1 single file (to let others pass). */
+
   file: number;
   path: Pt[];
   idx: number;
@@ -85,7 +73,7 @@ interface Agent {
   end: End;
   seat: Seat | null;
   inside: boolean;
-  /** Seat transition progress. */
+
   t: number;
 }
 
@@ -98,11 +86,11 @@ const STRIDE = 0.95;
 
 export class Crowd {
   readonly bodies: Body[] = [];
-  /** Seat id → taken. */
+
   readonly seats = new Map<string, boolean>(SEATS.map((s) => [s.id, false]));
-  /** Seat id → look of the person sitting there. */
+
   readonly seatLook = new Map<string, number>();
-  /** Seats someone is walking to. */
+
   private readonly reserved = new Set<string>();
   private readonly agents: Agent[] = [];
 
@@ -135,18 +123,14 @@ export class Crowd {
     }
   }
 
-  /** Advances the simulation by `dt` seconds (call with small steps). */
   step(dt: number): void {
     for (const a of this.agents) this.update(a, dt);
   }
 
-  /** Runs the simulation forward in fixed steps, e.g. to start mid-scene. */
   warmUp(seconds: number, dt = 0.1): this {
     for (let t = 0; t < seconds; t += dt) this.step(dt);
     return this;
   }
-
-  // -------------------------------------------------------------------------
 
   private update(a: Agent, dt: number): void {
     switch (a.mode) {
@@ -204,7 +188,7 @@ export class Crowd {
         break;
       }
       case 'leave': {
-        // Keep drifting the way they were going while fading out.
+
         a.speed = Math.max(0.4, a.speed - DECEL * 0.3 * dt);
         a.pos = { x: a.pos.x + Math.cos(a.heading) * a.speed * dt, y: a.pos.y + Math.sin(a.heading) * a.speed * dt };
         const alpha = Math.max(0, a.bodies[0].alpha - dt / 0.6);
@@ -218,15 +202,12 @@ export class Crowd {
     }
   }
 
-  /** Chooses the next outing: where from, where to, and whether to stop on the way. */
   private plan(a: Agent, from?: NodeId): void {
     const r = a.rng;
     const pair = a.bodies.length > 1;
     let start: NodeId = from ?? (a.inside ? 'door' : pick(r, BUSY_EDGES));
     a.inside = false;
 
-    // Destination.
-    // One newcomer per bench at a time (seats `park-a`/`park-b` share a bench).
     const bench = (id: string) => id.replace(/-[ab]$/, '');
     const busy = new Set([...this.reserved].map(bench));
     const freeSeats = SEATS.filter((s) => !busy.has(bench(s.id)) && s.access !== start);
@@ -256,7 +237,6 @@ export class Crowd {
     const startsAtPlace = start === 'door' || from !== undefined;
     const path = offsetPath(points, LANE, startsAtPlace, end.kind !== 'edge');
 
-    // Do not appear on top of someone.
     if (!from && this.crowded(path[0], a)) {
       a.mode = 'off';
       a.timer = 1.5;
@@ -273,7 +253,6 @@ export class Crowd {
     a.mode = 'walk';
     if (end.kind === 'seat') this.reserved.add(end.seat.id);
 
-    // A short stop on the way: to check something, or to talk.
     a.pauseIdx = -1;
     const stops = nodes.map((n, i) => (i > 0 && i < nodes.length - 1 && PAUSE_NODES.has(n) ? i : -1)).filter((i) => i > 0);
     if (stops.length && r() < (pair ? 0.6 : 0.3)) {
@@ -291,9 +270,8 @@ export class Crowd {
     const dy = target.y - a.pos.y;
     const dist = Math.hypot(dx, dy);
 
-    // Arrived at a waypoint.
     if (dist < (last ? 0.12 : 0.4)) {
-      // Stop only where nobody else is standing.
+
       if (a.idx === a.pauseIdx && !this.crowded(a.pos, a)) {
         a.mode = 'pause';
         a.timer = a.pauseFor;
@@ -304,14 +282,12 @@ export class Crowd {
       return;
     }
 
-    // Turn smoothly toward the waypoint.
     const want = Math.atan2(dy, dx);
     let diff = want - a.heading;
     while (diff > Math.PI) diff -= 2 * Math.PI;
     while (diff < -Math.PI) diff += 2 * Math.PI;
     a.heading += clamp(diff, -TURN_RATE * dt, TURN_RATE * dt);
 
-    // Speed: slow for sharp turns and before stopping, follow or avoid others.
     let target_ = a.pace * (1 - 0.45 * Math.min(1, Math.abs(diff) / 1.6));
     const stopAhead = last && a.end.kind !== 'edge' ? dist : a.idx === a.pauseIdx ? dist : Infinity;
     target_ = Math.min(target_, Math.max(0.35, stopAhead * 1.1));
@@ -333,10 +309,9 @@ export class Crowd {
       const cos = ohx * hx + ohy * hy;
       const ahead = rx * hx + ry * hy;
       const lat = -rx * hy + ry * hx;
-      // Pairs fall into single file when someone comes the other way.
+
       if (cos < 0.5 && ahead > 0 && ahead < 4 && Math.abs(lat) < 2) fileWant = 1;
 
-      // Where will the two be closest, in the next few seconds?
       const vx = (still ? 0 : ohx * o.speed) - vax;
       const vy = (still ? 0 : ohy * o.speed) - vay;
       const vv = vx * vx + vy * vy;
@@ -346,18 +321,18 @@ export class Crowd {
       if (closest > room || ahead < -0.3) continue;
 
       if (!still && cos > 0.5) {
-        // Same way: follow at their pace.
+
         target_ = Math.min(target_, ahead < 1.1 ? o.speed * 0.8 : o.speed);
       } else if (still) {
-        // Someone standing: walk around them.
+
         const step = Math.min(1.1, room - Math.abs(lat) + Math.abs(a.side) + 0.1);
         sideWant = lat >= 0 ? -step : step;
         if (dist < 1.4) target_ = Math.min(target_, 0.6);
       } else if (cos < -0.5) {
-        // Coming the other way: both keep right a little more.
+
         sideWant = lat >= 0 ? -0.5 : 0.5;
       } else {
-        // Crossing paths: whoever would get there later gives way.
+
         const mine = ahead;
         const theirs = -(rx * ohx + ry * ohy);
         if (mine > theirs || (Math.abs(mine - theirs) < 0.2 && a.id > o.id)) target_ = Math.min(target_, Math.max(0, (dist - 1.0) * 1.3));
@@ -379,13 +354,12 @@ export class Crowd {
     } else {
       if (a.end.kind === 'door') {
         a.inside = true;
-        a.heading = -Math.PI / 2; // into the building
+        a.heading = -Math.PI / 2;
       }
       a.mode = 'leave';
     }
   }
 
-  /** Positions, facing and limb swing of the agent's people. */
   private place(a: Agent, dt: number, alpha = a.bodies[0].alpha): void {
     const hx = Math.cos(a.heading);
     const hy = Math.sin(a.heading);
@@ -406,7 +380,7 @@ export class Crowd {
       b.phase += (a.speed * dt * Math.PI) / STRIDE;
       b.swing = Math.min(1, a.speed / 1.3);
       if (a.mode === 'sit-down' || a.mode === 'stand-up') return;
-      // Face the way they walk; when talking, face each other.
+
       const fx = talking ? -nx * Math.sign(off) : hx;
       const fy = talking ? -ny * Math.sign(off) : hy;
       setFacing(b, fx, fy);
@@ -426,11 +400,6 @@ export class Crowd {
   }
 }
 
-/**
- * Screen direction of a world heading: toward the viewer = `front`, to the
- * left = `flip`. Small components keep the previous value, so people do not
- * flicker between views when walking almost straight up or down the screen.
- */
 function setFacing(b: Body, dx: number, dy: number): void {
   const sx = dx - dy;
   const sy = dx + dy;
@@ -438,7 +407,6 @@ function setFacing(b: Body, dx: number, dy: number): void {
   if (Math.abs(sx) > 0.2) b.flip = sx < 0;
 }
 
-/** Shifts a route sideways so people keep to the right; endpoints at a door or seat stay exact. */
 export function offsetPath(points: Pt[], lane: number, keepStart: boolean, keepEnd: boolean): Pt[] {
   const n = points.length;
   const normals = points.slice(1).map((p, i) => {
@@ -461,17 +429,12 @@ export function offsetPath(points: Pt[], lane: number, keepStart: boolean, keepE
   });
 }
 
-/**
- * Edges weighted toward the streets in view: the front and side sidewalks
- * and the park crossing are used more than the paths behind the building.
- */
 const BUSY_EDGES: readonly NodeId[] = [...EDGE_NODES, 'fW', 'fW', 'fE', 'fE', 'sN', 'sN', 'ffW', 'ffE', 'pS', 'sfS'];
 
 function pick<T>(r: () => number, list: readonly T[]): T {
   return list[Math.floor(r() * list.length)];
 }
 
-/** Sideways space an agent takes up. */
 function width(a: Agent): number {
   return a.bodies.length > 1 ? 2 * PAIR * (1 - a.file) : 0;
 }
@@ -488,7 +451,6 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
-/** The neighbourhood: people walking alone and in pairs, at their own pace (world units/s). */
 export const CAST: readonly { id: string; looks: number[]; pace: number; seed: number }[] = [
   { id: 'ana', looks: [0], pace: 2.1, seed: 11 },
   { id: 'ben', looks: [4], pace: 1.75, seed: 23 },

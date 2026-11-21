@@ -8,12 +8,10 @@ import { UI, UiStrings } from './ui-strings';
 export const LANGS: readonly Lang[] = ['en', 'fr'];
 export const DEFAULT_LANG: Lang = 'en';
 
-/** Language comes from the URL: English at the root, French under /fr. */
 export function langFromUrl(url: string): Lang {
   return /^\/fr(\/|\?|#|$)/.test(url) ? 'fr' : 'en';
 }
 
-/** Strips the language prefix: "/fr/projects" → "/projects". */
 export function stripLang(url: string): string {
   const path = url.replace(/^\/fr(?=\/|\?|#|$)/, '');
   return path === '' || path.startsWith('?') || path.startsWith('#') ? '/' + path : path;
@@ -50,12 +48,10 @@ export class LanguageService {
     });
   }
 
-  /** Path in the current language. */
   path(path: string): string {
     return localizePath(path, this.lang());
   }
 
-  /** The current page in another language. */
   switchUrl(target: Lang): string {
     return localizePath(stripLang(this.url().split('#')[0]), target);
   }

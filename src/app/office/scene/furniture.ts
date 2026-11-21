@@ -1,14 +1,7 @@
 import { Bounds, Material, SceneObject, Shape, ShapeTree, blob, box, flat, obj, project, wallX, wallY } from '../engine/iso';
 
-/**
- * Furniture builders. Every function returns one or more SceneObjects whose
- * bounds are used for depth sorting. Shapes inside an object are already in
- * back-to-front order. Dimensions are in world units (1 unit ≈ 60 cm).
- */
+type Facing = 'n' | 's' | 'e' | 'w';
 
-type Facing = 'n' | 's' | 'e' | 'w'; // n = toward -y, s = toward +y, e = toward +x, w = toward -x
-
-/** Deterministic pseudo-random generator so server and browser render identical markup. */
 export function seeded(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -22,11 +15,6 @@ export function seeded(seed: number): () => number {
 
 const b = (x: number, y: number, z: number, w: number, d: number, h: number): Bounds => ({ x, y, z, w, d, h });
 
-// ---------------------------------------------------------------------------
-// Surfaces on vertical planes
-// ---------------------------------------------------------------------------
-
-/** Maps fractional (u: left→right, v: top→bottom) coordinates onto a vertical rectangle. */
 type Facet = (u0: number, u1: number, v0: number, v1: number, cls: string) => Shape;
 
 function facetY(y: number, x0: number, x1: number, z0: number, z1: number): Facet {
@@ -35,14 +23,13 @@ function facetY(y: number, x0: number, x1: number, z0: number, z1: number): Face
 }
 
 function facetX(x: number, y0: number, y1: number, z0: number, z1: number): Facet {
-  // On an x-plane, screen-left is the high-y end.
+
   return (u0, u1, v0, v1, cls) =>
     wallX(x, y1 - (y1 - y0) * u1, y1 - (y1 - y0) * u0, z1 - (z1 - z0) * v1, z1 - (z1 - z0) * v0, cls);
 }
 
 export type ScreenContent = 'app' | 'board' | 'slides' | 'standby' | 'docs' | 'blank';
 
-/** Calm, abstract screen layouts. No fake code or numbers: just interface structure. */
 function screenContent(f: Facet, kind: ScreenContent): Shape[] {
   const s: Shape[] = [f(0, 1, 0, 1, 'p m-screen')];
   switch (kind) {
@@ -81,13 +68,9 @@ function screenContent(f: Facet, kind: ScreenContent): Shape[] {
   return s;
 }
 
-// ---------------------------------------------------------------------------
-// Building shell
-// ---------------------------------------------------------------------------
-
 export function floorSlab(w: number, d: number): SceneObject {
   const shapes: ShapeTree[] = [...box(0, 0, -0.7, w, d, 0.7, 'slab', { noTop: true }), flat(0, 0, w, d, 0, 'p m-floor')];
-  // Subtle large-format tile seams.
+
   for (let x = 3; x < w; x += 3) shapes.push(lineOnFloor(x, 0, x, d));
   for (let y = 3; y < d; y += 3) shapes.push(lineOnFloor(0, y, w, y));
   return obj(b(0, 0, -0.7, w, d, 0.7), shapes);
@@ -99,7 +82,6 @@ function lineOnFloor(x0: number, y0: number, x1: number, y1: number): Shape {
   return { kind: 'line', x1: a[0], y1: a[1], x2: c[0], y2: c[1], cls: 'seam' };
 }
 
-/** The two back walls: along the x axis at y=0, and along the y axis at x=0. */
 export function backWalls(w: number, d: number, h: number): SceneObject[] {
   const t = 0.45;
   return [
@@ -133,7 +115,6 @@ export function windowOnY(x0: number, x1: number, z0: number, z1: number, panes 
   return obj(b(x0, 0, z0, x1 - x0, 0.02, z1 - z0), shapes);
 }
 
-/** Glazed entrance door in the left wall. */
 export function doorOnX(y0: number, y1: number, h: number): SceneObject {
   const f = facetX(0.01, y0, y1, 0, h);
   return obj(b(0, y0, 0, 0.05, y1 - y0, h), [
@@ -151,7 +132,6 @@ export function rug(x0: number, y0: number, x1: number, y1: number, mat: Materia
   return obj(b(x0, y0, -0.03, x1 - x0, y1 - y0, 0.03), shapes);
 }
 
-/** A glass partition running along x (plane y = const) or along y (plane x = const). */
 export function glassWall(axis: 'x' | 'y', at: number, from: number, to: number, h: number): SceneObject {
   const t = 0.08;
   const shapes: ShapeTree[] = [];
@@ -173,7 +153,6 @@ export function glassWall(axis: 'x' | 'y', at: number, from: number, to: number,
   return obj(b(at, from, 0, t, to - from, h), shapes);
 }
 
-/** Low acoustic partition, fabric covered. */
 export function partition(axis: 'x' | 'y', at: number, from: number, to: number, h: number, mat: Material): SceneObject {
   const t = 0.18;
   if (axis === 'x') {
@@ -181,10 +160,6 @@ export function partition(axis: 'x' | 'y', at: number, from: number, to: number,
   }
   return obj(b(at, from, 0, t, to - from, h), box(at, from, 0, t, to - from, h, mat), box(at, from, h, t, to - from, 0.05, 'frame'));
 }
-
-// ---------------------------------------------------------------------------
-// Furniture
-// ---------------------------------------------------------------------------
 
 export function desk(
   x: number,
@@ -203,7 +178,6 @@ export function desk(
   return obj(b(x, y, 0, w, d, h), shapes);
 }
 
-/** Monitor on a stand. `dir` is the direction the screen faces. */
 export function monitor(x: number, y: number, z: number, dir: 's' | 'e' | 'n', content: ScreenContent, size = 1.3): SceneObject {
   const sh = size * 0.6;
   if (dir === 's') {
@@ -216,7 +190,7 @@ export function monitor(x: number, y: number, z: number, dir: 's' | 'e' | 'n', c
     ]);
   }
   if (dir === 'n') {
-    // Seen from behind: just the housing.
+
     return obj(b(x, y, z, size, 0.5, 0.3 + sh), [
       box(x + size / 2 - 0.05, y + 0.3, z + 0.04, 0.1, 0.08, 0.4, 'dark'),
       box(x, y + 0.2, z + 0.3, size, 0.1, sh, 'dark'),
@@ -267,7 +241,6 @@ export function chair(x: number, y: number, facing: Facing, mat: Material = 'fab
   return obj(b(x, y, 0, s, s, 0.72 + bh), shapes);
 }
 
-/** Upholstered lounge chair or sofa. `facing` is the direction someone sitting would look. */
 export function sofa(x: number, y: number, w: number, d: number, facing: Facing, mat: Material): SceneObject {
   const seatH = 0.75;
   const backT = 0.42;
@@ -318,7 +291,6 @@ export function table(x: number, y: number, w: number, d: number, h: number, top
   ]);
 }
 
-/** Meeting table on two pedestal legs. */
 export function meetingTable(x: number, y: number, w: number, d: number): SceneObject {
   const h = 1.25;
   return obj(b(x, y, 0, w, d, h), [
@@ -373,7 +345,6 @@ export function plant(x: number, y: number, kind: PlantKind, z = 0, potMat: Mate
   return obj(b(x, y, z, s, s, top), shapes);
 }
 
-/** Bookshelf standing against the left wall (front faces +x). */
 export function bookshelfOnLeftWall(y0: number, len: number, h: number, rows: number, seed: number): SceneObject {
   const depth = 0.95;
   const x = 0.02;
@@ -404,7 +375,6 @@ export function bookshelfOnLeftWall(y0: number, len: number, h: number, rows: nu
   return obj(b(x, y0, 0, depth, len, h), shapes);
 }
 
-/** Low cabinet with doors, used as a sideboard. */
 export function cabinet(x: number, y: number, w: number, d: number, h: number, mat: Material, front: 's' | 'e'): SceneObject {
   const shapes: ShapeTree[] = [...box(x + 0.08, y + 0.08, 0, w - 0.16, d - 0.16, 0.08, 'dark'), ...box(x, y, 0.08, w, d, h - 0.08, mat)];
   if (front === 's') {
@@ -419,13 +389,12 @@ export function cabinet(x: number, y: number, w: number, d: number, h: number, m
   return obj(b(x, y, 0, w, d, h), shapes);
 }
 
-/** Wall-mounted whiteboard on the back wall with a simple architecture sketch. */
 export function whiteboardOnY(x0: number, x1: number, z0: number, z1: number): SceneObject {
   const f = facetY(0.03, x0, x1, z0, z1);
   return obj(b(x0, 0, z0, x1 - x0, 0.05, z1 - z0), [
     f(0, 1, 0, 1, 'p m-frame'),
     f(0.015, 0.985, 0.03, 0.97, 'p m-whiteboard'),
-    // Three components and connectors: an abstract system sketch.
+
     f(0.08, 0.28, 0.18, 0.4, 'p m-ink-blue'),
     f(0.4, 0.6, 0.18, 0.4, 'p m-ink-dark'),
     f(0.72, 0.92, 0.18, 0.4, 'p m-ink-blue'),
@@ -437,14 +406,12 @@ export function whiteboardOnY(x0: number, x1: number, z0: number, z1: number): S
   ]);
 }
 
-/** Wall-mounted display on the left wall. */
 export function displayOnX(y0: number, y1: number, z0: number, z1: number, content: ScreenContent): SceneObject {
   const f = facetX(0.06, y0, y1, z0, z1);
   const inner = facetX(0.061, y0 + 0.08, y1 - 0.08, z0 + 0.08, z1 - 0.08);
   return obj(b(0, y0, z0, 0.08, y1 - y0, z1 - z0), [box(0, y0, z0, 0.06, y1 - y0, z1 - z0, 'dark', { noLeft: false }), f(0, 1, 0, 1, 'p m-dark'), screenContent(inner, content)]);
 }
 
-/** Framed project board on the back wall: an image area and caption bars. */
 export function projectBoardOnY(x0: number, x1: number, z0: number, z1: number, variant: number): SceneObject {
   const f = facetY(0.05, x0, x1, z0, z1);
   const tint = ['p m-board-a', 'p m-board-b', 'p m-board-c'][variant % 3];
@@ -459,7 +426,6 @@ export function projectBoardOnY(x0: number, x1: number, z0: number, z1: number, 
   ]);
 }
 
-/** Framed certificate on the left wall. */
 export function frameOnX(y0: number, y1: number, z0: number, z1: number): SceneObject {
   const f = facetX(0.04, y0, y1, z0, z1);
   return obj(b(0, y0, z0, 0.05, y1 - y0, z1 - z0), [
@@ -472,11 +438,6 @@ export function frameOnX(y0: number, y1: number, z0: number, z1: number): SceneO
   ]);
 }
 
-/**
- * Reception counter, front facing +y. Two objects: the receptionist's work
- * surface behind, and the raised front with its ledge, so items on the work
- * surface sort correctly between them.
- */
 export function receptionCounter(x: number, y: number, w: number, d: number): SceneObject[] {
   const h = 1.75;
   const back = d * 0.45;
@@ -491,7 +452,6 @@ export function receptionCounter(x: number, y: number, w: number, d: number): Sc
   ];
 }
 
-/** Kitchenette counter with a coffee machine. Front faces +y. */
 export function kitchenette(x: number, y: number, w: number, d: number): SceneObject[] {
   const h = 1.5;
   const f = facetY(y + d + 0.002, x, x + w, 0.1, h - 0.1);
@@ -534,7 +494,6 @@ export function mug(x: number, y: number, z: number, mat: Material = 'mug'): Sce
   return obj(b(x, y, z, 0.22, 0.22, 0.25), box(x, y, z, 0.22, 0.22, 0.25, mat));
 }
 
-/** A closed document folder lying on a table, with the edge of a sheet showing. */
 export function folder(x: number, y: number, z: number, w = 1.0, d = 0.7): SceneObject {
   return obj(b(x, y, z, w, d, 0.07), [
     box(x + 0.06, y + 0.05, z, w - 0.1, d - 0.08, 0.035, 'paper'),
@@ -543,7 +502,6 @@ export function folder(x: number, y: number, z: number, w = 1.0, d = 0.7): Scene
   ]);
 }
 
-/** Stack of paper or a document tray. */
 export function papers(x: number, y: number, z: number, w = 0.6, d = 0.8, n = 3): SceneObject {
   const shapes: ShapeTree[] = [];
   for (let i = 0; i < n; i++) shapes.push(...box(x + (i % 2) * 0.03, y + (i % 2) * 0.02, z + i * 0.03, w, d, 0.03, 'paper'));
@@ -567,7 +525,6 @@ export function headphones(x: number, y: number, z: number): SceneObject {
   ]);
 }
 
-/** Sticky notes on the front (+y) face of a partition: a personal planning board. */
 export function pinboardOnPartition(y: number, x0: number, x1: number, z0: number, z1: number): SceneObject {
   const f = facetY(y + 0.002, x0, x1, z0, z1);
   const notes: Shape[] = [f(0, 1, 0, 1, 'p m-cork')];

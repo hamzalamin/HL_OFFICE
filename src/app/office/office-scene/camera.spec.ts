@@ -1,11 +1,11 @@
 import { frameTarget, toScreen } from './camera';
 
 describe('frameTarget', () => {
-  const viewport = { w: 1200, h: 900 }; // same 4:3 ratio as the scene: base scale 1.25
+  const viewport = { w: 1200, h: 900 };
 
   it('centres a target inside the uncovered part of the viewport', () => {
     const t = frameTarget(viewport, { x: 380, y: 260, w: 200, h: 200 }, { top: 0, right: 400, bottom: 0, left: 0 });
-    // Target centre (480, 360) in scene units → (600, 450) px at base scale.
+
     const cx = t.x + t.k * 600;
     const cy = t.y + t.k * 450;
     expect(cx).toBeCloseTo((1200 - 400) / 2, 0);
@@ -28,7 +28,7 @@ describe('toScreen', () => {
     const target = { x: 300, y: 200, w: 120, h: 90 };
     const insets = { top: 0, right: 400, bottom: 0, left: 0 };
     const r = toScreen(viewport, frameTarget(viewport, target, insets), target);
-    expect(r.x + r.w / 2).toBeCloseTo(500, 0); // centre of the 1000 px left of the inset
+    expect(r.x + r.w / 2).toBeCloseTo(500, 0);
     expect(r.y + r.h / 2).toBeCloseTo(400, 0);
   });
 });

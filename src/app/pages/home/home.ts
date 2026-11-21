@@ -30,26 +30,18 @@ import { RoomDock } from '../../office/room-dock/room-dock';
 import { AREA_BY_ID, AreaId } from '../../office/scene/areas';
 import { WelcomeMemory } from './welcome-memory';
 
-/** Breakpoint between the centred folio (wide) and the bottom sheet (phones). */
 const WIDE_QUERY = '(min-width: 900px)';
 
-// Layout of the floating pieces, in px. Mirrored in home.scss.
-/** Space kept clear at the top for the language and CV controls. */
 const TOP = 68;
 const TOP_PHONE = 60;
-/** Space kept clear at the bottom for the room dock. */
+
 const DOCK = 84;
 const DOCK_PHONE = 72;
-/** The phone bottom sheet's maximum height (mirrors home.scss). */
+
 function phoneSheetHeight(h: number): number {
   return Math.min(0.5 * h, 460);
 }
 
-/**
- * The office: the persistent interface of the whole portfolio. It stays
- * mounted while visitors move between areas and projects (child routes);
- * only the camera and the panel change.
- */
 @Component({
   selector: 'app-home',
   imports: [OfficeScene, AreaPanel, FocusSheet, RoomDock, RouterLink, Icon, ContentText],
@@ -74,7 +66,6 @@ export class Home {
   private readonly welcomeButton = viewChild<ElementRef<HTMLButtonElement>>('welcomeButton');
   private readonly memory = inject(WelcomeMemory);
 
-  /** The focus is part of the URL so it is shareable and works with back/forward. */
   protected readonly focus = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
@@ -83,55 +74,41 @@ export class Home {
     ),
     { requireSync: true, equal: sameFocus },
   );
-  /**
-   * What the panel and the room highlighting show: the focus, a couple of
-   * frames later. The camera follows `focus` at once, so it is already
-   * gliding (on the GPU) while the page does the heavier update.
-   */
+
   protected readonly shown = signal<OfficeFocus>(this.focus());
   private readonly delayFrames = inject(PANEL_DELAY_FRAMES);
   private delayFrame = 0;
 
   protected readonly activeArea = computed(() => this.shown().area);
-  /** The opened project, if its slug matches one on the wall. */
+
   protected readonly project = computed(() => this.findProject(this.shown().project));
   protected readonly projectMissing = computed(() => !!this.shown().project && !this.project());
-  /** The opened experience, if its id matches one in the presentation. */
+
   protected readonly experience = computed(() => {
     const id = this.shown().experience;
     return id ? (this.content.content().experience.find((e) => e.id === id) ?? null) : null;
   });
   protected readonly experienceMissing = computed(() => !!this.shown().experience && !this.experience());
-  /** The opened blog post, if its slug matches a published one. */
+
   protected readonly post = computed(() => this.blog.find(this.shown().post));
-  /** Unknown only once the live list has answered: a post published since the build may still come. */
+
   protected readonly postMissing = computed(() => !!this.shown().post && !this.post() && this.blog.settled());
-  /** A case study, an experience or a post is open: it gets the editorial sheet, the folio steps aside. */
+
   protected readonly deep = computed(() => !!this.project() || !!this.experience() || !!this.post());
 
-  /**
-   * The welcome popup opens by itself on the first visit only. Once closed it
-   * collapses into a small button that can reopen it.
-   */
   protected readonly welcomeOpen = signal(false);
-  /** Briefly shows the exploration hint next to the button after closing. */
+
   protected readonly hintExpanded = signal(false);
   private hintTimer: ReturnType<typeof setTimeout> | undefined;
-  /** Where focus goes after the popup closes. */
+
   private focusAfterClose: 'button' | 'area' | 'none' = 'button';
 
   protected readonly wide = signal(true);
 
   private readonly windowSize = signal({ w: 0, h: 0 });
 
-  /**
-   * Space the camera keeps clear: the top controls, the dock and, while a
-   * room is open, the bottom sheet (phones). A
-   * case study or experience frames its board or slide in the middle, behind
-   * the sheet.
-   */
   protected readonly sceneInsets = computed<Insets>(() => {
-    // From the new focus at once, so the camera frames the final layout.
+
     const f = this.focus();
     const item =
       !!this.findProject(f.project) ||
@@ -145,7 +122,6 @@ export class Home {
     return this.roomInsets();
   });
 
-  /** What the zoom inside the office is fitted to. Wide screens: the folio is centred over the room, so the room keeps the whole canvas. */
   protected readonly roomInsets = computed<Insets>(() =>
     this.wide()
       ? { ...NO_INSETS, top: TOP, bottom: DOCK }
@@ -153,8 +129,7 @@ export class Home {
   );
 
   constructor() {
-    // The panel and highlighting follow the focus a few frames later (at
-    // once on the server, which has no frames).
+
     const frames = typeof requestAnimationFrame === 'function';
     effect(() => {
       const f = this.focus();
@@ -168,13 +143,12 @@ export class Home {
     });
     this.destroyRef.onDestroy(() => frames && cancelAnimationFrame(this.delayFrame));
 
-    // Entering the blog (or opening a post): fetch what is published right now.
     effect(() => {
       if (this.focus().area === 'blog') untracked(() => void this.blog.refresh());
     });
 
     afterNextRender(() => {
-      // A shared link to a specific area should not be covered by the popup.
+
       if (!this.memory.hasSeen() && !this.activeArea()) this.openWelcome();
 
       const mq = typeof window.matchMedia === 'function' ? window.matchMedia(WIDE_QUERY) : null;
@@ -188,7 +162,6 @@ export class Home {
     });
     this.destroyRef.onDestroy(() => clearTimeout(this.hintTimer));
 
-    // Title and description follow the focus (also in the prerendered pages).
     const title = inject(Title);
     const meta = inject(Meta);
     effect(() => {
@@ -219,15 +192,13 @@ export class Home {
       }
     });
 
-    // Keep keyboard focus with the interaction: into the panel when it opens or
-    // changes, back to where the visitor came from when going up a level.
     let previous: OfficeFocus | null = null;
     effect(() => {
       const current = this.shown();
       untracked(() => {
         const prev = previous;
         previous = current;
-        if (!prev) return; // First render: nothing to move from.
+        if (!prev) return;
         afterNextRender(() => this.moveFocus(prev, current), { injector: this.injector });
       });
     });
@@ -235,12 +206,12 @@ export class Home {
 
   private moveFocus(prev: OfficeFocus, current: OfficeFocus): void {
     if (current.area) {
-      // A case study or experience: the sheet takes focus (it does so itself when it opens).
+
       if (focusItem(current)) return this.sheet()?.focusHeading();
-      // Back from one: return to it in the room's folio.
+
       const prevItem = focusItem(prev);
       if (prevItem && current.area === prev.area && this.panel()?.focusItem(prevItem)) return;
-      // Gliding through the rooms with the dock: stay on the dock.
+
       if (document.activeElement?.closest('app-room-dock')) return;
       this.panel()?.focusHeading();
     } else if (prev.area) {
@@ -260,7 +231,6 @@ export class Home {
     this.hintExpanded.set(false);
   }
 
-  /** "Explore the office": close the popup and put the visitor on the first area. */
   protected explore(): void {
     this.closeWelcome('area');
   }
@@ -268,11 +238,10 @@ export class Home {
   protected closeWelcome(focus: 'button' | 'area' | 'none' = 'button'): void {
     this.focusAfterClose = focus;
     const dialog = this.welcomeDialog().nativeElement;
-    if (dialog.open) dialog.close(); // fires (close) → onWelcomeClosed()
+    if (dialog.open) dialog.close();
     else this.onWelcomeClosed();
   }
 
-  /** Runs for every way of closing: buttons, Escape, or a click on the backdrop. */
   protected onWelcomeClosed(): void {
     if (!this.welcomeOpen()) return;
     this.welcomeOpen.set(false);
@@ -284,7 +253,7 @@ export class Home {
 
     const target = this.focusAfterClose;
     this.focusAfterClose = 'button';
-    if (target === 'none') return; // A link inside the popup moves focus itself.
+    if (target === 'none') return;
     afterNextRender(
       () => {
         const el =
@@ -297,7 +266,6 @@ export class Home {
     );
   }
 
-  /** Clicks on the dialog element itself land on the backdrop area. */
   protected onDialogClick(event: MouseEvent): void {
     if (event.target === this.welcomeDialog().nativeElement) this.closeWelcome();
   }
@@ -306,7 +274,6 @@ export class Home {
     return this.lang.path(AREA_BY_ID[id].route);
   }
 
-  /** Escape goes up one level: case study or experience → its room → office overview. */
   protected onEscape(event: Event): void {
     if (event.defaultPrevented || this.welcomeOpen()) return;
     const area = this.activeArea();

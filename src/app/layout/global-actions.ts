@@ -8,12 +8,6 @@ import { cvOptions, downloadAll } from '../core/content/cv';
 import { LANGS, LanguageService } from '../core/i18n/language.service';
 import { Icon } from './icon';
 
-/**
- * The only global controls: language and, once the files exist, the CV.
- * Small floating icons in the top-right corner; the office is the navigation.
- * Each opens a compact menu: the language to read in, or the CV version
- * (English, French or both) to download.
- */
 type Menu = 'lang' | 'cv';
 
 @Component({
@@ -22,7 +16,7 @@ type Menu = 'lang' | 'cv';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'onEscape($event)',
-    // pointerdown, not click: iOS sends no click for taps on plain content.
+
     '(document:pointerdown)': 'onOutside($event)',
   },
   template: `
@@ -290,7 +284,7 @@ export class GlobalActions {
 
   protected readonly langs: readonly Lang[] = LANGS;
   protected readonly open = signal<Menu | null>(null);
-  /** The CV versions that exist; the icon only appears when there is at least one. */
+
   protected readonly cv = computed(() => cvOptions(this.content.content().cv));
 
   constructor() {
@@ -315,7 +309,6 @@ export class GlobalActions {
     this.close();
   }
 
-  /** Escape closes the menu first (and nothing else). */
   protected onEscape(event: Event): void {
     const menu = this.open();
     if (!menu) return;

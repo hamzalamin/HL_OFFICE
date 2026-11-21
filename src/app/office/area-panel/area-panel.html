@@ -17,7 +17,7 @@
     } @else {
       @switch (area()) {
         @case ('reception') {
-          <!-- Reception: introduction and professional profile -->
+
           @let pr = profile();
           <div class="card profile">
             @if (content.visible(pr.name)) {
@@ -59,7 +59,7 @@
         }
 
         @case ('workstation') {
-          <!-- Workstation: the technologies and practices -->
+
           @if (skills().length) {
             <dl class="skills">
               @for (g of skills(); track $index) {
@@ -79,7 +79,7 @@
         }
 
         @case ('projects') {
-          <!-- Project wall: one board per project -->
+
           @if (projectMissing()) {
             <p class="notice" role="status">{{ t.projects.notFound }}</p>
           }
@@ -87,7 +87,7 @@
             @for (p of content.projects(); track p.slug; let i = $index) {
               <li>
                 <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-item-link]="p.slug">
-                  <!-- A miniature of the project's board on the wall: tinted screen, caption bars, its number. -->
+
                   <span class="board-screen" aria-hidden="true">
                     <span class="board-bars"><i></i><i></i></span>
                     <span class="board-no">{{ (i + 1).toString().padStart(2, '0') }}</span>
@@ -120,7 +120,7 @@
         }
 
         @case ('meeting') {
-          <!-- Meeting room: the professional journey, with parallel work on its own track -->
+
           @if (experienceMissing()) {
             <p class="notice" role="status">{{ t.career.notFound }}</p>
           }
@@ -166,7 +166,7 @@
         }
 
         @case ('library') {
-          <!-- Library: the CV document, education, certificates -->
+
           <div class="document">
             <app-icon name="file" />
             <div class="document-body">
@@ -235,7 +235,7 @@
         }
 
         @case ('blog') {
-          <!-- Blog: ideas and notes, newest first -->
+
           @if (postMissing()) {
             <p class="notice" role="status">{{ t.blog.notFound }}</p>
           }
@@ -243,7 +243,7 @@
         }
 
         @case ('lounge') {
-          <!-- Lounge: contact details -->
+
           @let ct = contact();
           @if (content.visible(ct.message)) {
             <p class="lead"><app-text [value]="ct.message" /></p>
@@ -299,7 +299,6 @@
       }
     }
 
-    <!-- Essential information is always one step away, wherever you are. -->
     @if (area() === 'reception') {
       <div class="actions">
         <a class="btn btn-primary" [routerLink]="areaPath('projects')">{{ t.reception.seeProjects }} <app-icon name="arrow-right" /></a>

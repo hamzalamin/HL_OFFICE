@@ -1,11 +1,6 @@
 import { Lang } from '../../../content';
 import { AreaId } from '../../office/scene/areas';
 
-/**
- * Interface text (buttons, labels, area descriptions). This is product copy,
- * not personal content: personal content lives in src/content/.
- */
-
 interface AreaStrings {
   name: string;
   section: string;
@@ -99,14 +94,14 @@ export interface UiStrings {
   };
   lounge: { email: string; phone: string; copy: string; copied: string; links: string; location: string };
   blog: {
-    /** "{n}" is replaced with the number of minutes. */
+
     minutes: string;
     read: string;
     empty: string;
     draft: string;
     share: string;
     copied: string;
-    /** "{language}" is replaced with the language the post is written in (from `languageNames`). */
+
     writtenIn: string;
     languageNames: Record<Lang, string>;
     back: string;

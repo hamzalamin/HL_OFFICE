@@ -3,7 +3,6 @@ import { isPlatformBrowser } from '@angular/common';
 
 const KEY = 'portfolio.welcome-seen';
 
-/** Minimal storage interface so tests can provide an in-memory fake. */
 export type WelcomeStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 export const WELCOME_STORAGE = new InjectionToken<WelcomeStorage | null>('WELCOME_STORAGE', {
@@ -13,16 +12,11 @@ export const WELCOME_STORAGE = new InjectionToken<WelcomeStorage | null>('WELCOM
     try {
       return window.localStorage;
     } catch {
-      return null; // Storage blocked (private mode, disabled cookies…)
+      return null;
     }
   },
 });
 
-/**
- * Remembers whether this visitor has already closed the welcome popup, so it
- * only opens automatically on the first visit. A per-visitor convenience:
- * if storage is unavailable, the popup simply shows again.
- */
 @Injectable({ providedIn: 'root' })
 export class WelcomeMemory {
   private readonly storage = inject(WELCOME_STORAGE);
@@ -39,7 +33,7 @@ export class WelcomeMemory {
     try {
       this.storage?.setItem(KEY, '1');
     } catch {
-      // Ignore: nothing important is lost.
+
     }
   }
 }

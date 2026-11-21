@@ -3,7 +3,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
-/** A post as stored in Neon (see api/blog.ts). */
 interface StoredPost {
   slug: string;
   lang: 'en' | 'fr';
@@ -16,9 +15,9 @@ interface StoredPost {
 }
 
 interface Draft extends StoredPost {
-  /** Comma-separated in the form. */
+
   tagText: string;
-  /** Saved before: slug and language can no longer change. */
+
   existing: boolean;
 }
 
@@ -29,11 +28,10 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** "Mon idée géniale!" → "mon-idee-geniale". While typing (`partial`), a trailing dash is kept. */
 function slugify(text: string, partial = false): string {
   const s = text
     .normalize('NFKD')
-    .replace(/\p{M}/gu, '') // accents: "é" → "e"
+    .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+/, '')
@@ -45,12 +43,6 @@ function blank(): Draft {
   return { slug: '', lang: 'en', title: '', date: today(), summary: '', tags: [], tagText: '', body: '', draft: true, existing: false };
 }
 
-/**
- * The private writing desk: write, preview, save and publish blog posts.
- * Posts are stored in Neon through /api/blog (password protected); saving
- * triggers a rebuild of the site, and the build turns every published post
- * into a prerendered page. Not linked from anywhere, and not indexed.
- */
 @Component({
   selector: 'app-write',
   imports: [RouterLink],
@@ -65,7 +57,7 @@ export class Write {
   protected readonly unlocked = signal(false);
   protected readonly posts = signal<StoredPost[]>([]);
   protected readonly post = signal<Draft>(blank());
-  /** The slug follows the title until it is edited by hand. */
+
   private slugTouched = false;
 
   protected readonly busy = signal(false);
@@ -90,11 +82,10 @@ export class Write {
           void this.unlock();
         }
       } catch {
-        // Storage unavailable: type the password each time.
+
       }
     }
 
-    // Live preview, with the same Markdown rules as the build.
     effect(() => {
       if (this.tab() !== 'preview') return;
       const body = this.post().body;
@@ -141,7 +132,7 @@ export class Write {
       try {
         sessionStorage.setItem(PASSWORD_KEY, this.password());
       } catch {
-        // Not remembered for this tab.
+
       }
     } catch (e) {
       this.message.set({ kind: 'error', text: (e as Error).message });
@@ -156,11 +147,10 @@ export class Write {
     try {
       sessionStorage.removeItem(PASSWORD_KEY);
     } catch {
-      // Nothing stored.
+
     }
   }
 
-  /** The value of the input, textarea or select an event came from. */
   protected val(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }

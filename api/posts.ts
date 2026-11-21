@@ -1,12 +1,3 @@
-// The blog's public read API (a Vercel function at /api/posts): published
-// posts only, so new and edited posts show on the site at once, without
-// waiting for a rebuild.
-//
-//   GET /api/posts                      every published post (no body)
-//   GET /api/posts?slug=..&lang=..      one published post, with its HTML
-//
-// Cached briefly at the edge: a change is visible within about 10 seconds.
-
 import { database, json, readingMinutes, renderMarkdown } from './_shared';
 
 const CACHE = 'public, max-age=0, s-maxage=10, stale-while-revalidate=60';

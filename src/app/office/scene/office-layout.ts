@@ -4,13 +4,6 @@ import { AREAS, AreaDef, AreaId, OFFICE } from './areas';
 import { Exterior, buildExterior } from './exterior';
 import * as F from './furniture';
 
-/**
- * The composition of the office: which furniture stands where. The result is
- * computed once at module load and is pure data, so it renders identically on
- * the server (prerender) and in the browser.
- */
-
-/** Boards on the back wall of the project area, one per project: [x0, x1]. */
 const PROJECT_BOARDS = [
   [13, 17],
   [18, 22],
@@ -18,7 +11,6 @@ const PROJECT_BOARDS = [
 ] as const;
 const BOARD_Z = [2.2, 4.8] as const;
 
-/** The meeting room's presentation screen (left wall) and the folders on its table, one per experience. */
 const SCREEN = { y0: 2.2, y1: 6.6, z0: 2, z1: 4.6 } as const;
 const TABLE_Z = 1.25;
 const FOLDERS = [3.4, 4.75, 6.1, 7.45].map((x) => ({ x, y: 3.45 }));
@@ -108,7 +100,7 @@ function furnish(id: AreaId): SceneObject[] {
         F.plant(23.2, 20.6, 'snake'),
       ];
     case 'blog':
-      // The writing corner, at the front between the reception and the lounge.
+
       return [
         F.rug(12, 18.6, 21, 21.7, 'rug-library'),
         F.plant(11.3, 18.5, 'snake'),
@@ -125,7 +117,7 @@ function furnish(id: AreaId): SceneObject[] {
       ];
     case 'reception':
       return [
-        // The entrance is in the front, facing the street (see exterior.ts).
+
         F.rug(1.2, 20.3, 3.8, 21.7, 'mat', false),
         F.windowOnX(17.4, 20.6, 1.3, 4.6, 2),
         F.plant(4.3, 16.4, 'bush'),
@@ -139,7 +131,6 @@ function furnish(id: AreaId): SceneObject[] {
   }
 }
 
-/** Decorative pieces outside the interactive areas. */
 function decor(): SceneObject[] {
   return [
     F.windowOnX(16.6, 17.6, 1.3, 4.6, 1),
@@ -153,40 +144,37 @@ export interface RenderGroup {
   key: string;
   area?: AreaDef;
   objects: SceneObject[];
-  /** Floor footprint polygon (areas only): highlight and pointer target. */
+
   footprint?: string;
 }
 
 export interface AreaGeometry {
   id: AreaId;
-  /** Screen-space rectangle framing the area, used by the camera. */
+
   frame: { x: number; y: number; w: number; h: number };
-  /** Label anchor in screen units. */
+
   label: { x: number; y: number };
 }
 
-/** A project board: the camera frames it and it can be selected directly. */
 export interface ProjectSlot {
-  /** Screen-space rectangle framing the board and the monitor below it. */
+
   frame: { x: number; y: number; w: number; h: number };
-  /** Board face polygon, used as the pointer target and highlight. */
+
   hit: string;
-  /** Label anchor above the board, in screen units. */
+
   pin: { x: number; y: number };
 }
 
-/** A folder on the meeting table: selectable, with a label anchor. */
 export interface FolderSlot {
   hit: string;
   pin: { x: number; y: number };
 }
 
-/** The meeting room presentation: where the slide is drawn and what the camera frames. */
 export interface MeetingRoom {
-  /** SVG transform mapping slide units (84.8 × 44.9, origin top left) onto the screen surface. */
+
   slide: string;
   slideSize: { w: number; h: number };
-  /** Screen-space rectangle framing the screen and the table, for a selected experience. */
+
   frame: { x: number; y: number; w: number; h: number };
   folders: FolderSlot[];
 }
@@ -195,23 +183,23 @@ export interface OfficeModel {
   shell: SceneObject[];
   groups: RenderGroup[];
   areas: Record<AreaId, AreaGeometry>;
-  /** Screen-space rectangle framing the whole office for the overview. */
+
   overview: { x: number; y: number; w: number; h: number };
-  /** Project boards, in content order: project N is shown on board N. */
+
   projectSlots: ProjectSlot[];
-  /** The city block around the building. */
+
   exterior: Exterior;
   meeting: MeetingRoom;
 }
 
 function meetingRoom(): MeetingRoom {
-  // The inner screen surface (see displayOnX): on the x = 0 wall, screen-left is the high-y end.
+
   const y0 = SCREEN.y0 + 0.08;
   const y1 = SCREEN.y1 - 0.08;
   const z0 = SCREEN.z0 + 0.08;
   const z1 = SCREEN.z1 - 0.08;
   const [ox, oy] = project(0.07, y1, z1);
-  // One slide unit along the wall = 1/20 world unit: (+0.866, −0.5) on screen; vertical units stay vertical.
+
   const slide = `matrix(0.866 -0.5 0 1 ${Math.round(ox * 10) / 10} ${Math.round(oy * 10) / 10})`;
   const slideSize = { w: Math.round((y1 - y0) * 200) / 10, h: Math.round((z1 - z0) * 0.92 * 200) / 10 };
   const folders = FOLDERS.map(({ x, y }) => {
@@ -275,9 +263,6 @@ export function buildOffice(): OfficeModel {
     areas[g.area.id] = { id: g.area.id, frame, label: { x: sx, y: sy } };
   }
 
-  // The overview frames the floor and everything on it. The empty top of the
-  // back walls and the front tip of the slab may run off-screen, so the
-  // office itself gets as much of the screen as possible.
   const overview = screenRect({ x: -0.45, y: -0.45, z: -0.2, w: OFFICE.w + 0.45, d: OFFICE.d + 0.45, h: 5.2 });
 
   return { shell, groups: depthSort(groups), areas, overview, projectSlots: PROJECT_BOARDS.map(projectSlot), exterior: buildExterior(), meeting: meetingRoom() };

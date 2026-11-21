@@ -1,20 +1,3 @@
-// Turns the blog's posts into TypeScript the app can import.
-//
-//   Neon (blog_posts table, written from the /write page)  ┐
-//   src/content/blog/<lang>/<slug>.md                       ┴→ src/content/blog/generated/
-//
-// Posts come from the database when DATABASE_URL is set (in Vercel, or in a
-// local .env file), and from Markdown files in any case. If the database is
-// configured but cannot be read, the build fails rather than publishing a
-// site without its posts.
-//
-// Runs before `npm start`, `npm run build` and `npm test`. With --watch it
-// keeps running and regenerates whenever a Markdown post changes (used by
-// npm start; run `npm run blog` to pull new posts from the database).
-//
-// The Markdown is converted here, at build time, so no Markdown library is
-// shipped to visitors; each post's body becomes its own lazily loaded chunk.
-
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,21 +10,20 @@ const LANGS = ['en', 'fr'];
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// A local .env file (never committed) can hold DATABASE_URL for local builds.
 try {
   process.loadEnvFile(join(ROOT, '.env'));
 } catch {
-  // No .env file: Markdown posts only, unless DATABASE_URL is set otherwise.
+
 }
 
 marked.use({
   renderer: {
-    // The post's title is the page heading: "# Part" becomes the next level down.
+
     heading({ tokens, depth }) {
       const level = Math.min(depth + 1, 6);
       return `<h${level}>${this.parser.parseInline(tokens)}</h${level}>\n`;
     },
-    // Links to other sites open in a new tab.
+
     link({ href, title, tokens }) {
       const text = this.parser.parseInline(tokens);
       const t = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
@@ -51,7 +33,6 @@ marked.use({
   },
 });
 
-/** A small front-matter reader: `key: value` lines and `[a, b]` lists between `---` fences. */
 function frontMatter(source, file) {
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(source);
   if (!m) throw new Error(`${file}: missing front matter (a block between --- lines at the top).`);
@@ -95,7 +76,6 @@ function toPost({ slug, lang, title, date, summary, tags, draft, body, source, u
   };
 }
 
-/** Posts written as Markdown files in the repository. */
 function readMarkdownPosts() {
   const posts = [];
   for (const lang of LANGS) {
@@ -127,7 +107,6 @@ function readMarkdownPosts() {
   return posts;
 }
 
-/** Posts written from the /write page, stored in Neon. */
 async function readDatabasePosts() {
   const url = process.env.DATABASE_URL;
   if (!url) return [];
@@ -135,7 +114,7 @@ async function readDatabasePosts() {
     const { neon } = await import('@neondatabase/serverless');
     const sql = neon(url);
     const [{ found }] = await sql`SELECT to_regclass('public.blog_posts') IS NOT NULL AS found`;
-    if (!found) return []; // Nothing written yet: the table is created on the first save.
+    if (!found) return [];
     const rows = await sql`
       SELECT slug, lang, title, to_char(date, 'YYYY-MM-DD') AS date, summary, tags, body, draft,
              to_char(updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated
@@ -153,7 +132,7 @@ async function readPosts() {
   for (const p of database) {
     if (seen.has(`${p.lang}/${p.slug}`)) throw new Error(`"${p.lang}/${p.slug}" exists both as a Markdown file and in the database: rename one.`);
   }
-  // Newest first.
+
   return [...files, ...database].sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
 }
 

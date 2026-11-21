@@ -1,9 +1,3 @@
-// Typography and building blocks shared by everything shown in the panel.
-
-// Cards are drawn like the office furniture: a lit top face, a front face
-// below it in a darker shade of the same material, soft darker edges, and a
-// faint contact shadow on the floor. Light comes from the upper left, as in
-// the scene (materials.scss). Set --c to the card's material.
 @mixin block($side: 4px, $radius: 6px) {
   --side: #{$side};
   --side-rest: #{$side};
@@ -18,7 +12,6 @@
     0 calc(var(--side) + 6px) 12px -8px var(--o-shadow);
 }
 
-// Picked up on hover, pressed onto the floor on click.
 @mixin block-press {
   transition:
     transform 200ms var(--ease-out),
@@ -67,7 +60,6 @@ h3 {
   color: var(--color-accent-strong);
 }
 
-// The reception counter: the profile card.
 .card {
   @include block(5px, 8px);
   --c: var(--o-counter);
@@ -76,7 +68,6 @@ h3 {
   padding: 1rem 1.125rem;
 }
 
-// Skills as small keys on the desk.
 .chips {
   display: flex;
   flex-wrap: wrap;

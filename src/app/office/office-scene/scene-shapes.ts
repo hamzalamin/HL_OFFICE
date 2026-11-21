@@ -1,15 +1,10 @@
 import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@angular/core';
 import { SceneObject } from '../engine/iso';
 
-/**
- * Renders a list of scene objects as SVG primitives. Used as an attribute
- * component on an <svg:g> so the markup stays valid SVG. OnPush with static
- * inputs means the (large) static geometry is never re-checked.
- */
 @Component({
   selector: 'g[appSceneShapes]',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Materials target the SVG primitives rendered here, scoped under `.scene`.
+
   encapsulation: ViewEncapsulation.None,
   styleUrl: './materials.scss',
   template: `

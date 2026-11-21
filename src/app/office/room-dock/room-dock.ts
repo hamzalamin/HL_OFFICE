@@ -4,12 +4,6 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 
-/**
- * The floating dock along the bottom of the office: the six rooms as small
- * index tabs, so visitors can glide from room to room without going back to
- * the overview. Plain links (each room has its own URL); the current room
- * carries aria-current.
- */
 @Component({
   selector: 'app-room-dock',
   imports: [RouterLink, Icon],
@@ -69,8 +63,7 @@ import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
       margin: 0 0.125rem;
       background: var(--stone-strong);
     }
-    // Each room is a small key: flat at rest, picked up on hover, and the
-    // current room stands raised on its front edge like the cards.
+
     .tab {
       --c: var(--o-white);
       --side: 0px;
@@ -161,7 +154,7 @@ import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
       outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
-    // Narrow screens: numbered markers only; the open folio names the room.
+
     @media (max-width: 1099px) {
       .tab:not(.is-overview) {
         justify-content: center;

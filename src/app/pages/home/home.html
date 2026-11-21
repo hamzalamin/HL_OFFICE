@@ -12,8 +12,6 @@
     [roomInsets]="roomInsets()"
   />
 
-  <!-- Welcome popup: opens by itself on the first visit only. Kept in the DOM
-       (closed) so the heading and introduction stay part of the page. -->
   <dialog
     #welcome
     class="welcome"
@@ -55,7 +53,6 @@
     </div>
   </dialog>
 
-  <!-- Collapsed welcome: a small button that reopens the popup. -->
   <div class="welcome-dock" [class.is-expanded]="hintExpanded()" [class.is-hidden]="welcomeOpen()">
     <button
       #welcomeButton
@@ -75,7 +72,6 @@
     <span class="welcome-tooltip" aria-hidden="true">{{ t.home.showIntro }}</span>
   </div>
 
-  <!-- The room's folio: one card size, centred on the page (a bottom sheet on phones). -->
   @if (activeArea(); as area) {
     @if (!deep()) {
       <app-area-panel
@@ -89,7 +85,6 @@
     }
   }
 
-  <!-- Deep content: an editorial sheet over the dimmed studio. -->
   @if (deep()) {
     <app-focus-sheet [project]="project()" [experience]="experience()" [post]="post()" />
   }

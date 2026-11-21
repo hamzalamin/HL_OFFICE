@@ -1,15 +1,5 @@
 import { Shape } from '../engine/iso';
 
-/**
- * People, drawn as small SVG figures in the same flat style as the office.
- *
- * Isometric characters only need two drawings: a 3/4 view walking toward the
- * viewer (`front`, facing the lower right) and one walking away (`back`,
- * facing the upper right). Mirroring each gives the four isometric
- * directions. Coordinates are screen units around the feet (standing) or the
- * seat (sitting); a standing person is about 1.6 m tall at office scale.
- */
-
 export type View = 'front' | 'back';
 export type Pose = 'stand' | 'sit';
 
@@ -33,10 +23,8 @@ export const LOOKS: readonly Look[] = [
   { skin: 'b', hair: 'c', top: 'a', bottom: 'c' },
 ];
 
-/** Hip line of a standing figure. */
 const STAND_HIP = -17.5;
 
-/** Pivots (local units) used to swing limbs: legs at the hip, arms at the shoulder. */
 export const PIVOTS = {
   near: { x: -1.3, y: STAND_HIP },
   far: { x: 1.6, y: STAND_HIP },
@@ -61,11 +49,6 @@ class Pen {
   }
 }
 
-/**
- * Draws one person. `front` faces the lower right, `back` the upper right;
- * `mirror` flips to the left. Limbs carry `limb-*` classes so a walker's
- * legs and arms can swing around `PIVOTS`.
- */
 export function personShapes(lookIndex: number, view: View, pose: Pose, ox = 0, oy = 0, mirror = false): Shape[] {
   const l = LOOKS[lookIndex % LOOKS.length];
   const skin = `p m-skin-${l.skin}`;
@@ -76,7 +59,6 @@ export function personShapes(lookIndex: number, view: View, pose: Pose, ox = 0, 
   const front = view === 'front';
   const H = pose === 'stand' ? STAND_HIP : -1;
 
-  // Legs. Facing the viewer, the figure's right side (screen left) is nearer.
   if (pose === 'stand') {
     p.ellipse(1.5, 0.6, 6, 2.4, 'shadow');
     const nearX = front ? -1.3 : 1.6;
@@ -92,11 +74,9 @@ export function personShapes(lookIndex: number, view: View, pose: Pose, ox = 0, 
     p.poly([[-2.6, 0.2], [2.8, -0.4], [4.4, -2.6], [-0.8, -2.4]], bottom);
   }
 
-  // Far arm, behind the body.
   if (front) arm(p, 3.4, 5.4, H, `${top} shade ${pose === 'stand' ? 'limb-arm-far' : ''}`);
   else arm(p, -5.6, -3.6, H, `${top} shade ${pose === 'stand' ? 'limb-arm-far' : ''}`);
 
-  // Torso, shaded on the far side.
   p.poly([[-4.6, H + 0.5], [4.4, H + 0.5], [4.8, H - 12.5], [3.0, H - 16], [-3.2, H - 16], [-5.0, H - 12.5]], top);
   if (front) p.poly([[2.2, H + 0.5], [4.4, H + 0.5], [4.8, H - 12.5], [3.0, H - 16], [2.4, H - 15.9]], `${top} shade`);
   else p.poly([[-4.6, H + 0.5], [-2.3, H + 0.5], [-2.5, H - 15.9], [-3.2, H - 16], [-5.0, H - 12.5]], `${top} shade`);
@@ -109,7 +89,6 @@ export function personShapes(lookIndex: number, view: View, pose: Pose, ox = 0, 
     }
   }
 
-  // Near arm, in front of the body, with the hand.
   if (front) {
     arm(p, -5.6, -3.6, H, `${top} ${pose === 'stand' ? 'limb-arm' : ''}`);
     p.ellipse(-4.6, H - 0.8, 1.3, 1.3, `${skin} ${pose === 'stand' ? 'limb-arm' : ''}`);
@@ -118,7 +97,6 @@ export function personShapes(lookIndex: number, view: View, pose: Pose, ox = 0, 
     p.ellipse(4.6, H - 0.8, 1.3, 1.3, `${skin} ${pose === 'stand' ? 'limb-arm' : ''}`);
   }
 
-  // Neck and head.
   p.poly([[-1.2, H - 16], [1.4, H - 16], [1.4, H - 18], [-1.2, H - 18]], skin);
   if (l.long && !front) p.poly([[-4.0, H - 22], [3.6, H - 22], [3.4, H - 14.8], [-3.8, H - 14.6]], hair);
   p.ellipse(0.4, H - 22.1, 4.2, 4.6, skin);

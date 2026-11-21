@@ -1,12 +1,6 @@
 import { SHARED } from './shared';
 import { PortfolioContent } from './types';
 
-/**
- * English portfolio content.
- * Values starting with YOUR_ still need confirmation: they show as badges
- * while developing and are hidden from visitors. Remove optional fields or
- * list items you do not need: the interface adapts and hides empty sections.
- */
 export const CONTENT_EN: PortfolioContent = {
   profile: {
     name: 'Hamza Lamin',

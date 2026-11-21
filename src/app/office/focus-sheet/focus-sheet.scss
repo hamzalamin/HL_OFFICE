@@ -1,6 +1,3 @@
-// A centred editorial sheet over the dimmed studio: a wide margin of
-// parchment, a single readable column, a quiet title block.
-
 :host {
   display: contents;
 }
@@ -107,7 +104,6 @@
   text-transform: uppercase;
   color: var(--terracotta);
 
-  // A short ruled line before the kicker, as on a title block.
   &::before {
     content: '';
     display: inline-block;
@@ -147,7 +143,6 @@ h2 {
   }
 }
 
-// Phones: a tall sheet rising from the bottom edge.
 @media (max-width: 899px) {
   .sheet {
     width: 100%;

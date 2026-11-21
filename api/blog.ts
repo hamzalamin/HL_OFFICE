@@ -1,19 +1,3 @@
-// The blog's private write API (a Vercel function at /api/blog).
-//
-//   GET    /api/blog                       all posts, drafts included (for the /write page)
-//   POST   /api/blog   { post }            create or update a post (by slug + lang)
-//   DELETE /api/blog?slug=..&lang=..       delete a post
-//
-// Every request needs `Authorization: Bearer <BLOG_ADMIN_PASSWORD>`.
-// Published posts show on the site at once (it reads them from /api/posts).
-// If a deploy hook is configured, a change also rebuilds the site, so every
-// post gets its own prerendered page right away; otherwise at the next deploy.
-//
-// Environment variables (Vercel → Project → Settings → Environment Variables):
-//   DATABASE_URL            Neon connection string
-//   BLOG_ADMIN_PASSWORD     the /write password (at least 16 characters)
-//   VERCEL_DEPLOY_HOOK_URL  optional: a Vercel deploy hook URL
-
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { database, json } from './_shared';
 
@@ -32,7 +16,6 @@ interface PostInput {
   draft: boolean;
 }
 
-/** Constant-time password check. A wrong password also waits a second, to slow down guessing. */
 async function authorized(request: Request): Promise<boolean> {
   const expected = process.env['BLOG_ADMIN_PASSWORD'] ?? '';
   const given = (request.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
@@ -42,7 +25,6 @@ async function authorized(request: Request): Promise<boolean> {
   return ok;
 }
 
-/** Asks Vercel to rebuild the site, so the change goes live. */
 async function rebuild(): Promise<boolean> {
   const hook = process.env['VERCEL_DEPLOY_HOOK_URL'];
   if (!hook) return false;
@@ -53,7 +35,6 @@ async function rebuild(): Promise<boolean> {
   }
 }
 
-/** Checks and normalises a post sent by the /write page; returns an error message or the post. */
 function validate(input: unknown): string | PostInput {
   if (!input || typeof input !== 'object') return 'Missing post.';
   const p = input as Record<string, unknown>;

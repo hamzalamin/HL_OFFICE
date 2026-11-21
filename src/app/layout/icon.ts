@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 export type IconName = 'menu' | 'close' | 'arrow-right' | 'arrow-left' | 'compass' | 'play' | 'file' | 'globe' | 'external' | 'mail' | 'pause' | 'info' | 'download' | 'check' | 'phone' | 'share';
 
-/** Small inline stroke icons (24×24 grid). Decorative: always aria-hidden. */
 @Component({
   selector: 'app-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,

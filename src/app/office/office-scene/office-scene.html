@@ -9,7 +9,7 @@
   <div #cameraLayer class="camera" [attr.style]="cameraStyle()">
     <div class="stage" [style.width.px]="stageWidth()">
       <svg #svg class="scene" [attr.viewBox]="viewBox" aria-hidden="true" focusable="false" (click)="onSceneClick($event)">
-        <!-- Outside, behind the building -->
+
         <g class="exterior" [appSceneShapes]="ext.ground"></g>
         <g #crowdLayer class="exterior layer">
           @for (o of ext.back; track $index) {
@@ -45,9 +45,6 @@
           }
         }
 
-        <!-- Outside, in front of the building. Each layer holds its scenery
-             objects one by one; people move between layers as they walk and
-             are slotted between the objects in depth order (see crowd-view.ts). -->
         <g #crowdLayer class="exterior layer">
           @for (o of ext.inner; track $index) {
             <g class="obj" [appSceneShapes]="[o]"></g>
@@ -75,7 +72,6 @@
           }
         </g>
 
-        <!-- The entrance plaza: the way into the office. -->
         <polygon
           class="entrance"
           [class.is-emphasis]="emphasis() === 'reception' && !active()"
@@ -85,7 +81,6 @@
           (pointerleave)="hovered.set(null)"
         />
 
-        <!-- Meeting room: the presentation slide on the screen, and the folders on the table. -->
         @let sl = slide();
         <g class="slide" [attr.transform]="model.meeting.slide" aria-hidden="true">
           <rect class="slide-accent" x="6" y="7" width="10" height="1.4" rx="0.7" />
@@ -114,7 +109,6 @@
           }
         </g>
 
-        <!-- Project boards: selectable on their own, drawn over the wall. -->
         <g class="boards" [class.is-dimmed]="!!active() && active() !== 'projects'">
           @for (b of boards(); track b.slug) {
             <polygon

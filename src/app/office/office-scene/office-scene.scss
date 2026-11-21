@@ -30,8 +30,6 @@
   transition: transform var(--camera-duration) var(--ease-camera);
 }
 
-// The camera is always its own GPU layer, so a move starts at once and keeps
-// gliding while the page updates the panel; labels wait for it to arrive.
 .camera {
   will-change: transform;
 }
@@ -47,7 +45,6 @@
   transition: none;
 }
 
-// Sized from the measured viewport (office-scene.ts); this is the fallback.
 .stage {
   position: relative;
   width: min(100cqw, 100cqh * 4 / 3);
@@ -62,10 +59,6 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-
-// ---------------------------------------------------------------------------
-// Areas
-// ---------------------------------------------------------------------------
 
 .area {
   cursor: pointer;
@@ -102,7 +95,6 @@
   stroke-dasharray: none;
 }
 
-// Quietly step back the rest of the office while one area is in focus.
 .has-focus .area:not(.is-active),
 .has-focus .decor,
 .has-focus .exterior,
@@ -115,7 +107,6 @@
   pointer-events: none;
 }
 
-// The entrance plaza: the way in from the street.
 .entrance {
   cursor: pointer;
   fill: var(--color-accent);
@@ -137,10 +128,6 @@
 .has-focus .entrance {
   pointer-events: none;
 }
-
-// ---------------------------------------------------------------------------
-// Project boards (selectable objects on the project wall)
-// ---------------------------------------------------------------------------
 
 .board {
   cursor: pointer;
@@ -170,19 +157,12 @@
   opacity: 0.5;
 }
 
-// ---------------------------------------------------------------------------
-// Labels (HTML, positioned over the drawing; counter-scaled against zoom)
-// ---------------------------------------------------------------------------
-
 .labels ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-// Area labels are architectural callouts: a parchment tag with a slate index
-// marker, a hairline leader down to an anchor dot on the floor, and a faint
-// ellipse where it lands (flattened to the isometric plane).
 .pin {
   position: absolute;
   transform: translate(-50%, -100%) scale(calc(1 / var(--k)));
@@ -193,7 +173,6 @@
     z-index: 2;
   }
 
-  // Leader line.
   &::after {
     content: '';
     position: absolute;
@@ -206,7 +185,6 @@
     transition: height 200ms var(--ease-out);
   }
 
-  // Anchor dot, with its footprint on the floor.
   &::before {
     content: '';
     position: absolute;
@@ -224,8 +202,6 @@
   }
 }
 
-// Inside an area, the panel says where you are: area labels step aside and
-// leave the tab order (visibility), so only the area's own objects remain.
 .pin {
   transition: opacity 200ms ease 150ms;
 }
@@ -259,7 +235,6 @@
     box-shadow 200ms var(--ease-out);
 }
 
-// The index marker: a small slate plate, like a sheet number on a drawing.
 .pin-index,
 .board-index {
   display: grid;
@@ -328,10 +303,6 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
 }
-
-// ---------------------------------------------------------------------------
-// Meeting room: slide on the screen, folders on the table
-// ---------------------------------------------------------------------------
 
 .slide {
   pointer-events: none;
@@ -402,7 +373,6 @@
   opacity: 0.5;
 }
 
-// Board and folder labels: only inside their area.
 .board-labels {
   visibility: hidden;
 
@@ -424,13 +394,11 @@
   opacity: 0;
   transition: opacity 150ms ease;
 
-  // Appear once the camera has mostly arrived, so they read as part of the focus.
   .is-shown & {
     opacity: 1;
     transition: opacity 250ms ease 450ms;
   }
 
-  // A short leader to the object.
   &::after {
     content: '';
     position: absolute;
@@ -497,8 +465,6 @@
   text-overflow: ellipsis;
 }
 
-// Small screens: compact numbered markers, large enough for a finger (42 px);
-// the names are in the directory below.
 .compact {
   .board-name {
     display: none;

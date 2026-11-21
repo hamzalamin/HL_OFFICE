@@ -1,11 +1,7 @@
-/**
- * Language-independent values used by both en.ts and fr.ts.
- * Write each URL, address and slug once here.
- */
 export const SHARED = {
   email: 'hamzalamin80@gmail.com',
   phone: '+212 639 621 650',
-  /** Named for whoever downloads them: name, title, CV. */
+
   cv: {
     en: 'cv/HamzaLamin_SoftwareDeveloper_CV.pdf',
     fr: 'cv/HamzaLamin_DeveloppeurLogiciel_CV.pdf',
@@ -15,7 +11,7 @@ export const SHARED = {
     linkedin: 'https://www.linkedin.com/in/hamza-lamin-a0440a296/',
   },
   projects: {
-    // Repository, demo and dates still to be confirmed.
+
     qatratHayat: {
       slug: 'qatrat-hayat',
       nativeName: { text: 'قطرة حياة', lang: 'ar', dir: 'rtl' as const },

@@ -2,10 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { isPlaceholder } from './placeholder';
 import { ContentService } from './content.service';
 
-/**
- * Renders a content string. Placeholders (`YOUR_*`) appear as a dashed badge
- * while previewing and are replaced by `fallback` (or nothing) in production.
- */
 @Component({
   selector: 'app-text',
   changeDetection: ChangeDetectionStrategy.OnPush,

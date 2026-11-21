@@ -1,12 +1,6 @@
 import { SHARED } from './shared';
 import { PortfolioContent } from './types';
 
-/**
- * French portfolio content (contenu en français).
- * Values starting with YOUR_ still need confirmation: they show as badges
- * while developing and are hidden from visitors. Names of technologies,
- * repositories and certifications are not translated.
- */
 export const CONTENT_FR: PortfolioContent = {
   profile: {
     name: 'Hamza Lamin',

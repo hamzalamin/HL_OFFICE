@@ -235,7 +235,6 @@ textarea {
   font-size: 1.0625rem;
   line-height: 1.65;
 
-  // The rendered Markdown is not part of this template: reach it explicitly.
   ::ng-deep {
     h2,
     h3,

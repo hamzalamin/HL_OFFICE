@@ -13,17 +13,15 @@ function memoryStorage(initial: Record<string, string> = {}): WelcomeStorage & {
   return { data, getItem: (k) => data[k] ?? null, setItem: (k, v) => void (data[k] = v) };
 }
 
-/** A draft post in English only, so the tests do not depend on real posts. */
 const BLOG: BlogSource = {
   posts: [
     { slug: 'sample-post', lang: 'en', title: 'Sample post', date: '2026-11-21', summary: 'A sample.', tags: ['test'], minutes: 1, draft: true, source: 'file', updated: '' },
   ],
   bodies: { 'en/sample-post': () => Promise.resolve('<h3>Sample heading</h3><p>Body.</p>') },
-  // No live API, as on the dev server: the built posts are used.
+
   live: { list: () => Promise.reject(new Error('offline')), body: () => Promise.reject(new Error('offline')) },
 };
 
-/** A database post that was in the build, and the live API as it is now. */
 const built: BlogPostMeta = { slug: 'old-post', lang: 'en', title: 'Old post', date: '2026-11-01', summary: '', tags: [], minutes: 1, draft: false, source: 'db', updated: '2026-11-01T10:00:00.000Z' };
 const fresh: BlogPostMeta = { ...built, slug: 'new-post', title: 'New post', date: '2026-11-22', updated: '2026-11-22T10:00:00.000Z' };
 function liveBlog(live: BlogPostMeta[]): BlogSource {
@@ -43,7 +41,7 @@ async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memory
       { provide: SHOW_PLACEHOLDERS, useValue: showPlaceholders },
       { provide: WELCOME_STORAGE, useValue: storage },
       { provide: BLOG_SOURCE, useFactory: () => blogSource },
-      // Tests check the panel right after navigating: no frame delay.
+
       { provide: PANEL_DELAY_FRAMES, useValue: 0 },
     ],
   });
@@ -87,7 +85,7 @@ describe('Home (office)', () => {
     expect(el(harness).querySelector('app-focus-sheet dialog app-project-case-study')).not.toBeNull();
     expect(el(harness).querySelector('app-focus-sheet .back')?.getAttribute('href')).toBe('/projects');
     expect(el(harness).querySelector('.board.is-active')?.getAttribute('data-board')).toBe('qatrat-hayat');
-    // The room's folio steps aside while the sheet is open, and comes back after.
+
     expect(el(harness).querySelector('app-area-panel')).toBeNull();
     await harness.navigateByUrl('/projects');
     expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
@@ -141,7 +139,7 @@ describe('Home (office)', () => {
       expect(heading(harness)).toContain('Blog');
       expect(el(harness).querySelector('app-blog-list .post-card')).toBeNull();
       expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
-      // A draft's link falls back to the blog, as an unknown post.
+
       await harness.navigateByUrl('/blog/sample-post');
       await harness.fixture.whenStable();
       expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
@@ -261,8 +259,8 @@ describe('Home (office)', () => {
       const parallel = panel.querySelector<HTMLElement>('.parallel')!;
       expect(parallel.getAttribute('href')).toBe('/experience/freelance');
       expect(parallel.textContent).toContain('Alongside my studies and internships');
-      expect(parallel.textContent).not.toMatch(/20\d\d/); // No invented dates.
-      // Drawn beside the two internships (rows 3 to 5), not the current position.
+      expect(parallel.textContent).not.toMatch(/20\d\d/);
+
       expect(parallel.style.gridRow.replace(/\s/g, '')).toBe('3/6');
       expect(el(harness).querySelectorAll('.folder-hit').length).toBe(4);
     });
@@ -279,7 +277,7 @@ describe('Home (office)', () => {
       await harness.fixture.whenStable();
       expect(panel().querySelectorAll('.bullets li').length).toBe(5);
       expect([...panel().querySelectorAll('.chips li')].map((c) => c.textContent!.trim())).toEqual(['Java', 'Spring Boot', 'Angular', 'Oracle', 'JWT', 'Docker']);
-      // Grouped with the later position at the same employer.
+
       expect(panel().querySelector('.also-link')?.getAttribute('href')).toBe('/experience/eurafric-developer');
     });
 

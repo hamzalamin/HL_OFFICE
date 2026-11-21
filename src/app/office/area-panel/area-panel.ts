@@ -23,12 +23,6 @@ import { BlogList } from '../blog-list/blog-list';
 import { journey, periodText } from '../career';
 import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 
-/**
- * The room's folio: one fixed-size card centred on the page (desktop), or a
- * bottom sheet above the room dock (phones). It presents what
- * the room holds; deep items (a case study, an experience) open in the
- * editorial sheet instead (FocusSheet).
- */
 @Component({
   selector: 'app-area-panel',
   imports: [RouterLink, Icon, ContentText, BlogList],
@@ -38,11 +32,11 @@ import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 })
 export class AreaPanel {
   readonly area = input.required<AreaId>();
-  /** A project URL that matches no project on the wall. */
+
   readonly projectMissing = input(false);
-  /** An experience URL that matches no experience. */
+
   readonly experienceMissing = input(false);
-  /** A blog URL that matches no post. */
+
   readonly postMissing = input(false);
 
   protected readonly lang = inject(LanguageService);
@@ -60,10 +54,9 @@ export class AreaPanel {
       .office.areaOf.replace('{n}', String(this.index() + 1).padStart(2, '0'))
       .replace('{total}', String(AREAS.length).padStart(2, '0')),
   );
-  /** Changes whenever the folio shows another room. */
+
   private readonly view = computed(() => this.area());
 
-  // Content of each area, limited to what can be shown.
   private readonly c = computed(() => this.content.content());
   protected readonly profile = computed(() => this.c().profile);
   protected readonly journeyRows = computed(() => journey(this.c().experience.filter((e) => this.content.visible(e.role))));
@@ -74,10 +67,9 @@ export class AreaPanel {
   protected readonly cvFiles = computed(() => cvOptions(this.cv()));
   protected readonly contact = computed(() => this.c().contact);
   protected readonly links = computed(() => this.contact().links.filter((l) => this.content.visible(l.url)));
-  /** The GitHub profile, for visitors who want to see more work. */
+
   protected readonly githubProfile = computed(() => this.content.real(this.contact().links.find((l) => l.kind === 'github')?.url));
 
-  /** Whether the area has anything to show besides its description. */
   protected readonly isEmpty = computed(() => {
     const v = (x: unknown) => this.content.visible(x);
     switch (this.area()) {
@@ -90,9 +82,9 @@ export class AreaPanel {
       case 'meeting':
         return !this.journeyRows().rows.length && !this.journeyRows().parallel.length;
       case 'library':
-        return false; // The CV is always on the shelf, even before its PDF exists.
+        return false;
       case 'blog':
-        return false; // An empty blog says so itself.
+        return false;
       case 'lounge':
         return !v(this.contact().email) && !this.links().length && !v(this.contact().message);
     }
@@ -105,15 +97,12 @@ export class AreaPanel {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => clearTimeout(this.copiedTimer));
 
-    // When the panel switches to another area or project, start at the top
-    // and let the new content settle in (the panel itself stays in place).
     let shown: string | null = null;
     afterRenderEffect(() => {
       const view = this.view();
       const el = this.body().nativeElement;
       if (shown !== null && shown !== view) {
-        // Next frame, when layout is clean: touching scrollTop now would force
-        // a full layout of the page right as the camera starts to move.
+
         requestAnimationFrame(() => {
           el.scrollTop = 0;
           const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -161,7 +150,7 @@ export class AreaPanel {
       clearTimeout(this.copiedTimer);
       this.copiedTimer = setTimeout(() => this.copied.set(false), 2000);
     } catch {
-      // Clipboard refused: the address stays selectable as text.
+
     }
   }
 
@@ -169,7 +158,6 @@ export class AreaPanel {
     this.heading()?.nativeElement.focus({ preventScroll: true });
   }
 
-  /** Back from a case study or an experience: return focus to it in the list. */
   focusItem(id: string): boolean {
     const link = this.host.nativeElement.querySelector<HTMLElement>(`[data-item-link="${id}"]`);
     link?.focus({ preventScroll: true });

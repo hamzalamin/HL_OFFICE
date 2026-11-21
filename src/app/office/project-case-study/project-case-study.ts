@@ -5,7 +5,6 @@ import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 
-/** Full case study of one project, shown in the panel next to its board. */
 @Component({
   selector: 'app-project-case-study',
   imports: [ContentText, Icon],

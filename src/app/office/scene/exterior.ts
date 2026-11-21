@@ -5,38 +5,16 @@ import { seeded } from './furniture';
 import { personShapes } from './people';
 import { SEATS, Seat, facingView } from './pedestrians';
 
-/**
- * The city block around the office: streets, sidewalks, a park, the coffee
- * terrace and the people who use them. Same projection, builders and
- * materials as the interior, so inside and outside read as one place.
- *
- * World layout (office floor is x 0–30, y 0–22; +x runs to the lower right,
- * +y to the lower left of the screen):
- *
- *   - entrance plaza and front garden    y 22–26.5
- *   - front sidewalk / road / sidewalk   y 26.5–30 / 30–35 / 35–37.5, then the park
- *   - coffee terrace and side garden     x 30–34.5
- *   - side sidewalk / road / sidewalk    x 34.5–38 / 38–43 / 43–45.5, then more park
- *   - behind the back walls: trees, paths and two neighbouring buildings
- *
- * Everything outside stands on the street level, the bottom of the office plinth.
- */
-
 export { GROUND };
 const G = GROUND;
 const WORLD = { x0: -30, y0: -30, x1: 70, y1: 50 } as const;
 
 const b = (x: number, y: number, z: number, w: number, d: number, h: number): Bounds => ({ x, y, z, w, d, h });
 
-// ---------------------------------------------------------------------------
-// Ground
-// ---------------------------------------------------------------------------
-
 function surface(x0: number, y0: number, x1: number, y1: number, mat: string, z = G): SceneObject {
   return obj(b(x0, y0, z - 0.01, x1 - x0, y1 - y0, 0.01), flat(x0, y0, x1, y1, z, `p m-${mat}`));
 }
 
-/** A slightly raised slab (sidewalk, curb, bed edge): its front faces read as a curb. */
 function slab(x0: number, y0: number, x1: number, y1: number, h: number, mat: string): SceneObject {
   return obj(b(x0, y0, G, x1 - x0, y1 - y0, h), box(x0, y0, G, x1 - x0, y1 - y0, h, mat));
 }
@@ -50,7 +28,6 @@ function dashes(axis: 'x' | 'y', at: number, from: number, to: number, skip: [nu
   return out;
 }
 
-/** Zebra crossing: bars run in the walking direction, spaced across it. */
 function crossing(walk: 'x' | 'y', across0: number, n: number, from: number, to: number): SceneObject[] {
   const out: SceneObject[] = [];
   for (let i = 0; i < n; i++) {
@@ -64,22 +41,22 @@ function groundLayer(): SceneObject[] {
   const { x0, y0, x1, y1 } = WORLD;
   return [
     surface(x0, y0, x1, y1, 'grass'),
-    // Paths behind the building and around the neighbours.
+
     surface(x0, -7.5, 34.5, -5.5, 'path', G + 0.002),
     surface(-7.5, y0, -5.5, 26.5, 'path', G + 0.002),
     surface(-25.5, -5.5, -10.5, 13.5, 'paving', G + 0.002),
     surface(0.5, -25.5, 21.5, -10.5, 'paving', G + 0.002),
-    // The block the office stands on, with the entrance plaza and the terrace deck.
+
     surface(-1.2, -1.2, 34.5, 26.5, 'paving', G + 0.003),
     surface(-0.6, 22, 6.6, 26.5, 'plaza', G + 0.004),
     surface(30.6, 11.6, 34.3, 21.6, 'deck', G + 0.004),
-    // Park paths and a pond.
+
     surface(1.4, 37.5, 4.1, y1, 'path', G + 0.002),
     surface(x0, 47, 34.5, 48.6, 'path', G + 0.002),
     surface(45.5, 13.5, x1, 15.2, 'path', G + 0.002),
     slab(8.6, 39.8, 17.4, 45.4, 0.14, 'stone'),
     surface(9, 40.2, 17, 45, 'water', G + 0.142),
-    // Roads.
+
     surface(38, y0, 43, y1, 'asphalt', G + 0.003),
     surface(x0, 30, x1, 35, 'asphalt', G + 0.0035),
     ...dashes('x', 32.5, x0, x1, [
@@ -92,7 +69,7 @@ function groundLayer(): SceneObject[] {
     ...crossing('y', 43.3, 4, 30.3, 34.7),
     ...crossing('x', 26.8, 5, 38.3, 42.7),
     ...crossing('x', 35.2, 4, 38.3, 42.7),
-    // Sidewalks, raised by a curb.
+
     slab(x0, 26.5, 38, 30, 0.12, 'sidewalk'),
     slab(43, 26.5, x1, 30, 0.12, 'sidewalk'),
     slab(34.5, y0, 38, 30, 0.12, 'sidewalk'),
@@ -104,12 +81,8 @@ function groundLayer(): SceneObject[] {
   ];
 }
 
-// ---------------------------------------------------------------------------
-// Builders
-// ---------------------------------------------------------------------------
-
 function groundShadow(x: number, y: number, rx: number, ry: number): Shape {
-  // Light comes from the upper left: shadows fall toward the lower right.
+
   return blob(x, y, G + 0.13, rx, ry, 'shadow');
 }
 
@@ -184,7 +157,6 @@ function streetLamp(x: number, y: number, dir: Dir): SceneObject {
   ]);
 }
 
-/** Bench; `facing` is the direction the sitter looks. */
 function bench(x: number, y: number, facing: Dir, len = 2): SceneObject {
   const alongX = facing === '+y' || facing === '-y';
   const [w, d] = alongX ? [len, 0.6] : [0.6, len];
@@ -240,7 +212,6 @@ function wheel(x: number, y: number, z: number): Shape[] {
   return [blob(x, y, z, 5.2, 5.6, 'p m-tyre'), blob(x, y, z, 2.2, 2.4, 'p m-metal')];
 }
 
-/** Café table with a striped umbrella. */
 function umbrellaTable(x: number, y: number): SceneObject {
   const shapes: ShapeTree[] = [
     box(x - 0.35, y - 0.35, G, 0.7, 0.7, 0.05, 'dark'),
@@ -254,7 +225,7 @@ function umbrellaTable(x: number, y: number): SceneObject {
     ring.push(project(x + Math.cos(a) * 1.25, y + Math.sin(a) * 1.25, G + 2.6));
   }
   const apex = project(x, y, G + 3.05);
-  // Back panels first, then the front ones, alternating colours.
+
   const order = [5, 6, 4, 7, 3, 0, 2, 1];
   for (const i of order) {
     const p = ring[i];
@@ -299,7 +270,6 @@ function bikeRack(x: number, y: number, n: number): SceneObject {
   return obj(b(x - 1.2, y, G, 2.1, n * 0.9 + 0.6, 1.3), shapes);
 }
 
-/** Monument sign by the entrance: the company mark, no text. */
 function sign(x: number, y: number): SceneObject {
   const w = 1.5;
   return obj(b(x, y, G, w, 0.35, 1.3), [
@@ -310,11 +280,10 @@ function sign(x: number, y: number): SceneObject {
   ]);
 }
 
-/** Neighbouring building: plain façade with a regular window grid. */
 function neighbour(x0: number, y0: number, x1: number, y1: number, h: number, mat: string): SceneObject {
   const shapes: ShapeTree[] = [box(x0, y0, G, x1 - x0, y1 - y0, h, mat)];
   const floors = Math.floor((h - 1) / 2);
-  // Ground floor: a glazed band. Upper floors: windows.
+
   shapes.push(wallX(x1 + 0.002, y0 + 0.6, y1 - 0.6, G + 0.3, G + 1.7, 'p m-facade-glass'));
   shapes.push(wallY(y1 + 0.002, x0 + 0.6, x1 - 0.6, G + 0.3, G + 1.7, 'p m-facade-glass'));
   for (let f = 1; f <= floors; f++) {
@@ -322,18 +291,13 @@ function neighbour(x0: number, y0: number, x1: number, y1: number, h: number, ma
     for (let yy = y0 + 0.8; yy + 1.2 < y1 - 0.4; yy += 2) shapes.push(wallX(x1 + 0.002, yy, yy + 1.2, z, z + 1.2, 'p m-facade-glass'));
     for (let xx = x0 + 0.8; xx + 1.2 < x1 - 0.4; xx += 2) shapes.push(wallY(y1 + 0.002, xx, xx + 1.2, z, z + 1.2, 'p m-facade-glass'));
   }
-  // Roof edge and a plant room.
+
   shapes.push(box(x0 + 2, y0 + 2, G + h, 3, 2.4, 0.9, 'facade-b'));
   return obj(b(x0, y0, G, x1 - x0, y1 - y0, h + 1), shapes);
 }
 
-// ---------------------------------------------------------------------------
-// People
-// ---------------------------------------------------------------------------
-
 type Facing = '+x' | '-x' | '+y' | '-y';
 
-/** Someone standing still, facing a direction. */
 function person(x: number, y: number, look: number, facing: Facing): SceneObject {
   const [px, py] = project(x, y, G);
   const { view, flip } = facingView(facing);
@@ -347,34 +311,25 @@ function sitter(x: number, y: number, seatZ: number, look: number, facing: Facin
   return obj(b(x - 0.25, y - 0.25, G, 0.5, 0.5, seatZ + 2), shapes);
 }
 
-/**
- * A seat pedestrians can take: drawn with a sitter (depth-sorted with the
- * furniture) that the scene shows only while someone sits there.
- */
 function seat(s: Seat, look: number): SceneObject {
   return sitter(s.x, s.y, s.z, look, s.facing, `seat seat-${s.id} seat-free`);
 }
 
 const seatById = (id: string) => SEATS.find((s) => s.id === id)!;
 
-// ---------------------------------------------------------------------------
-// The block
-// ---------------------------------------------------------------------------
-
 export interface Exterior {
-  /** Flat ground: grass, paving, roads, sidewalks. */
+
   ground: SceneObject[];
-  /** Behind the back walls (drawn before the building). */
+
   back: SceneObject[];
-  /** Around the building, up to the near sidewalks: the cut walls, entrance, garden, terrace. */
+
   inner: SceneObject[];
-  /** On and beyond the roads: cars, the far sidewalks and the park. */
+
   outer: SceneObject[];
-  /** The entrance plaza: selecting it enters the office at the reception. */
+
   entrance: string;
 }
 
-/** Low cut-away walls on the open sides, and the entrance door frame. */
 function frontage(): SceneObject[] {
   const h = 0.6;
   const t = 0.25;
@@ -387,7 +342,7 @@ function frontage(): SceneObject[] {
     obj(b(doorX0 - 0.1, 22 - t, 0, 0.1, t, 2.8), box(doorX0 - 0.1, 22 - t, 0, 0.1, t, 2.8, 'frame')),
     obj(b(doorX1, 22 - t, 0, 0.1, t, 2.8), box(doorX1, 22 - t, 0, 0.1, t, 2.8, 'frame')),
     obj(b(doorX0 - 0.1, 22 - t, 2.7, doorX1 - doorX0 + 0.2, t, 0.12), box(doorX0 - 0.1, 22 - t, 2.7, doorX1 - doorX0 + 0.2, t, 0.12, 'frame')),
-    // Steps down from the floor to the plaza.
+
     obj(b(1.1, 22, G, 2.8, 0.45, 0.7), box(1.1, 22, G, 2.8, 0.45, 0.7, 'stone')),
     obj(b(1.1, 22.45, G, 2.8, 0.45, 0.47), box(1.1, 22.45, G, 2.8, 0.45, 0.47, 'stone')),
     obj(b(1.1, 22.9, G, 2.8, 0.45, 0.23), box(1.1, 22.9, G, 2.8, 0.45, 0.23, 'stone')),
@@ -415,19 +370,19 @@ export function buildExterior(): Exterior {
 
   const inner: SceneObject[] = [
     ...frontage(),
-    // Entrance plaza.
+
     planter(-0.3, 23.4),
     planter(4.5, 23.4),
     sign(4.4, 25.4),
     streetLamp(-0.4, 26.1, '+y'),
     bikeRack(7.4, 23.6, 3),
-    // Front garden: low planting only, so it never hides the rooms.
+
     flowerBed(10, 22.7, 20.3, 25.2),
     flowerBed(21.8, 22.7, 29.6, 25.2),
     hedge(10, 25.5, 20.3, 26.1),
     hedge(21.8, 25.5, 29.6, 26.1),
     streetLamp(21, 26.2, '+y'),
-    // Side garden and coffee terrace by the lounge.
+
     flowerBed(30.8, 0.6, 33.8, 4.2),
     bench(31.1, 6.2, '+x', 2.4),
     seat(seatById('garden'), 6),
@@ -445,7 +400,7 @@ export function buildExterior(): Exterior {
     cafeChair(33.95, 18.32, '+x'),
     seat(seatById('cafe-2'), 0),
     planter(33.5, 21.9, 0.8),
-    // Two colleagues talking at the corner.
+
     person(31.4, 24.1, 1, '+x'),
     person(32.3, 24.7, 3, '-x'),
     streetLamp(34.1, 25.9, '+x'),
@@ -471,7 +426,7 @@ export function buildExterior(): Exterior {
     streetLamp(45.1, 8, '-x'),
     streetLamp(45.1, 22, '-x'),
     streetLamp(45.1, -6, '-x'),
-    // Park beyond the front road.
+
     tree(9.5, 39.8, 1.1),
     tree(21, 40.3, 1.2),
     tree(29.5, 39.7, 1),
@@ -487,7 +442,7 @@ export function buildExterior(): Exterior {
     sitter(24.3, 38.5, 0.55, 3, '-y'),
     sitter(25.1, 38.5, 0.55, 5, '-y'),
     flowerBed(5.2, 38.4, 7.6, 41.2),
-    // Park beyond the side road.
+
     tree(48, 3.5, 1.1),
     tree(49.5, 11, 1),
     tree(47.6, 19, 1.15),
@@ -499,7 +454,6 @@ export function buildExterior(): Exterior {
     seat(seatById('side-a'), 1),
     seat(seatById('side-b'), 3),
   ];
-
 
   return {
     ground: groundLayer(),

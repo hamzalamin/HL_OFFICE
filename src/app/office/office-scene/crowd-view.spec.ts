@@ -10,7 +10,7 @@ describe('people among the scenery', () => {
 
   it('hides someone walking behind a tree, behind that tree', () => {
     const back = OFFICE_MODEL.exterior.back;
-    const tree = treeAt(back, 11.5, -3.8); // between the back path and the building
+    const tree = treeAt(back, 11.5, -3.8);
     expect(tree).toBeGreaterThanOrEqual(0);
     const walker = { x: 11.5, y: -6.5, z: GROUND };
     expect(slotAmong(walker, withRects(back))).toBeLessThanOrEqual(tree);
@@ -18,7 +18,7 @@ describe('people among the scenery', () => {
 
   it('draws someone in front of a tree over it', () => {
     const outer = OFFICE_MODEL.exterior.outer;
-    const tree = treeAt(outer, 26, 45.5); // park tree beside the park path
+    const tree = treeAt(outer, 26, 45.5);
     expect(tree).toBeGreaterThanOrEqual(0);
     const walker = { x: 26, y: 47.8, z: GROUND };
     expect(slotAmong(walker, withRects(outer))).toBeGreaterThan(tree);

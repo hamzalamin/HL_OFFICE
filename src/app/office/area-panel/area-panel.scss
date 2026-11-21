@@ -1,16 +1,11 @@
 @use 'content';
 
-// A column whose content area scrolls: the panel gets a fixed height on
-// desktop and only a maximum height as a bottom sheet on phones; with flex
-// (and min-height: 0) the scrolling body fits inside either way.
 :host {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-// The folio is a clean card centred over the office: translucent parchment,
-// a stone hairline edge and a small title block.
 .panel {
   position: relative;
   display: flex;
@@ -52,7 +47,6 @@
   }
 }
 
-// Scrollable content (replays a short entrance when it changes, see area-panel.ts).
 .body {
   flex: 1;
   min-height: 0;
@@ -66,7 +60,7 @@
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   container-type: inline-size;
-  // A thin, quiet scrollbar so long rooms still read as one smooth card.
+
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--ink), transparent 75%) transparent;
 
@@ -90,7 +84,6 @@ h2 {
   }
 }
 
-// Underlined with an ochre marker.
 .section-name {
   width: fit-content;
   margin-top: -0.5rem;
@@ -113,8 +106,6 @@ h2 {
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
 }
-
-// Reception ---------------------------------------------------------------
 
 .profile .card-title {
   font-size: 1.25rem;
@@ -156,8 +147,6 @@ h2 {
   }
 }
 
-// Timelines (experience, education) ---------------------------------------
-
 .timeline {
   list-style: none;
   margin: 0;
@@ -188,19 +177,14 @@ h2 {
   }
 }
 
-// Project wall ------------------------------------------------------------
-
-// Each card is a miniature of a board on the wall, drawn like the boards in
-// the scene: a paper board with a front edge, a tinted picture area with its
-// caption bars, held by a brass pin. Cards cycle through the boards' tints.
 .project-list {
   list-style: none;
   margin: 0;
   padding: 0.75rem 0 0;
   display: grid;
-  // Two boards per row in the wide card, one in narrow ones.
+
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
-  // Every board as tall as the tallest, whatever the summary's length.
+
   grid-auto-rows: 1fr;
   gap: 1.5rem;
 
@@ -228,7 +212,6 @@ h2 {
   color: var(--ink);
   text-decoration: none;
 
-  // The brass pin.
   &::before {
     content: '';
     position: absolute;
@@ -244,7 +227,6 @@ h2 {
   }
 }
 
-// The picture area, tinted like the scene's boards (--o-* mixed with white).
 .board-screen {
   position: relative;
   display: block;
@@ -256,7 +238,6 @@ h2 {
   overflow: hidden;
 }
 
-// Caption bars, as drawn on the boards; they grow when the board is picked up.
 .board-bars {
   position: absolute;
   left: 0.875rem;
@@ -284,7 +265,6 @@ h2 {
   }
 }
 
-// The board's number, oversized and cut off by the screen's edge.
 .board-no {
   position: absolute;
   right: 0.5rem;
@@ -324,7 +304,7 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  // Pinned to the board's bottom edge so the links line up across boards.
+
   align-self: flex-end;
   margin-top: auto;
   padding: 0.375rem 0 0.1875rem;
@@ -342,8 +322,6 @@ h2 {
     background-size: 100% 1px;
   }
 }
-
-// Reception languages, project details ------------------------------------
 
 .languages {
   display: grid;
@@ -393,8 +371,6 @@ h2 {
   }
 }
 
-// Meeting room: the professional journey ---------------------------------
-
 .journey {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -416,9 +392,6 @@ h2 {
   color: var(--color-text-muted);
 }
 
-// Roles are folders on the meeting table, in the scene's folder colours:
-// the dates on the tab, a sheet peeking out of the top that slides up when
-// the folder is picked up. The current role's tab is lit.
 .role {
   @include content.block(3px, 0);
   @include content.block-press;
@@ -432,7 +405,6 @@ h2 {
   color: var(--ink);
   text-decoration: none;
 
-  // The sheet inside.
   &::after {
     content: '';
     position: absolute;
@@ -466,10 +438,9 @@ h2 {
   color: color-mix(in oklab, var(--ink), transparent 22%);
 }
 
-// The folder tab.
 .role-date {
   position: absolute;
-  z-index: 1; // in front of the sheet
+  z-index: 1;
   left: -1px;
   bottom: calc(100% - 1px);
   display: inline-flex;
@@ -503,8 +474,6 @@ h2 {
   }
 }
 
-// Parallel work: its own track beside the entries it overlapped. The track
-// fades at both ends, because its exact start and end are not part of it.
 .parallel {
   grid-column: 2;
   display: flex;
@@ -550,7 +519,6 @@ h2 {
   font-weight: 700;
 }
 
-// Narrow panels: the parallel track becomes a card after the timeline.
 @container (max-width: 360px) {
   .journey.has-parallel {
     grid-template-columns: minmax(0, 1fr);
@@ -565,10 +533,6 @@ h2 {
   }
 }
 
-// Library -----------------------------------------------------------------
-
-// The CV as a sheet of paper with a folded corner, lying on the shelf: a
-// paper block with the library's book spines along its left edge.
 .document {
   @include content.block(4px, 6px);
   --c: var(--o-paper);
@@ -585,7 +549,6 @@ h2 {
     transparent 10px
   );
 
-  // Folded corner.
   &::after {
     content: '';
     position: absolute;
@@ -643,9 +606,6 @@ h2 {
   }
 }
 
-// Lounge ------------------------------------------------------------------
-
-// Contact cards in the lounge's sofa fabric.
 .contact-row {
   @include content.block(4px, 6px);
   --c: color-mix(in oklab, var(--o-fabric-sand), #fff 48%);

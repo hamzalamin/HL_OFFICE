@@ -51,7 +51,7 @@ describe('pedestrians', () => {
         for (let j = i + 1; j < shown.length; j++) {
           const a = shown[i];
           const c = shown[j];
-          if (a.id.split('-').slice(0, -1).join('-') === c.id.split('-').slice(0, -1).join('-')) continue; // same group
+          if (a.id.split('-').slice(0, -1).join('-') === c.id.split('-').slice(0, -1).join('-')) continue;
           if (Math.hypot(a.x - c.x, a.y - c.y) < 0.35) overlap = `${a.id} / ${c.id} at ${a.x.toFixed(1)},${a.y.toFixed(1)}`;
         }
       }

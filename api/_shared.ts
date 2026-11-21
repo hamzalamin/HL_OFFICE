@@ -1,11 +1,8 @@
-// Shared by the blog's Vercel functions (files starting with "_" are not routes).
-
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
 import type { Marked as MarkedType } from 'marked' with { 'resolution-mode': 'import' };
 
 export type Sql = NeonQueryFunction<false, false>;
 
-/** The Neon client; creates the posts table on first use. */
 export async function database(): Promise<Sql> {
   const url = process.env['DATABASE_URL'];
   if (!url) throw new Error('DATABASE_URL is not set.');
@@ -34,9 +31,6 @@ export function json(body: unknown, status = 200, cache = 'no-store'): Response 
   });
 }
 
-// Markdown rules, the same as at build time (scripts/blog.mjs): "#" headings
-// start one level below the post title, and links to other sites open in a new tab.
-// `marked` is an ES module: these functions are CommonJS, so it is loaded with import().
 let markdown: Promise<MarkedType> | undefined;
 const loadMarkdown = () => (markdown ??= import('marked').then(({ Marked }) => new Marked({
   renderer: {
@@ -57,7 +51,6 @@ export async function renderMarkdown(body: string): Promise<string> {
   return (await loadMarkdown()).parse(body, { async: false });
 }
 
-/** Estimated reading time, as at build time. */
 export function readingMinutes(body: string): number {
   return Math.max(1, Math.round(body.split(/\s+/).filter(Boolean).length / 200));
 }

@@ -4,7 +4,6 @@ import { BlogService } from '../../core/content/blog.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 
-/** The blog's posts in the room's folio, newest first; each opens in the reading sheet. */
 @Component({
   selector: 'app-blog-list',
   imports: [RouterLink, Icon],

@@ -1,14 +1,5 @@
 import { Bounds, screenRect } from './iso';
 
-/**
- * Painter's-algorithm ordering for non-intersecting axis-aligned boxes.
- *
- * Two boxes only need an ordering constraint when their screen rectangles
- * overlap. In that case the box that lies entirely on the "far" side along
- * some axis is drawn first. The constraints are resolved with a stable
- * topological sort; cycles (which only appear with intersecting boxes) fall
- * back to the original order.
- */
 export function depthSort<T extends { bounds: Bounds }>(items: readonly T[]): T[] {
   const n = items.length;
   const rects = items.map((i) => screenRect(i.bounds));
@@ -37,7 +28,7 @@ export function depthSort<T extends { bounds: Bounds }>(items: readonly T[]): T[
       }
     }
     if (next === -1) {
-      // Cycle: take the first remaining item to keep going deterministically.
+
       next = done.indexOf(false);
     }
     done[next] = true;
@@ -49,11 +40,10 @@ export function depthSort<T extends { bounds: Bounds }>(items: readonly T[]): T[
 
 const EPS = 1e-6;
 
-/** Negative when `a` must be painted before `b`, positive for the reverse, 0 when unconstrained. */
 export function compare(a: Bounds, b: Bounds): number {
   if (a.x + a.w <= b.x + EPS || a.y + a.d <= b.y + EPS || a.z + a.h <= b.z + EPS) return -1;
   if (b.x + b.w <= a.x + EPS || b.y + b.d <= a.y + EPS || b.z + b.h <= a.z + EPS) return 1;
-  // Intersecting boxes: approximate with centre depth.
+
   const da = a.x + a.w / 2 + a.y + a.d / 2 + a.z;
   const db = b.x + b.w / 2 + b.y + b.d / 2 + b.z;
   return da - db;

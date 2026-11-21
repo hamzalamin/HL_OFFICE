@@ -12,8 +12,7 @@ describe('exterior', () => {
   });
 
   it('keeps tall objects in front of the building clear of the rooms', () => {
-    // Near the open sides, anything wide and tall (umbrellas, trees) stands at
-    // least 3 units out, so it never covers a room. Slim posts and lamps may be closer.
+
     const wideAndTall = ext.inner.filter((o) => o.bounds.z + o.bounds.h > 1.2 && o.bounds.w * o.bounds.d > 1.5);
     for (const o of wideAndTall) {
       const cx = o.bounds.x + o.bounds.w / 2;

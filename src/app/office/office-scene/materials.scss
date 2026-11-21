@@ -1,7 +1,3 @@
-// Office materials. Each `m-*` class sets a base colour (--c); face classes
-// derive light and shade from it, so the light direction stays consistent.
-// Light comes from the upper left: tops are brightest, +x faces darkest.
-
 .scene {
   --edge-mix: 26%;
 
@@ -37,7 +33,6 @@
     stroke-width: 1.4;
   }
 
-  // Building
   .m-floor { --c: var(--o-floor); }
   .m-slab { --c: var(--o-slab); }
   .m-wall { --c: var(--o-wall); }
@@ -59,7 +54,6 @@
     stroke-opacity: 0.6;
   }
 
-  // Floors and textiles
   .m-carpet-eng { --c: var(--o-carpet-eng); }
   .m-rug-desk { --c: var(--o-rug-desk); }
   .m-rug-desk-inner { --c: color-mix(in oklab, var(--o-rug-desk), #fff 18%); }
@@ -74,7 +68,6 @@
   .m-fabric-sand { --c: var(--o-fabric-sand); }
   .m-fabric-terracotta { --c: var(--o-fabric-terracotta); }
 
-  // Furniture
   .m-wood { --c: var(--o-wood); }
   .m-wood-dark { --c: var(--o-wood-dark); }
   .m-desk { --c: var(--o-desk); }
@@ -98,14 +91,12 @@
   .m-paper { --c: var(--o-paper); }
   .m-indicator { --c: var(--o-indicator); }
 
-  // Plants
   .m-pot { --c: var(--o-pot); }
   .m-soil { --c: var(--o-soil); }
   .m-leaf { --c: var(--o-leaf); }
   .m-leaf-dark { --c: var(--o-leaf-dark); }
   .m-leaf-light { --c: var(--o-leaf-light); }
 
-  // Books
   .m-book-1 { --c: var(--o-book-1); }
   .m-book-2 { --c: var(--o-book-2); }
   .m-book-3 { --c: var(--o-book-3); }
@@ -113,7 +104,6 @@
   .m-book-5 { --c: var(--o-book-5); }
   .m-book-6 { --c: var(--o-book-6); }
 
-  // Screens and boards
   .m-screen { --c: var(--o-screen); }
   .m-screen-bar { --c: color-mix(in oklab, var(--o-screen), #fff 14%); }
   .m-screen-soft { --c: color-mix(in oklab, var(--o-screen), #fff 22%); }
@@ -133,7 +123,6 @@
   .m-board-text { --c: color-mix(in oklab, var(--o-dark), #fff 70%); }
   .m-board-chip { --c: color-mix(in oklab, var(--o-accent), #fff 70%); }
 
-  // Outside
   .m-grass { --c: var(--o-grass); }
   .m-paving { --c: var(--o-paving); }
   .m-plaza { --c: var(--o-plaza); }
@@ -215,7 +204,6 @@
   .m-folder-tab { --c: var(--o-accent); }
   .m-bag-strap { --c: color-mix(in oklab, var(--o-bag), #000 20%); }
 
-  // A seat shows its sitter only while someone sits there.
   .seat {
     transition: opacity 500ms ease;
   }

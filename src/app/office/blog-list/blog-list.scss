@@ -4,8 +4,6 @@
   display: block;
 }
 
-// Each post is a note on the writing desk: a paper card with a margin rule
-// in the desk lamp's ochre, two per row in the wide card.
 .post-list {
   list-style: none;
   margin: 0;
@@ -84,7 +82,6 @@
   color: var(--terracotta);
 }
 
-// "Read →", underlined when the note is picked up.
 .post-read {
   display: inline-flex;
   align-items: center;

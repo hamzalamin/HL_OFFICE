@@ -18,14 +18,6 @@ import { BlogService } from '../../core/content/blog.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 
-/**
- * One blog post, read in the editorial sheet. The body (HTML converted from
- * Markdown at build time) loads on demand; prerendering waits for it, so
- * every published post is in its static page.
- *
- * Not encapsulated: the post's HTML is inserted as is, so its styles are
- * scoped by the `.blog-post` class instead.
- */
 @Component({
   selector: 'app-blog-post',
   imports: [Icon],
@@ -100,7 +92,6 @@ import { Icon } from '../../layout/icon';
       font-size: 0.9375rem;
     }
 
-    // The post itself: a calm reading column.
     .blog-post-prose {
       display: grid;
       gap: 1rem;
@@ -245,12 +236,11 @@ export class BlogPostView {
   private readonly document = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
-  /** The post's HTML once loaded, or whether loading failed. */
   protected readonly html = signal<string | null>(null);
   protected readonly failed = signal(false);
 
   protected readonly date = computed(() => this.blog.date(this.post().date, this.lang.lang()));
-  /** A post written in the other language says so. */
+
   protected readonly writtenIn = computed(() => {
     const t = this.lang.t();
     const p = this.post();
@@ -264,8 +254,6 @@ export class BlogPostView {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => clearTimeout(this.copiedTimer));
 
-    // Load the body whenever the post changes. A pending task keeps the
-    // prerenderer waiting, so the static page contains the whole post.
     const pending = inject(PendingTasks);
     let current = '';
     effect(() => {
@@ -285,7 +273,6 @@ export class BlogPostView {
     });
   }
 
-  /** The system share sheet where there is one (phones), otherwise copy the link. */
   protected async share(): Promise<void> {
     if (!this.isBrowser) return;
     const url = this.document.location.origin + this.lang.path('/blog/' + this.post().slug);
@@ -300,7 +287,7 @@ export class BlogPostView {
       clearTimeout(this.copiedTimer);
       this.copiedTimer = setTimeout(() => this.copied.set(false), 2000);
     } catch {
-      // Sharing cancelled or refused: nothing to do.
+
     }
   }
 }

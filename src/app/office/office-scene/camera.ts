@@ -23,18 +23,13 @@ export interface CameraTransform {
 export const IDENTITY: CameraTransform = { x: 0, y: 0, k: 1 };
 export const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
-/**
- * Computes the CSS transform (translate + scale, origin top-left) that frames
- * `target` (in viewBox units) inside the part of the viewport not covered by
- * panels. The scene itself is letterboxed into the viewport at base scale.
- */
 export function frameTarget(
   viewport: { w: number; h: number },
   target: Rect,
   insets: Insets = NO_INSETS,
   limits: { min: number; max: number } = { min: 0.5, max: 2.6 },
   padding = 16,
-  /** Use this zoom instead of fitting the target (the target is still centred). */
+
   zoom?: number,
 ): CameraTransform {
   if (viewport.w <= 0 || viewport.h <= 0) return IDENTITY;
@@ -71,10 +66,6 @@ function round(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-/**
- * Where `target` (viewBox units) lands in the viewport under `camera`: the
- * inverse of `frameTarget`, used to anchor floating content beside a room.
- */
 export function toScreen(viewport: { w: number; h: number }, camera: CameraTransform, target: Rect): Rect {
   const s0 = Math.min(viewport.w / VIEWBOX.w, viewport.h / VIEWBOX.h);
   const ox = (viewport.w - VIEWBOX.w * s0) / 2;
