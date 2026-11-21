@@ -19,7 +19,7 @@ import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { AREAS, AREA_BY_ID, AreaId, VIEWBOX } from '../scene/areas';
 import { OFFICE_MODEL } from '../scene/office-layout';
-import { IDENTITY, Insets, NO_INSETS, frameTarget, grow } from './camera';
+import { IDENTITY, Insets, NO_INSETS, Rect, frameTarget, grow, toScreen } from './camera';
 import { obj } from '../engine/iso';
 import { OfficeFocus } from '../office-focus';
 import { Crowd } from '../scene/pedestrians';
@@ -76,6 +76,11 @@ export class OfficeScene {
   readonly framed = input<OfficeFocus | null>(null);
   /** Space covered by overlaying panels, so the camera frames around them. */
   readonly insets = input<Insets>(NO_INSETS);
+  /**
+   * The space the zoom inside the office is fitted to. Stays the same while a
+   * room's folio or a case study opens, so the camera only slides.
+   */
+  readonly roomInsets = input<Insets | null>(null);
 
   protected readonly lang = inject(LanguageService);
   private readonly content = inject(ContentService);
@@ -150,7 +155,10 @@ export class OfficeScene {
     const project = f ? f.project : this.project();
     const experience = f ? f.experience : this.experience();
     // Small screens: a little room at the top so the finger-sized markers are not cut off.
-    if (!id) return frameTarget(size, this.model.overview, this.compact() ? { ...NO_INSETS, top: 22 } : NO_INSETS, { min: 0.4, max: 1.8 }, 0);
+    if (!id) {
+      const insets = this.insets();
+      return frameTarget(size, this.model.overview, this.compact() ? { ...insets, top: insets.top + 22 } : insets, { min: 0.4, max: 1.8 }, 0);
+    }
     // Inside the office every view shares one zoom level, so moving between
     // rooms, projects and experiences only slides the camera: the browser
     // reuses what it has drawn instead of redrawing the scene at a new size.
@@ -163,14 +171,25 @@ export class OfficeScene {
   });
 
   /**
-   * The zoom used inside the office: what fits the meeting room beside a
-   * standard panel. It depends on the screen only, not on which panel is
-   * open, so it stays the same from room to room.
+   * The zoom used inside the office: what fits the meeting room (with some
+   * floor around it) in the space left beside a folio. It depends on the
+   * screen only, so it stays the same from room to room: a gentle step in.
    */
   private readonly roomZoom = computed(() => {
-    const insets = this.insets();
-    const reference = insets.right > 0 ? { ...NO_INSETS, right: 472 } : insets;
-    return frameTarget(this.size(), grow(this.model.areas.meeting.frame, 28), reference, { min: 0.5, max: 2.4 }).k;
+    const reference = this.roomInsets() ?? this.insets();
+    return frameTarget(this.size(), grow(this.model.areas.meeting.frame, 64), reference, { min: 0.5, max: 2 }).k;
+  });
+
+  /**
+   * Where the framed room ends up on screen once the camera arrives (viewport
+   * pixels), so the page can anchor its folio right beside it.
+   */
+  readonly focusRect = computed<Rect | null>(() => {
+    const size = this.size();
+    const f = this.framed();
+    const id = f ? f.area : this.active();
+    if (!id || size.w === 0) return null;
+    return toScreen(size, this.camera(), this.model.areas[id].frame);
   });
 
   protected readonly cameraStyle = computed(() => {

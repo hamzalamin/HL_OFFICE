@@ -1,4 +1,4 @@
-import { frameTarget } from './camera';
+import { frameTarget, toScreen } from './camera';
 
 describe('frameTarget', () => {
   const viewport = { w: 1200, h: 900 }; // same 4:3 ratio as the scene: base scale 1.25
@@ -19,5 +19,16 @@ describe('frameTarget', () => {
 
   it('returns identity before the viewport is measured', () => {
     expect(frameTarget({ w: 0, h: 0 }, { x: 0, y: 0, w: 10, h: 10 })).toEqual({ x: 0, y: 0, k: 1 });
+  });
+});
+
+describe('toScreen', () => {
+  it('maps a framed target back to the middle of the uncovered viewport', () => {
+    const viewport = { w: 1400, h: 800 };
+    const target = { x: 300, y: 200, w: 120, h: 90 };
+    const insets = { top: 0, right: 400, bottom: 0, left: 0 };
+    const r = toScreen(viewport, frameTarget(viewport, target, insets), target);
+    expect(r.x + r.w / 2).toBeCloseTo(500, 0); // centre of the 1000 px left of the inset
+    expect(r.y + r.h / 2).toBeCloseTo(400, 0);
   });
 });

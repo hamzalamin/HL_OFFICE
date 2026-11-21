@@ -1,337 +1,311 @@
 @let t = lang.t();
 
-<section class="panel" [class.is-case]="!!project()" aria-labelledby="area-heading">
+<section class="panel" aria-labelledby="area-heading">
   <header class="panel-head">
-    @if (project()) {
-      <a class="back" [routerLink]="areaPath('projects')">
-        <app-icon name="arrow-left" />
-        {{ backToWall() }}
-      </a>
-    } @else if (experience()) {
-      <a class="back" [routerLink]="areaPath('meeting')">
-        <app-icon name="arrow-left" />
-        {{ t.career.backToJourney }}
-      </a>
-    } @else {
-      <p class="eyebrow">{{ position() }}</p>
-    }
+    <p class="eyebrow">{{ position() }}</p>
     <a class="close btn btn-ghost btn-icon" [routerLink]="lang.path('/')" [attr.aria-label]="t.office.close" [attr.title]="t.office.close">
       <app-icon name="close" />
     </a>
   </header>
 
   <div class="body" #body>
-    @if (project(); as p) {
-      <h2 id="area-heading" #heading tabindex="-1"><app-text [value]="p.name" /></h2>
-      <app-project-case-study [project]="p" />
-    } @else if (experience(); as x) {
-      <h2 id="area-heading" #heading tabindex="-1">{{ x.role }}</h2>
-      <app-experience-detail [experience]="x" />
-    } @else {
-      <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
-      <p class="section-name">{{ strings().section }}</p>
-      <p class="blurb">{{ strings().blurb }}</p>
+    <h2 id="area-heading" #heading tabindex="-1">{{ strings().name }}</h2>
+    <p class="section-name">{{ strings().section }}</p>
 
-      @if (isEmpty()) {
-        <p class="empty">{{ t.office.empty }}</p>
-      } @else {
-        @switch (area()) {
-          @case ('reception') {
-            <!-- Reception: introduction and professional profile -->
-            @let pr = profile();
-            <div class="card profile">
-              @if (content.visible(pr.name)) {
-                <p class="card-title"><app-text [value]="pr.name" /></p>
+    @if (isEmpty()) {
+      <p class="empty">{{ t.office.empty }}</p>
+    } @else {
+      @switch (area()) {
+        @case ('reception') {
+          <!-- Reception: introduction and professional profile -->
+          @let pr = profile();
+          <div class="card profile">
+            @if (content.visible(pr.name)) {
+              <p class="card-title"><app-text [value]="pr.name" /></p>
+            }
+            @if (content.visible(pr.title)) {
+              <p class="card-sub"><app-text [value]="pr.title" /></p>
+            }
+            @if (content.visible(pr.location) || content.visible(pr.availability)) {
+              <p class="meta">
+                @if (content.visible(pr.location)) {
+                  <span><app-text [value]="pr.location" /></span>
+                }
+                @if (content.visible(pr.availability)) {
+                  <span class="status"><app-text [value]="pr.availability" /></span>
+                }
+              </p>
+            }
+            @if (content.visible(pr.introduction)) {
+              <p class="lead"><app-text [value]="pr.introduction" /></p>
+            }
+          </div>
+          @for (para of pr.about; track $index) {
+            @if (content.visible(para)) {
+              <p><app-text [value]="para" /></p>
+            }
+          }
+          @if (pr.languages?.length) {
+            <h3>{{ t.reception.languages }}</h3>
+            <dl class="languages">
+              @for (l of pr.languages; track l.name) {
+                <div>
+                  <dt>{{ l.name }}</dt>
+                  <dd>{{ l.level }}</dd>
+                </div>
               }
-              @if (content.visible(pr.title)) {
-                <p class="card-sub"><app-text [value]="pr.title" /></p>
+            </dl>
+          }
+        }
+
+        @case ('workstation') {
+          <!-- Workstation: the technologies and practices -->
+          @if (skills().length) {
+            <dl class="skills">
+              @for (g of skills(); track $index) {
+                <div>
+                  <dt><app-text [value]="g.name" /></dt>
+                  <dd>
+                    <ul class="chips">
+                      @for (s of g.skills; track $index) {
+                        <li><app-text [value]="s" /></li>
+                      }
+                    </ul>
+                  </dd>
+                </div>
               }
-              @if (content.visible(pr.location) || content.visible(pr.availability)) {
-                <p class="meta">
-                  @if (content.visible(pr.location)) {
-                    <span><app-text [value]="pr.location" /></span>
+            </dl>
+          }
+        }
+
+        @case ('projects') {
+          <!-- Project wall: one board per project -->
+          @if (projectMissing()) {
+            <p class="notice" role="status">{{ t.projects.notFound }}</p>
+          }
+          <ol class="project-list">
+            @for (p of content.projects(); track p.slug; let i = $index) {
+              <li>
+                <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-item-link]="p.slug">
+                  <!-- A miniature of the project's board on the wall: tinted screen, caption bars, its number. -->
+                  <span class="board-screen" aria-hidden="true">
+                    <span class="board-bars"><i></i><i></i></span>
+                    <span class="board-no">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  </span>
+                  <span class="project-body">
+                    @if (content.visible(p.category)) {
+                      <span class="project-category"><app-text [value]="p.category" /></span>
+                    }
+                    <span class="item-title">
+                      <app-text [value]="p.name" />
+                      @if (p.nativeName; as n) {
+                        <span class="native" [attr.lang]="n.lang" [attr.dir]="n.dir ?? null">{{ n.text }}</span>
+                      }
+                    </span>
+                    @if (content.visible(p.summary)) {
+                      <span class="project-summary"><app-text [value]="p.summary" /></span>
+                    }
+                    <span class="project-open">{{ t.projects.openCaseStudy }} <app-icon name="arrow-right" /></span>
+                  </span>
+                </a>
+              </li>
+            }
+          </ol>
+          @if (githubProfile(); as url) {
+            <a class="more-link" [href]="url" target="_blank" rel="noopener me">
+              {{ t.projects.moreOnGithub }}
+              <app-icon name="external" />
+            </a>
+          }
+        }
+
+        @case ('meeting') {
+          <!-- Meeting room: the professional journey, with parallel work on its own track -->
+          @if (experienceMissing()) {
+            <p class="notice" role="status">{{ t.career.notFound }}</p>
+          }
+          @let j = journeyRows();
+          <div class="journey" [class.has-parallel]="j.parallel.length > 0">
+            @for (r of j.rows; track $index; let i = $index) {
+              @if (r.kind === 'employer') {
+                <p class="employer" [style.grid-row]="i + 1">{{ r.organization }}</p>
+              } @else {
+                <a
+                  class="role"
+                  [class.is-current]="!r.experience.period?.end && !!r.experience.period"
+                  [style.grid-row]="i + 1"
+                  [routerLink]="experiencePath(r.experience.id)"
+                  [attr.data-item-link]="r.experience.id"
+                >
+                  <span class="role-title">{{ r.experience.role }}</span>
+                  @if (r.experience.employment) {
+                    <span class="role-meta">{{ r.experience.employment }}</span>
                   }
-                  @if (content.visible(pr.availability)) {
-                    <span class="status"><app-text [value]="pr.availability" /></span>
-                  }
-                </p>
+                  <span class="role-date">{{ periodOf(r.experience) }}</span>
+                </a>
               }
-              @if (content.visible(pr.introduction)) {
-                <p class="lead"><app-text [value]="pr.introduction" /></p>
+            }
+            @for (pl of j.parallel; track pl.experience.id) {
+              <a
+                class="parallel"
+                [style.grid-row]="pl.from + ' / ' + pl.to"
+                [routerLink]="experiencePath(pl.experience.id)"
+                [attr.data-item-link]="pl.experience.id"
+              >
+                <span class="parallel-kicker">{{ t.career.parallel }}</span>
+                <span class="role-title">{{ pl.experience.role }}</span>
+                @if (pl.experience.alongside) {
+                  <span class="role-meta">{{ pl.experience.alongside }}</span>
+                }
+                @if (pl.experience.scale) {
+                  <span class="parallel-scale">{{ pl.experience.scale }}</span>
+                }
+              </a>
+            }
+          </div>
+        }
+
+        @case ('library') {
+          <!-- Library: the CV document, education, certificates -->
+          <div class="document">
+            <app-icon name="file" />
+            <div class="document-body">
+              <p class="item-title">{{ t.library.cvTitle }}</p>
+              @if (content.visible(cv().updated)) {
+                <p class="item-date">{{ t.library.updated }} <app-text [value]="cv().updated" /></p>
+              }
+              @if (cvFiles().length) {
+                <div class="cv-options">
+                  @for (o of cvFiles(); track o.lang) {
+                    <a class="btn btn-secondary" [href]="o.href" [attr.download]="o.name" [attr.hreflang]="o.lang">
+                      <app-icon name="download" />
+                      {{ t.site.languages[o.lang] }}
+                    </a>
+                  }
+                  @if (cvFiles().length > 1) {
+                    <button type="button" class="btn btn-primary" (click)="downloadBothCvs()">
+                      <app-icon name="download" />
+                      {{ t.site.cvBoth }}
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="item-sub">{{ t.library.cvPending }}</p>
               }
             </div>
-            @for (para of pr.about; track $index) {
-              @if (content.visible(para)) {
-                <p><app-text [value]="para" /></p>
-              }
-            }
-            @if (pr.languages?.length) {
-              <h3>{{ t.reception.languages }}</h3>
-              <dl class="languages">
-                @for (l of pr.languages; track l.name) {
-                  <div>
-                    <dt>{{ l.name }}</dt>
-                    <dd>{{ l.level }}</dd>
-                  </div>
-                }
-              </dl>
-            }
-          }
+          </div>
 
-          @case ('workstation') {
-            <!-- Workstation: the technologies and practices -->
-            @if (skills().length) {
-              <h3>{{ t.workstation.skills }}</h3>
-              <dl class="skills">
-                @for (g of skills(); track $index) {
-                  <div>
-                    <dt><app-text [value]="g.name" /></dt>
-                    <dd>
-                      <ul class="chips">
-                        @for (s of g.skills; track $index) {
-                          <li><app-text [value]="s" /></li>
-                        }
-                      </ul>
-                    </dd>
-                  </div>
-                }
-              </dl>
-            }
-          }
-
-          @case ('projects') {
-            <!-- Project wall: one board per project -->
-            @if (projectMissing()) {
-              <p class="notice" role="status">{{ t.projects.notFound }}</p>
-            }
-            <p class="hint">{{ t.projects.pick }}</p>
-            <ol class="project-list">
-              @for (p of content.projects(); track p.slug; let i = $index) {
+          @if (education().length) {
+            <h3>{{ t.library.education }}</h3>
+            <ol class="timeline">
+              @for (e of education(); track $index) {
                 <li>
-                  <a class="project-card" [routerLink]="projectPath(p.slug)" [attr.data-item-link]="p.slug">
-                    <span class="project-index" aria-hidden="true">{{ i + 1 }}</span>
-                    <span class="project-body">
-                      <span class="item-title">
-                        <app-text [value]="p.name" />
-                        @if (p.nativeName; as n) {
-                          <span class="native" [attr.lang]="n.lang" [attr.dir]="n.dir ?? null">{{ n.text }}</span>
-                        }
-                      </span>
-                      @if (content.visible(p.category)) {
-                        <span class="project-category"><app-text [value]="p.category" /></span>
-                      }
-                      @if (content.visible(p.summary)) {
-                        <span class="project-summary"><app-text [value]="p.summary" /></span>
-                      }
-                      <span class="project-open">{{ t.projects.openCaseStudy }} <app-icon name="arrow-right" /></span>
-                    </span>
-                  </a>
+                  <p class="item-title"><app-text [value]="e.degree" /></p>
+                  <p class="item-sub"><app-text [value]="e.institution" /></p>
+                  @if (content.visible(e.start) || content.visible(e.end)) {
+                    <p class="item-date"><app-text [value]="e.start" /> – <app-text [value]="e.end" /></p>
+                  }
+                  @if (content.visible(e.description)) {
+                    <p><app-text [value]="e.description" /></p>
+                  }
                 </li>
               }
             </ol>
-            @if (githubProfile(); as url) {
-              <a class="more-link" [href]="url" target="_blank" rel="noopener me">
-                {{ t.projects.moreOnGithub }}
-                <app-icon name="external" />
-              </a>
-            }
           }
 
-          @case ('meeting') {
-            <!-- Meeting room: the professional journey, with parallel work on its own track -->
-            @if (experienceMissing()) {
-              <p class="notice" role="status">{{ t.career.notFound }}</p>
-            }
-            <p class="hint">{{ t.career.intro }}</p>
-            @let j = journeyRows();
-            <div class="journey" [class.has-parallel]="j.parallel.length > 0">
-              @for (r of j.rows; track $index; let i = $index) {
-                @if (r.kind === 'employer') {
-                  <p class="employer" [style.grid-row]="i + 1">{{ r.organization }}</p>
-                } @else {
-                  <a
-                    class="role"
-                    [class.is-current]="!r.experience.period?.end && !!r.experience.period"
-                    [style.grid-row]="i + 1"
-                    [routerLink]="experiencePath(r.experience.id)"
-                    [attr.data-item-link]="r.experience.id"
-                  >
-                    <span class="role-title">{{ r.experience.role }}</span>
-                    @if (r.experience.employment) {
-                      <span class="role-meta">{{ r.experience.employment }}</span>
+          @if (certifications().length) {
+            <h3>{{ t.library.certifications }}</h3>
+            <ul class="plain-list">
+              @for (c of certifications(); track $index) {
+                <li>
+                  <p class="item-title"><app-text [value]="c.name" /></p>
+                  <p class="item-sub">
+                    <app-text [value]="c.issuer" />
+                    @if (content.visible(c.date)) {
+                      · <app-text [value]="c.date" />
                     }
-                    <span class="role-date">{{ periodOf(r.experience) }}</span>
-                  </a>
-                }
+                  </p>
+                  @if (content.real(c.credentialUrl); as url) {
+                    <a [href]="url" target="_blank" rel="noopener">{{ t.library.credential }} <app-icon name="external" /></a>
+                  }
+                </li>
               }
-              @for (pl of j.parallel; track pl.experience.id) {
-                <a
-                  class="parallel"
-                  [style.grid-row]="pl.from + ' / ' + pl.to"
-                  [routerLink]="experiencePath(pl.experience.id)"
-                  [attr.data-item-link]="pl.experience.id"
-                >
-                  <span class="parallel-kicker">{{ t.career.parallel }}</span>
-                  <span class="role-title">{{ pl.experience.role }}</span>
-                  @if (pl.experience.alongside) {
-                    <span class="role-meta">{{ pl.experience.alongside }}</span>
-                  }
-                  @if (pl.experience.scale) {
-                    <span class="parallel-scale">{{ pl.experience.scale }}</span>
-                  }
-                </a>
-              }
-            </div>
+            </ul>
           }
+        }
 
-          @case ('library') {
-            <!-- Library: the CV document, education, certificates -->
-            <div class="document">
-              <app-icon name="file" />
-              <div class="document-body">
-                <p class="item-title">{{ t.library.cvTitle }}</p>
-                @if (content.visible(cv().updated)) {
-                  <p class="item-date">{{ t.library.updated }} <app-text [value]="cv().updated" /></p>
-                }
-                @if (cvFiles().length) {
-                  <p class="item-sub">{{ t.site.cvChoice }}</p>
-                  <div class="cv-options">
-                    @for (o of cvFiles(); track o.lang) {
-                      <a class="btn btn-secondary" [href]="o.href" [attr.download]="o.name" [attr.hreflang]="o.lang">
-                        <app-icon name="download" />
-                        {{ t.site.languages[o.lang] }}
-                      </a>
-                    }
-                    @if (cvFiles().length > 1) {
-                      <button type="button" class="btn btn-primary" (click)="downloadBothCvs()">
-                        <app-icon name="download" />
-                        {{ t.site.cvBoth }}
-                      </button>
-                    }
-                  </div>
-                } @else {
-                  <p class="item-sub">{{ t.library.cvPending }}</p>
-                }
-              </div>
-            </div>
-
-            @if (education().length) {
-              <h3>{{ t.library.education }}</h3>
-              <ol class="timeline">
-                @for (e of education(); track $index) {
-                  <li>
-                    <p class="item-title"><app-text [value]="e.degree" /></p>
-                    <p class="item-sub"><app-text [value]="e.institution" /></p>
-                    @if (content.visible(e.start) || content.visible(e.end)) {
-                      <p class="item-date"><app-text [value]="e.start" /> – <app-text [value]="e.end" /></p>
-                    }
-                    @if (content.visible(e.description)) {
-                      <p><app-text [value]="e.description" /></p>
-                    }
-                  </li>
-                }
-              </ol>
-            }
-
-            @if (certifications().length) {
-              <h3>{{ t.library.certifications }}</h3>
-              <ul class="plain-list">
-                @for (c of certifications(); track $index) {
-                  <li>
-                    <p class="item-title"><app-text [value]="c.name" /></p>
-                    <p class="item-sub">
-                      <app-text [value]="c.issuer" />
-                      @if (content.visible(c.date)) {
-                        · <app-text [value]="c.date" />
-                      }
-                    </p>
-                    @if (content.real(c.credentialUrl); as url) {
-                      <a [href]="url" target="_blank" rel="noopener">{{ t.library.credential }} <app-icon name="external" /></a>
-                    }
-                  </li>
-                }
-              </ul>
-            }
+        @case ('blog') {
+          <!-- Blog: ideas and notes, newest first -->
+          @if (postMissing()) {
+            <p class="notice" role="status">{{ t.blog.notFound }}</p>
           }
+          <app-blog-list />
+        }
 
-          @case ('lounge') {
-            <!-- Lounge: contact details -->
-            @let ct = contact();
-            @if (content.visible(ct.message)) {
-              <p class="lead"><app-text [value]="ct.message" /></p>
-            }
-            @if (content.visible(ct.email)) {
-              <div class="contact-row">
-                <app-icon name="mail" />
-                <div class="contact-body">
-                  <p class="item-sub">{{ t.lounge.email }}</p>
-                  @if (content.real(ct.email); as email) {
-                    <a class="contact-value" [href]="'mailto:' + email">{{ email }}</a>
-                  } @else {
-                    <p class="contact-value"><app-text [value]="ct.email" /></p>
-                  }
-                </div>
+        @case ('lounge') {
+          <!-- Lounge: contact details -->
+          @let ct = contact();
+          @if (content.visible(ct.message)) {
+            <p class="lead"><app-text [value]="ct.message" /></p>
+          }
+          @if (content.visible(ct.email)) {
+            <div class="contact-row">
+              <app-icon name="mail" />
+              <div class="contact-body">
+                <p class="item-sub">{{ t.lounge.email }}</p>
                 @if (content.real(ct.email); as email) {
-                  <button type="button" class="btn btn-secondary copy" (click)="copyEmail(email)">
-                    {{ copied() ? t.lounge.copied : t.lounge.copy }}
-                  </button>
+                  <a class="contact-value" [href]="'mailto:' + email">{{ email }}</a>
+                } @else {
+                  <p class="contact-value"><app-text [value]="ct.email" /></p>
                 }
               </div>
-            }
-            @if (content.real(ct.phone); as phone) {
-              <div class="contact-row">
-                <app-icon name="phone" />
-                <div class="contact-body">
-                  <p class="item-sub">{{ t.lounge.phone }}</p>
-                  <a class="contact-value" [href]="telHref(phone)">{{ phone }}</a>
-                </div>
+              @if (content.real(ct.email); as email) {
+                <button type="button" class="btn btn-secondary copy" (click)="copyEmail(email)">
+                  {{ copied() ? t.lounge.copied : t.lounge.copy }}
+                </button>
+              }
+            </div>
+          }
+          @if (content.real(ct.phone); as phone) {
+            <div class="contact-row">
+              <app-icon name="phone" />
+              <div class="contact-body">
+                <p class="item-sub">{{ t.lounge.phone }}</p>
+                <a class="contact-value" [href]="telHref(phone)">{{ phone }}</a>
               </div>
-            }
-            @if (links().length) {
-              <h3>{{ t.lounge.links }}</h3>
-              <ul class="link-list">
-                @for (l of links(); track $index) {
-                  <li>
-                    @if (content.real(l.url); as url) {
-                      <a [href]="url" target="_blank" rel="noopener me">
-                        {{ l.label }}
-                        <app-icon name="external" />
-                      </a>
-                    } @else {
-                      <span class="link-placeholder">{{ l.label }} <app-text [value]="l.url" /></span>
-                    }
-                  </li>
-                }
-              </ul>
-            }
-            @if (content.visible(ct.location)) {
-              <p class="item-sub">{{ t.lounge.location }} <app-text [value]="ct.location" /></p>
-            }
+            </div>
+          }
+          @if (links().length) {
+            <h3>{{ t.lounge.links }}</h3>
+            <ul class="link-list">
+              @for (l of links(); track $index) {
+                <li>
+                  @if (content.real(l.url); as url) {
+                    <a [href]="url" target="_blank" rel="noopener me">
+                      {{ l.label }}
+                      <app-icon name="external" />
+                    </a>
+                  } @else {
+                    <span class="link-placeholder">{{ l.label }} <app-text [value]="l.url" /></span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          @if (content.visible(ct.location)) {
+            <p class="item-sub">{{ t.lounge.location }} <app-text [value]="ct.location" /></p>
           }
         }
       }
+    }
 
-      <!-- Essential information is always one step away, wherever you are. -->
-      @if (area() === 'reception') {
-        <div class="actions">
-          <a class="btn btn-primary" [routerLink]="areaPath('projects')">{{ t.reception.seeProjects }} <app-icon name="arrow-right" /></a>
-          <a class="btn btn-secondary" [routerLink]="areaPath('library')">{{ t.reception.viewCv }}</a>
-          <a class="btn btn-secondary" [routerLink]="areaPath('lounge')">{{ t.reception.getInTouch }}</a>
-        </div>
-      }
+    <!-- Essential information is always one step away, wherever you are. -->
+    @if (area() === 'reception') {
+      <div class="actions">
+        <a class="btn btn-primary" [routerLink]="areaPath('projects')">{{ t.reception.seeProjects }} <app-icon name="arrow-right" /></a>
+        <a class="btn btn-secondary" [routerLink]="areaPath('library')">{{ t.reception.viewCv }}</a>
+        <a class="btn btn-secondary" [routerLink]="areaPath('lounge')">{{ t.reception.getInTouch }}</a>
+      </div>
     }
   </div>
-
-  @if (!project() && !experience()) {
-    <nav class="stepper" [attr.aria-label]="t.office.mapLabel">
-      <a class="btn btn-ghost" [routerLink]="areaPath(prev())">
-        <app-icon name="arrow-left" />
-        <span class="visually-hidden">{{ t.office.previous }}: </span>{{ t.areas[prev()].name }}
-      </a>
-      <a class="btn btn-ghost" [routerLink]="areaPath(next())">
-        <span class="visually-hidden">{{ t.office.next }}: </span>{{ t.areas[next()].name }}
-        <app-icon name="arrow-right" />
-      </a>
-    </nav>
-  }
 </section>

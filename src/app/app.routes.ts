@@ -14,12 +14,15 @@ const officeRoutes: Routes = [
   ...AREAS.map((a) => ({ path: a.route.slice(1), data: { area: a.id }, children: [] })),
   { path: 'projects/:slug', data: { area: 'projects' }, children: [] },
   { path: 'experience/:experience', data: { area: 'meeting' }, children: [] },
+  { path: 'blog/:post', data: { area: 'blog' }, children: [] },
 ];
 
 /** English at the root, French under /fr (see LanguageService). */
 const languageRoutes: Routes = [{ path: '', component: Home, children: officeRoutes }];
 
 export const routes: Routes = [
+  // The private writing desk for the blog (not linked, not indexed).
+  { path: 'write', loadComponent: () => import('./pages/write/write').then((m) => m.Write) },
   { path: 'fr', children: languageRoutes },
   { path: '', children: languageRoutes },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound) },

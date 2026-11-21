@@ -121,32 +121,40 @@ type Menu = 'lang' | 'cv';
       width: 44px;
       height: 44px;
       padding: 0;
-      border-radius: 50%;
-      border: 1px solid var(--color-border);
-      background: color-mix(in oklab, var(--color-surface), transparent 4%);
-      color: var(--color-text);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stone-strong);
+      background: var(--glass-strong);
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+      color: var(--ink);
       box-shadow: var(--shadow-pin);
       cursor: pointer;
       transition:
-        background 150ms ease,
-        color 150ms ease,
-        transform 180ms var(--ease-out);
+        background-color var(--dur) var(--ease-out),
+        color var(--dur) var(--ease-out),
+        border-color var(--dur) var(--ease-out),
+        transform var(--dur) var(--ease-out);
+    }
+    .action:hover {
+      background: var(--paper);
+      border-color: color-mix(in oklab, var(--ink), transparent 60%);
+      transform: translateY(-1px);
+    }
+    .action[aria-expanded='true'] {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--on-ink);
+    }
+    .action:active {
+      transform: translateY(1px) scale(0.97);
+      transition-duration: 80ms;
     }
     .action svg {
       width: 1.25rem;
       height: 1.25rem;
     }
-    .action:hover,
-    .action[aria-expanded='true'] {
-      background: var(--color-accent);
-      border-color: var(--color-accent);
-      color: var(--color-on-accent);
-    }
-    .action:hover {
-      transform: translateY(-1px);
-    }
     .action:focus-visible {
-      outline: 3px solid var(--color-focus);
+      outline: 2px solid var(--color-focus);
       outline-offset: 3px;
     }
     .tooltip {
@@ -154,11 +162,12 @@ type Menu = 'lang' | 'cv';
       top: calc(100% + 0.5rem);
       right: 0;
       padding: 0.3rem 0.625rem;
-      border-radius: var(--radius-sm);
-      background: var(--color-text);
-      color: #fff;
-      font-size: 0.8125rem;
+      border-radius: var(--radius-xs);
+      background: var(--ink);
+      color: var(--on-ink);
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.02em;
       white-space: nowrap;
       opacity: 0;
       transform: translateY(-3px);
@@ -188,25 +197,27 @@ type Menu = 'lang' | 'cv';
       right: 0;
       min-width: 10rem;
       padding: 0.375rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: var(--glass-strong);
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--stone);
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-panel);
       opacity: 0;
       visibility: hidden;
       transform: translateY(-4px);
       transition:
-        opacity 140ms ease,
-        transform 160ms var(--ease-out),
-        visibility 0s linear 160ms;
+        opacity 180ms var(--ease-out),
+        transform 200ms var(--ease-out),
+        visibility 0s linear 200ms;
     }
     .menu.is-open {
       opacity: 1;
       visibility: visible;
       transform: none;
       transition:
-        opacity 140ms ease,
-        transform 160ms var(--ease-out);
+        opacity 180ms var(--ease-out),
+        transform 200ms var(--ease-out);
     }
     .menu-title {
       padding: 0.375rem 0.75rem 0.25rem;
@@ -223,9 +234,13 @@ type Menu = 'lang' | 'cv';
       cursor: pointer;
     }
     .menu .kind {
-      font-size: 0.75rem;
+      padding: 0 0.3125rem;
+      border: 1px solid var(--stone-strong);
+      border-radius: 2px;
+      font-size: 0.625rem;
       font-weight: 700;
-      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+      color: var(--ink-muted);
     }
     .menu a,
     .menu button {
@@ -240,12 +255,16 @@ type Menu = 'lang' | 'cv';
       font-weight: 600;
       text-decoration: none;
     }
+    .menu a,
+    .menu button {
+      transition: background-color var(--dur) var(--ease-out);
+    }
     .menu a:hover,
     .menu button:hover {
-      background: var(--color-surface-2);
+      background: var(--paper-2);
     }
     .menu a.is-current {
-      color: var(--color-accent-strong);
+      color: var(--teal-strong);
     }
     .menu svg {
       width: 1rem;

@@ -1,33 +1,78 @@
 // Global design tokens and base styles.
 
+// Depth of a block's front face (see the block mixin in area-panel/_content):
+// registered so hover and press can animate it.
+@property --side {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
 :root {
   color-scheme: light;
 
-  // Interface
-  --color-bg: #f6f4f0;
-  --color-surface: #ffffff;
-  --color-surface-2: #f1eee8;
-  --color-text: #1d2128;
-  --color-text-muted: #5d6470;
-  --color-border: #e2ddd4;
-  --color-accent: #0f6f84;
-  --color-accent-strong: #0b5566;
-  --color-accent-soft: #dcefF2;
-  --color-on-accent: #ffffff;
-  --color-focus: #e08a1e;
-  --pin-bg: rgb(255 255 255 / 0.94);
-  --pin-stem: rgb(29 33 40 / 0.35);
+  // Interface: a drafting-studio palette. Warm parchment sheets with stone
+  // hairlines, slate ink for type and the few dark marks, and accents taken
+  // from the office drawing itself (teal fabric, terracotta, drafting blue,
+  // brass/ochre) rather than generic web blues.
+  --paper: #faf8f5;
+  --paper-2: #f3efe8;
+  --paper-3: #ebe5da;
+  --stone: #e5dfd3;
+  --stone-strong: #d3cbbb;
+  --ink: #1e293b;
+  --ink-2: #2b384d;
+  --ink-muted: #5b6270;
+  --on-ink: #faf8f5;
+  --on-ink-muted: rgb(250 248 245 / 0.66);
 
-  --shadow-pin: 0 1px 2px rgb(29 33 40 / 0.08), 0 6px 16px -6px rgb(29 33 40 / 0.22);
-  --shadow-panel: 0 1px 3px rgb(29 33 40 / 0.06), 0 24px 48px -16px rgb(29 33 40 / 0.28);
+  --teal: #2f6b66;
+  --teal-strong: #24534f;
+  --teal-soft: #e2ebe6;
+  --terracotta: #a4553a;
+  --terracotta-soft: #f3e3da;
+  --blue: #3f5c85;
+  --blue-soft: #e3e8ef;
+  --ochre: #8a6420;
+  --ochre-soft: #f1e5c9;
+  --brass: #b8913f;
+
+  --color-bg: #f4f1eb;
+  --color-surface: var(--paper);
+  --color-surface-2: var(--paper-2);
+  --color-text: var(--ink);
+  --color-text-muted: var(--ink-muted);
+  --color-border: var(--stone);
+  --color-accent: var(--teal);
+  --color-accent-strong: var(--teal-strong);
+  --color-accent-soft: var(--teal-soft);
+  --color-on-accent: var(--on-ink);
+  --color-focus: var(--teal);
+
+  // Translucent sheets laid over the drawing.
+  --glass: rgb(250 248 245 / 0.86);
+  --glass-strong: rgb(250 248 245 / 0.94);
+  --blur: blur(12px) saturate(1.15);
+
+  // Hairlines first, shadows barely there: a sheet resting on the drawing.
+  --line: var(--stone);
+  --line-strong: var(--stone-strong);
+  --shadow-pin: 0 1px 0 rgb(30 41 59 / 0.04), 0 4px 10px -6px rgb(30 41 59 / 0.22);
+  --shadow-panel: 0 1px 0 rgb(30 41 59 / 0.03), 0 20px 44px -28px rgb(30 41 59 / 0.35);
+  --lift-key: none;
+  --lift-1: 0 1px 0 rgb(30 41 59 / 0.03);
+  --lift-2: 0 1px 0 rgb(30 41 59 / 0.04), 0 8px 18px -12px rgb(30 41 59 / 0.22);
+
+  --radius-xs: 4px;
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 
   --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  --ease-out: cubic-bezier(0.22, 0.8, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-camera: cubic-bezier(0.45, 0.05, 0.2, 1);
+  --dur: 200ms;
   --camera-duration: 600ms;
 
   // Office palette
@@ -195,9 +240,8 @@ svg {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-focus);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 .visually-hidden {
@@ -214,70 +258,166 @@ svg {
 
 // Buttons ------------------------------------------------------------------
 
+// Studio controls, drawn like the scene's objects: a lit face on a shallow
+// front edge of the same material (--c). Hover picks the key up a little, a
+// press pushes it onto the floor.
+
 .btn {
+  --c: var(--o-white);
+  --side: 3px;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 44px;
+  margin-bottom: 3px;
   padding: 0.625rem 1.125rem;
-  border-radius: 999px;
+  border-radius: 6px;
   border: 1px solid transparent;
   font: inherit;
   font-size: 0.9375rem;
   font-weight: 650;
   line-height: 1.2;
+  letter-spacing: 0.002em;
   text-decoration: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    transform 160ms var(--ease-out);
-
-  &:active {
-    transform: translateY(1px);
-  }
+    background-color var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out),
+    --side var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
 
   svg {
-    width: 1.1em;
-    height: 1.1em;
+    width: 1.05em;
+    height: 1.05em;
     flex: none;
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  // Direction arrows lean the way they lead.
+  &:hover app-icon[name='arrow-right'] svg {
+    transform: translateX(3px);
+  }
+  &:hover app-icon[name='arrow-left'] svg {
+    transform: translateX(-3px);
+  }
+  &:hover app-icon[name='download'] svg {
+    transform: translateY(2px);
   }
 }
 
-.btn-primary {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+.btn-primary,
+.btn-secondary {
+  border-color: color-mix(in oklab, var(--c), #000 22%);
+  box-shadow:
+    0 var(--side) 0 -1px color-mix(in oklab, var(--c), #000 12%),
+    0 var(--side) 0 0 color-mix(in oklab, var(--c), #000 32%);
 
   &:hover {
-    background: var(--color-accent-strong);
+    --side: 4px;
+    transform: translateY(-1px);
+  }
+  &:active {
+    --side: 1px;
+    transform: translateY(2px);
+    transition-duration: 80ms;
+  }
+}
+
+// The office's teal, as on the umbrellas and the folder tabs.
+.btn-primary {
+  --c: var(--o-accent);
+  background-color: var(--c);
+  color: var(--on-ink);
+
+  &:hover {
+    background-color: color-mix(in oklab, var(--c), #fff 6%);
   }
 }
 
 .btn-secondary {
-  background: var(--color-surface);
-  color: var(--color-text);
-  border-color: var(--color-border);
+  background-color: color-mix(in oklab, var(--c), #fff 30%);
+  color: var(--ink);
 
   &:hover {
-    border-color: color-mix(in oklab, var(--color-border), #000 15%);
-    background: var(--color-surface-2);
+    background-color: color-mix(in oklab, var(--c), #fff 60%);
   }
 }
 
 .btn-ghost {
+  margin-bottom: 0;
   background: transparent;
-  color: var(--color-text);
+  color: var(--ink);
 
   &:hover {
-    background: var(--color-surface-2);
+    background: var(--paper-2);
+    border-color: var(--stone);
+  }
+  &:active {
+    transform: scale(0.96);
+    transition-duration: 80ms;
   }
 }
 
 .btn-icon {
   padding: 0;
   width: 44px;
+  border-radius: var(--radius-sm);
+}
+
+// Icons inside cards ---------------------------------------------------------
+// Icons render inside their own component view, so component styles cannot
+// reach their <svg>; these rules live here instead.
+
+.project-open svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 300ms var(--ease-out);
+}
+.project-card:hover .project-open svg {
+  transform: translateX(4px);
+}
+
+.document > app-icon svg,
+.contact-row > app-icon svg {
+  box-sizing: content-box;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0.625rem;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  border: 1px solid color-mix(in oklab, var(--tone, var(--teal)), #000 20%);
+  background: var(--tone, var(--teal));
+  box-shadow:
+    0 3px 0 -1px color-mix(in oklab, var(--tone, var(--teal)), #000 14%),
+    0 3px 0 0 color-mix(in oklab, var(--tone, var(--teal)), #000 32%);
+  color: var(--on-ink);
+}
+
+.link-list a svg,
+.also-link svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+  transition:
+    transform 200ms var(--ease-out),
+    color 160ms ease;
+}
+.link-list a:hover svg,
+.also-link:hover svg {
+  color: var(--color-accent-strong);
+  transform: translate(2px, -2px);
+}
+
+// Pulse of the "current role" indicator in the meeting room panel.
+@keyframes live {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--teal), transparent 78%);
+  }
 }
 
 // Placeholder preview (development builds only) -----------------------------

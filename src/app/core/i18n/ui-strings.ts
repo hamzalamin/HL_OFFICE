@@ -34,6 +34,8 @@ export interface UiStrings {
     mapLabel: string;
     projectsLabel: string;
     close: string;
+    overview: string;
+    dock: string;
     next: string;
     previous: string;
     areaOf: string;
@@ -96,6 +98,21 @@ export interface UiStrings {
     credential: string;
   };
   lounge: { email: string; phone: string; copy: string; copied: string; links: string; location: string };
+  blog: {
+    /** "{n}" is replaced with the number of minutes. */
+    minutes: string;
+    read: string;
+    empty: string;
+    draft: string;
+    share: string;
+    copied: string;
+    /** "{language}" is replaced with the language the post is written in (from `languageNames`). */
+    writtenIn: string;
+    languageNames: Record<Lang, string>;
+    back: string;
+    notFound: string;
+    loadError: string;
+  };
   notFound: { title: string; text: string; back: string };
 }
 
@@ -105,7 +122,7 @@ const en: UiStrings = {
     language: 'Language',
     languages: { en: 'English', fr: 'Français' },
     downloadCv: 'Download CV',
-    cvChoice: 'Which version would you like?',
+    cvChoice: 'Download PDF',
     cvBoth: 'Both versions',
   },
   home: {
@@ -121,11 +138,13 @@ const en: UiStrings = {
     mapLabel: 'Office areas',
     projectsLabel: 'Projects on the wall',
     close: 'Back to the office overview',
+    overview: 'Overview',
+    dock: 'Move between rooms',
     next: 'Next area',
     previous: 'Previous area',
-    areaOf: 'Area {n} of {total}',
+    areaOf: '{n} / {total}',
     backTo: 'Back to the {place}',
-    empty: 'This part of the office is still being prepared.',
+    empty: 'Coming soon.',
   },
   areas: {
     reception: {
@@ -153,13 +172,18 @@ const en: UiStrings = {
       section: 'CV, education & certificates',
       blurb: 'The records: curriculum vitae, studies and certifications.',
     },
+    blog: {
+      name: 'Blog',
+      section: 'Ideas & notes',
+      blurb: 'How I think: ideas, notes and lessons from my work.',
+    },
     lounge: {
       name: 'Lounge',
       section: 'Contact',
       blurb: 'Have a coffee and get in touch.',
     },
   },
-  reception: { seeProjects: 'See the projects', viewCv: 'View the CV', getInTouch: 'Get in touch', languages: 'Languages' },
+  reception: { seeProjects: 'Projects', viewCv: 'CV', getInTouch: 'Contact', languages: 'Languages' },
   workstation: { skills: 'Skills' },
   career: {
     journey: 'Professional journey',
@@ -176,14 +200,14 @@ const en: UiStrings = {
     open: 'View details',
     backToJourney: 'Back to the journey',
     clientProjects: 'Client projects',
-    notFound: 'This experience is not in the presentation. Here is the full journey.',
+    notFound: 'Experience not found. Here is the full journey.',
     folders: 'Experience folders on the table',
   },
   projects: {
     pick: 'Select a board on the wall, or a project below.',
-    openCaseStudy: 'Open the case study',
-    notFound: 'This project is not on the wall. Here are the projects that are.',
-    moreOnGithub: 'More projects on GitHub',
+    openCaseStudy: 'Case study',
+    notFound: 'Project not found. Here are the others.',
+    moreOnGithub: 'More on GitHub',
   },
   caseStudy: {
     period: 'Period',
@@ -212,13 +236,26 @@ const en: UiStrings = {
   },
   library: {
     cvTitle: 'Curriculum vitae',
-    cvPending: 'The PDF version will be available soon.',
+    cvPending: 'PDF coming soon.',
     updated: 'Updated',
     education: 'Education',
     certifications: 'Certifications',
     credential: 'View credential',
   },
   lounge: { email: 'Email', phone: 'Phone', copy: 'Copy', copied: 'Copied', links: 'Elsewhere', location: 'Based in' },
+  blog: {
+    minutes: '{n} min read',
+    read: 'Read',
+    empty: 'No posts yet. The first ones are on their way.',
+    draft: 'Draft',
+    share: 'Share',
+    copied: 'Link copied',
+    writtenIn: 'This post is written in {language}.',
+    languageNames: { en: 'English', fr: 'French' },
+    back: 'Back to the blog',
+    notFound: 'Post not found. Here are the others.',
+    loadError: 'This post could not be loaded. Please try again.',
+  },
   notFound: {
     title: 'This room does not exist',
     text: 'The page you are looking for could not be found.',
@@ -232,7 +269,7 @@ const fr: UiStrings = {
     language: 'Langue',
     languages: { en: 'English', fr: 'Français' },
     downloadCv: 'Télécharger le CV',
-    cvChoice: 'Quelle version souhaitez-vous ?',
+    cvChoice: 'Télécharger le PDF',
     cvBoth: 'Les deux versions',
   },
   home: {
@@ -248,11 +285,13 @@ const fr: UiStrings = {
     mapLabel: 'Espaces du bureau',
     projectsLabel: 'Projets au mur',
     close: 'Revenir à la vue d’ensemble',
+    overview: 'Vue d’ensemble',
+    dock: 'Passer d’un espace à l’autre',
     next: 'Espace suivant',
     previous: 'Espace précédent',
-    areaOf: 'Espace {n} sur {total}',
+    areaOf: '{n} / {total}',
     backTo: 'Retour : {place}',
-    empty: 'Cette partie du bureau est en cours de préparation.',
+    empty: 'Bientôt disponible.',
   },
   areas: {
     reception: {
@@ -280,13 +319,18 @@ const fr: UiStrings = {
       section: 'CV, formation et certificats',
       blurb: 'Les archives : curriculum vitae, études et certifications.',
     },
+    blog: {
+      name: 'Blog',
+      section: 'Idées et notes',
+      blurb: 'Ma façon de penser : idées, notes et leçons tirées de mon travail.',
+    },
     lounge: {
       name: 'Salon',
       section: 'Contact',
       blurb: 'Prenez un café et prenons contact.',
     },
   },
-  reception: { seeProjects: 'Voir les projets', viewCv: 'Consulter le CV', getInTouch: 'Prendre contact', languages: 'Langues' },
+  reception: { seeProjects: 'Projets', viewCv: 'CV', getInTouch: 'Contact', languages: 'Langues' },
   workstation: { skills: 'Compétences' },
   career: {
     journey: 'Parcours professionnel',
@@ -303,14 +347,14 @@ const fr: UiStrings = {
     open: 'Voir le détail',
     backToJourney: 'Retour au parcours',
     clientProjects: 'Projets clients',
-    notFound: 'Cette expérience ne figure pas dans la présentation. Voici le parcours complet.',
+    notFound: 'Expérience introuvable. Voici le parcours complet.',
     folders: 'Dossiers d’expérience sur la table',
   },
   projects: {
     pick: 'Sélectionnez un tableau au mur, ou un projet ci-dessous.',
-    openCaseStudy: 'Ouvrir l’étude de cas',
-    notFound: 'Ce projet n’est pas au mur. Voici ceux qui y sont.',
-    moreOnGithub: 'Plus de projets sur GitHub',
+    openCaseStudy: 'Étude de cas',
+    notFound: 'Projet introuvable. Voici les autres.',
+    moreOnGithub: 'Plus sur GitHub',
   },
   caseStudy: {
     period: 'Période',
@@ -339,13 +383,26 @@ const fr: UiStrings = {
   },
   library: {
     cvTitle: 'Curriculum vitae',
-    cvPending: 'La version PDF sera bientôt disponible.',
+    cvPending: 'PDF bientôt disponible.',
     updated: 'Mis à jour',
     education: 'Formation',
     certifications: 'Certifications',
     credential: 'Voir le certificat',
   },
   lounge: { email: 'E-mail', phone: 'Téléphone', copy: 'Copier', copied: 'Copié', links: 'Ailleurs', location: 'Basé à' },
+  blog: {
+    minutes: '{n} min de lecture',
+    read: 'Lire',
+    empty: 'Pas encore d’articles. Les premiers arrivent bientôt.',
+    draft: 'Brouillon',
+    share: 'Partager',
+    copied: 'Lien copié',
+    writtenIn: 'Cet article est rédigé en {language}.',
+    languageNames: { en: 'anglais', fr: 'français' },
+    back: 'Retour au blog',
+    notFound: 'Article introuvable. Voici les autres.',
+    loadError: 'Impossible de charger cet article. Veuillez réessayer.',
+  },
   notFound: {
     title: 'Cette pièce n’existe pas',
     text: 'La page demandée est introuvable.',

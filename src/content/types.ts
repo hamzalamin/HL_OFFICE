@@ -187,6 +187,26 @@ export interface Cv {
   updated?: string;
 }
 
+/**
+ * A blog post, read from src/content/blog/<lang>/<slug>.md by
+ * scripts/blog.mjs. The body is loaded separately, when the post opens.
+ */
+export interface BlogPostMeta {
+  /** URL segment: /blog/<slug>, from the file name. Shared by both languages. */
+  slug: string;
+  /** The language the post is written in. */
+  lang: Lang;
+  title: string;
+  /** YYYY-MM-DD */
+  date: string;
+  summary: string;
+  tags: string[];
+  /** Estimated reading time. */
+  minutes: number;
+  /** Drafts are shown on the dev server only. */
+  draft: boolean;
+}
+
 export interface PortfolioContent {
   profile: Profile;
   skills: SkillGroup[];

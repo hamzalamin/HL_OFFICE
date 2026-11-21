@@ -1,0 +1,103 @@
+<div class="desk">
+  @if (!unlocked()) {
+    <form class="lock" (submit)="$event.preventDefault(); unlock()">
+      <h1>Writing desk</h1>
+      <p class="muted">Private. Enter your password to write.</p>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" [value]="password()" (input)="password.set(val($event))" required />
+      </label>
+      <button type="submit" class="btn btn-primary" [disabled]="busy() || !password()">{{ busy() ? 'Checking…' : 'Open' }}</button>
+      @if (message(); as m) {
+        <p class="message" [class.is-error]="m.kind === 'error'" role="alert">{{ m.text }}</p>
+      }
+    </form>
+  } @else {
+    <aside class="list">
+      <div class="list-head">
+        <h1>Posts</h1>
+        <button type="button" class="btn btn-primary" (click)="newPost()">New post</button>
+      </div>
+      @if (posts().length) {
+        <ul>
+          @for (p of posts(); track p.lang + p.slug) {
+            <li>
+              <button type="button" class="post-row" [class.is-current]="post().existing && post().slug === p.slug && post().lang === p.lang" (click)="edit(p)">
+                <span class="row-title">{{ p.title }}</span>
+                <span class="row-meta">
+                  {{ p.date }} · {{ p.lang.toUpperCase() }}
+                  <span class="badge" [class.is-live]="!p.draft">{{ p.draft ? 'Draft' : 'Published' }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">No posts yet. Write the first one.</p>
+      }
+      <div class="list-foot">
+        <a routerLink="/blog">See the blog</a>
+        <button type="button" class="link" (click)="lock()">Lock</button>
+      </div>
+    </aside>
+
+    <section class="editor" aria-label="Editor">
+      @let p = post();
+      <div class="fields">
+        <label class="wide">
+          <span>Title</span>
+          <input name="title" [value]="p.title" (input)="update('title', val($event))" placeholder="What is this post about?" />
+        </label>
+        <label>
+          <span>Link</span>
+          <input name="slug" [value]="p.slug" (input)="updateSlug(val($event))" [disabled]="p.existing" placeholder="my-first-idea" />
+          <small>/blog/{{ p.slug || '…' }}</small>
+        </label>
+        <label>
+          <span>Language</span>
+          <select name="lang" (change)="update('lang', val($event) === 'fr' ? 'fr' : 'en')" [disabled]="p.existing">
+            <option value="en" [selected]="p.lang === 'en'">English</option>
+            <option value="fr" [selected]="p.lang === 'fr'">Français</option>
+          </select>
+        </label>
+        <label>
+          <span>Date</span>
+          <input type="date" name="date" [value]="p.date" (input)="update('date', val($event))" />
+        </label>
+        <label>
+          <span>Tags</span>
+          <input name="tags" [value]="p.tagText" (input)="update('tagText', val($event))" placeholder="ideas, angular" />
+        </label>
+        <label class="wide">
+          <span>Summary <small>(shown on the card)</small></span>
+          <textarea name="summary" rows="2" [value]="p.summary" (input)="update('summary', val($event))"></textarea>
+        </label>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'write'" (click)="tab.set('write')">Write</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'preview'" (click)="tab.set('preview')">Preview</button>
+        <span class="hint">Markdown: ## heading, **bold**, *italic*, [link](https://…), - list, &gt; quote</span>
+      </div>
+      @if (tab() === 'write') {
+        <textarea class="body" name="body" [value]="p.body" (input)="update('body', val($event))" placeholder="Write your post…"></textarea>
+      } @else {
+        <article class="preview" [innerHTML]="preview()"></article>
+      }
+
+      <div class="actions">
+        @if (message(); as m) {
+          <p class="message" [class.is-error]="m.kind === 'error'" role="status">{{ m.text }}</p>
+        }
+        @if (p.existing) {
+          <button type="button" class="btn btn-ghost danger" (click)="remove()" [disabled]="busy()">Delete</button>
+          @if (!p.draft) {
+            <a class="btn btn-ghost" [href]="liveUrl(p)" target="_blank" rel="noopener">View</a>
+          }
+        }
+        <button type="button" class="btn btn-secondary" (click)="save(false)" [disabled]="!canSave()">Save draft</button>
+        <button type="button" class="btn btn-primary" (click)="save(true)" [disabled]="!canSave()">{{ busy() ? 'Saving…' : 'Publish' }}</button>
+      </div>
+    </section>
+  }
+</div>

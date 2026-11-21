@@ -42,3 +42,9 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Blog: local secrets and posts generated at build time (from Neon and Markdown)
+.env
+.env.*
+!.env.example
+/src/content/blog/generated/

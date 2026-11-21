@@ -3,7 +3,7 @@
  * physical space in the scene to a portfolio section and its URL.
  */
 
-export const AREA_IDS = ['reception', 'workstation', 'projects', 'meeting', 'library', 'lounge'] as const;
+export const AREA_IDS = ['reception', 'workstation', 'projects', 'meeting', 'library', 'blog', 'lounge'] as const;
 export type AreaId = (typeof AREA_IDS)[number];
 
 export interface AreaDef {
@@ -24,6 +24,7 @@ export const AREAS: readonly AreaDef[] = [
   { id: 'projects', floor: [11.2, 0, 30, 8], height: 5, label: [20, 2, 5.6], route: '/projects' },
   { id: 'meeting', floor: [0, 0, 11, 9], height: 5, label: [5.5, 3, 5.8], route: '/experience' },
   { id: 'library', floor: [0, 9.5, 9, 16], height: 4.5, label: [1.6, 13.2, 4.9], route: '/cv' },
+  { id: 'blog', floor: [11, 18.2, 21.6, 22], height: 3.5, label: [16.4, 19.8, 2.8], route: '/blog' },
   { id: 'lounge', floor: [22, 11, 30, 22], height: 3, label: [26, 15.5, 3.6], route: '/contact' },
 ];
 

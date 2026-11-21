@@ -1,8 +1,16 @@
 @let t = lang.t();
 @let p = content.profile();
 
-<section class="office" [class.has-panel]="!!activeArea()" [style.--panel-w.px]="panelWidth()" [attr.aria-label]="t.home.eyebrow">
-  <app-office-scene class="scene" [active]="activeArea()" [project]="project()?.slug ?? null" [experience]="experience()?.id ?? null" [framed]="focus()" [insets]="sceneInsets()" />
+<section class="office" [class.has-panel]="!!activeArea()" [attr.aria-label]="t.home.eyebrow">
+  <app-office-scene
+    class="scene"
+    [active]="activeArea()"
+    [project]="project()?.slug ?? null"
+    [experience]="experience()?.id ?? null"
+    [framed]="focus()"
+    [insets]="sceneInsets()"
+    [roomInsets]="roomInsets()"
+  />
 
   <!-- Welcome popup: opens by itself on the first visit only. Kept in the DOM
        (closed) so the heading and introduction stay part of the page. -->
@@ -67,12 +75,24 @@
     <span class="welcome-tooltip" aria-hidden="true">{{ t.home.showIntro }}</span>
   </div>
 
+  <!-- The room's folio: one card size, centred on the page (a bottom sheet on phones). -->
   @if (activeArea(); as area) {
-    <app-area-panel class="panel" animate.leave="panel-leave" [area]="area" [project]="project()" [projectMissing]="projectMissing()" [experience]="experience()" [experienceMissing]="experienceMissing()" />
+    @if (!deep()) {
+      <app-area-panel
+        class="folio"
+        animate.leave="folio-leave"
+        [area]="area"
+        [projectMissing]="projectMissing()"
+        [experienceMissing]="experienceMissing()"
+        [postMissing]="postMissing()"
+      />
+    }
   }
 
-  <!-- Small screens: the directory sits under the drawing. -->
-  <nav class="mobile-directory" [attr.aria-label]="t.office.mapLabel">
-    <app-office-directory />
-  </nav>
+  <!-- Deep content: an editorial sheet over the dimmed studio. -->
+  @if (deep()) {
+    <app-focus-sheet [project]="project()" [experience]="experience()" [post]="post()" />
+  }
+
+  <app-room-dock class="room-dock" [active]="activeArea()" />
 </section>

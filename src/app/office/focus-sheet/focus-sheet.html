@@ -1,0 +1,31 @@
+@let t = lang.t();
+
+<dialog #dialog class="sheet" aria-labelledby="sheet-heading" (cancel)="onCancel($event)" (click)="onClick($event)">
+  <article class="folio" [class.is-case]="!!project()">
+    <header class="head">
+      <a class="back" [routerLink]="roomPath()">
+        <app-icon name="arrow-left" />
+        {{ backLabel() }}
+      </a>
+      <a class="close btn btn-ghost btn-icon" [routerLink]="lang.path('/')" [attr.aria-label]="t.office.close" [attr.title]="t.office.close">
+        <app-icon name="close" />
+      </a>
+    </header>
+
+    <div class="body" #body>
+      <div class="column">
+        <p class="kicker">{{ kicker() }}</p>
+        @if (project(); as p) {
+          <h2 id="sheet-heading" #heading tabindex="-1"><app-text [value]="p.name" /></h2>
+          <app-project-case-study [project]="p" />
+        } @else if (experience(); as x) {
+          <h2 id="sheet-heading" #heading tabindex="-1">{{ x.role }}</h2>
+          <app-experience-detail [experience]="x" />
+        } @else if (post(); as b) {
+          <h2 id="sheet-heading" #heading tabindex="-1" [attr.lang]="b.lang">{{ b.title }}</h2>
+          <app-blog-post [post]="b" />
+        }
+      </div>
+    </div>
+  </article>
+</dialog>

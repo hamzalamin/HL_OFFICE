@@ -1,0 +1,202 @@
+// Turns the blog's posts into TypeScript the app can import.
+//
+//   Neon (blog_posts table, written from the /write page)  ┐
+//   src/content/blog/<lang>/<slug>.md                       ┴→ src/content/blog/generated/
+//
+// Posts come from the database when DATABASE_URL is set (in Vercel, or in a
+// local .env file), and from Markdown files in any case. If the database is
+// configured but cannot be read, the build fails rather than publishing a
+// site without its posts.
+//
+// Runs before `npm start`, `npm run build` and `npm test`. With --watch it
+// keeps running and regenerates whenever a Markdown post changes (used by
+// npm start; run `npm run blog` to pull new posts from the database).
+//
+// The Markdown is converted here, at build time, so no Markdown library is
+// shipped to visitors; each post's body becomes its own lazily loaded chunk.
+
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { marked } from 'marked';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const BLOG = join(ROOT, 'src/content/blog');
+const OUT = join(BLOG, 'generated');
+const LANGS = ['en', 'fr'];
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// A local .env file (never committed) can hold DATABASE_URL for local builds.
+try {
+  process.loadEnvFile(join(ROOT, '.env'));
+} catch {
+  // No .env file: Markdown posts only, unless DATABASE_URL is set otherwise.
+}
+
+marked.use({
+  renderer: {
+    // The post's title is the page heading: "# Part" becomes the next level down.
+    heading({ tokens, depth }) {
+      const level = Math.min(depth + 1, 6);
+      return `<h${level}>${this.parser.parseInline(tokens)}</h${level}>\n`;
+    },
+    // Links to other sites open in a new tab.
+    link({ href, title, tokens }) {
+      const text = this.parser.parseInline(tokens);
+      const t = title ? ` title="${title.replace(/"/g, '&quot;')}"` : '';
+      const external = /^https?:\/\//.test(href) ? ' target="_blank" rel="noopener"' : '';
+      return `<a href="${href.replace(/"/g, '%22')}"${t}${external}>${text}</a>`;
+    },
+  },
+});
+
+/** A small front-matter reader: `key: value` lines and `[a, b]` lists between `---` fences. */
+function frontMatter(source, file) {
+  const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(source);
+  if (!m) throw new Error(`${file}: missing front matter (a block between --- lines at the top).`);
+  const data = {};
+  for (const line of m[1].split(/\r?\n/)) {
+    if (!line.trim() || line.trim().startsWith('#')) continue;
+    const kv = /^([A-Za-z]+)\s*:\s*(.*)$/.exec(line);
+    if (!kv) throw new Error(`${file}: cannot read front matter line "${line}".`);
+    let value = kv[2].trim();
+    const unquote = (s) => s.replace(/^(['"])(.*)\1$/, '$2');
+    if (value.startsWith('[') && value.endsWith(']')) {
+      value = value
+        .slice(1, -1)
+        .split(',')
+        .map((s) => unquote(s.trim()))
+        .filter(Boolean);
+    } else if (value === 'true' || value === 'false') {
+      value = value === 'true';
+    } else {
+      value = unquote(value);
+    }
+    data[kv[1]] = value;
+  }
+  return { data, body: source.slice(m[0].length) };
+}
+
+function toPost({ slug, lang, title, date, summary, tags, draft, body }) {
+  const words = body.split(/\s+/).filter(Boolean).length;
+  return {
+    slug,
+    lang,
+    title,
+    date,
+    summary: summary ?? '',
+    tags: tags ?? [],
+    minutes: Math.max(1, Math.round(words / 200)),
+    draft: draft === true,
+    html: marked.parse(body, { async: false }),
+  };
+}
+
+/** Posts written as Markdown files in the repository. */
+function readMarkdownPosts() {
+  const posts = [];
+  for (const lang of LANGS) {
+    const dir = join(BLOG, lang);
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir).sort()) {
+      if (!name.endsWith('.md')) continue;
+      const file = `src/content/blog/${lang}/${name}`;
+      const slug = name.slice(0, -3);
+      if (!SLUG.test(slug)) throw new Error(`${file}: file names must be lowercase words joined by dashes, e.g. my-first-post.md`);
+      const { data, body } = frontMatter(readFileSync(join(dir, name), 'utf8'), file);
+      if (!data.title) throw new Error(`${file}: "title" is required.`);
+      if (!DATE.test(String(data.date ?? ''))) throw new Error(`${file}: "date" is required, as YYYY-MM-DD.`);
+      posts.push(
+        toPost({
+          slug,
+          lang,
+          title: String(data.title),
+          date: data.date,
+          summary: String(data.summary ?? ''),
+          tags: Array.isArray(data.tags) ? data.tags : data.tags ? [String(data.tags)] : [],
+          draft: data.draft === true,
+          body,
+        }),
+      );
+    }
+  }
+  return posts;
+}
+
+/** Posts written from the /write page, stored in Neon. */
+async function readDatabasePosts() {
+  const url = process.env.DATABASE_URL;
+  if (!url) return [];
+  try {
+    const { neon } = await import('@neondatabase/serverless');
+    const sql = neon(url);
+    const [{ found }] = await sql`SELECT to_regclass('public.blog_posts') IS NOT NULL AS found`;
+    if (!found) return []; // Nothing written yet: the table is created on the first save.
+    const rows = await sql`
+      SELECT slug, lang, title, to_char(date, 'YYYY-MM-DD') AS date, summary, tags, body, draft
+      FROM blog_posts`;
+    return rows.map(toPost);
+  } catch (e) {
+    throw new Error(`cannot read the posts from Neon (DATABASE_URL): ${e.message}`);
+  }
+}
+
+async function readPosts() {
+  const files = readMarkdownPosts();
+  const database = await readDatabasePosts();
+  const seen = new Set(files.map((p) => `${p.lang}/${p.slug}`));
+  for (const p of database) {
+    if (seen.has(`${p.lang}/${p.slug}`)) throw new Error(`"${p.lang}/${p.slug}" exists both as a Markdown file and in the database: rename one.`);
+  }
+  // Newest first.
+  return [...files, ...database].sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
+}
+
+async function generate() {
+  const posts = await readPosts();
+  rmSync(OUT, { recursive: true, force: true });
+  const header = '// Generated by scripts/blog.mjs from the blog posts (Neon and src/content/blog/<lang>/*.md). Do not edit.\n';
+  for (const p of posts) {
+    mkdirSync(join(OUT, p.lang), { recursive: true });
+    writeFileSync(join(OUT, p.lang, `${p.slug}.ts`), `${header}export const html = ${JSON.stringify(p.html)};\n`);
+  }
+  const meta = posts.map(({ html, ...m }) => m);
+  const bodies = posts.map((p) => `  '${p.lang}/${p.slug}': () => import('./${p.lang}/${p.slug}').then((m) => m.html),`).join('\n');
+  mkdirSync(OUT, { recursive: true });
+  writeFileSync(
+    join(OUT, 'index.ts'),
+    `${header}import { BlogPostMeta } from '../../types';\n\n` +
+      `export const BLOG_POSTS: BlogPostMeta[] = ${JSON.stringify(meta, null, 2)};\n\n` +
+      `export const BLOG_BODIES: Record<string, () => Promise<string>> = {\n${bodies}\n};\n`,
+  );
+  return posts.length;
+}
+
+async function run() {
+  try {
+    const n = await generate();
+    const from = process.env.DATABASE_URL ? 'Markdown files and Neon' : 'Markdown files; no DATABASE_URL, so not from Neon';
+    console.log(`blog: ${n} post${n === 1 ? '' : 's'} generated (${from})`);
+    return true;
+  } catch (e) {
+    console.error(`blog: ${e.message}`);
+    return false;
+  }
+}
+
+const ok = await run();
+if (process.argv.includes('--watch')) {
+  let timer;
+  for (const lang of LANGS) {
+    const dir = join(BLOG, lang);
+    mkdirSync(dir, { recursive: true });
+    watch(dir, () => {
+      clearTimeout(timer);
+      timer = setTimeout(run, 100);
+    });
+  }
+  console.log('blog: watching src/content/blog for changes');
+} else if (!ok) {
+  process.exit(1);
+}

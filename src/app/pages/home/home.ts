@@ -16,20 +16,34 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
+import { BlogService } from '../../core/content/blog.service';
 import { ContentService } from '../../core/content/content.service';
 import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
 import { AreaPanel } from '../../office/area-panel/area-panel';
 import { OfficeFocus, PANEL_DELAY_FRAMES, focusItem, readOfficeFocus, sameFocus } from '../../office/office-focus';
-import { OfficeDirectory } from '../../office/office-directory/office-directory';
+import { FocusSheet } from '../../office/focus-sheet/focus-sheet';
 import { Insets, NO_INSETS } from '../../office/office-scene/camera';
 import { OfficeScene } from '../../office/office-scene/office-scene';
+import { RoomDock } from '../../office/room-dock/room-dock';
 import { AREA_BY_ID, AreaId } from '../../office/scene/areas';
 import { WelcomeMemory } from './welcome-memory';
 
-/** Breakpoint where the office becomes the full-screen centrepiece. */
+/** Breakpoint between the centred folio (wide) and the bottom sheet (phones). */
 const WIDE_QUERY = '(min-width: 900px)';
+
+// Layout of the floating pieces, in px. Mirrored in home.scss.
+/** Space kept clear at the top for the language and CV controls. */
+const TOP = 68;
+const TOP_PHONE = 60;
+/** Space kept clear at the bottom for the room dock. */
+const DOCK = 84;
+const DOCK_PHONE = 72;
+/** The phone bottom sheet's maximum height (mirrors home.scss). */
+function phoneSheetHeight(h: number): number {
+  return Math.min(0.5 * h, 460);
+}
 
 /**
  * The office: the persistent interface of the whole portfolio. It stays
@@ -38,7 +52,7 @@ const WIDE_QUERY = '(min-width: 900px)';
  */
 @Component({
   selector: 'app-home',
-  imports: [OfficeScene, AreaPanel, OfficeDirectory, RouterLink, Icon, ContentText],
+  imports: [OfficeScene, AreaPanel, FocusSheet, RoomDock, RouterLink, Icon, ContentText],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +61,7 @@ const WIDE_QUERY = '(min-width: 900px)';
 export class Home {
   protected readonly lang = inject(LanguageService);
   protected readonly content = inject(ContentService);
+  private readonly blog = inject(BlogService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly injector = inject(Injector);
@@ -54,6 +69,7 @@ export class Home {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly panel = viewChild(AreaPanel);
+  private readonly sheet = viewChild(FocusSheet);
   private readonly welcomeDialog = viewChild.required<ElementRef<HTMLDialogElement>>('welcome');
   private readonly welcomeButton = viewChild<ElementRef<HTMLButtonElement>>('welcomeButton');
   private readonly memory = inject(WelcomeMemory);
@@ -86,6 +102,11 @@ export class Home {
     return id ? (this.content.content().experience.find((e) => e.id === id) ?? null) : null;
   });
   protected readonly experienceMissing = computed(() => !!this.shown().experience && !this.experience());
+  /** The opened blog post, if its slug matches a published one. */
+  protected readonly post = computed(() => this.blog.find(this.shown().post));
+  protected readonly postMissing = computed(() => !!this.shown().post && !this.post());
+  /** A case study, an experience or a post is open: it gets the editorial sheet, the folio steps aside. */
+  protected readonly deep = computed(() => !!this.project() || !!this.experience() || !!this.post());
 
   /**
    * The welcome popup opens by itself on the first visit only. Once closed it
@@ -102,26 +123,33 @@ export class Home {
 
   private readonly windowSize = signal({ w: 0, h: 0 });
 
-  /** Desktop panel width: a case study gets more room; the career timeline a little. */
-  protected readonly panelWidth = computed(() => {
-    // From the new focus at once, so the camera frames the final layout.
-    const f = this.focus();
-    if (this.findProject(f.project)) return Math.round(Math.min(620, Math.max(440, 0.44 * this.windowSize().w)));
-    return f.area === 'meeting' ? 440 : 400;
-  });
-
   /**
-   * Space hidden by the panel, so the camera frames the focus beside it.
-   * Desktop: the side panel. Mobile: a bottom sheet over the lower part of
-   * the scene (sizes mirror home.scss).
+   * Space the camera keeps clear: the top controls, the dock and, while a
+   * room is open, the bottom sheet (phones). A
+   * case study or experience frames its board or slide in the middle, behind
+   * the sheet.
    */
   protected readonly sceneInsets = computed<Insets>(() => {
-    if (this.wide()) return { ...NO_INSETS, right: this.panelWidth() + 32 };
-    const { w, h } = this.windowSize();
-    const sceneH = Math.min(0.75 * w, 0.5 * h);
-    const sheetH = Math.min(0.62 * h, 560) + 8;
-    return { ...NO_INSETS, bottom: Math.max(0, sceneH - (h - sheetH)) };
+    // From the new focus at once, so the camera frames the final layout.
+    const f = this.focus();
+    const item =
+      !!this.findProject(f.project) ||
+      (!!f.experience && this.content.content().experience.some((e) => e.id === f.experience)) ||
+      !!this.blog.find(f.post);
+    if (this.wide()) {
+      if (!f.area) return { ...NO_INSETS, bottom: DOCK };
+      return item ? { ...NO_INSETS, top: TOP, bottom: DOCK } : this.roomInsets();
+    }
+    if (!f.area || item) return { ...NO_INSETS, top: f.area ? TOP_PHONE : 0, bottom: DOCK_PHONE };
+    return this.roomInsets();
   });
+
+  /** What the zoom inside the office is fitted to. Wide screens: the folio is centred over the room, so the room keeps the whole canvas. */
+  protected readonly roomInsets = computed<Insets>(() =>
+    this.wide()
+      ? { ...NO_INSETS, top: TOP, bottom: DOCK }
+      : { ...NO_INSETS, top: TOP_PHONE, bottom: phoneSheetHeight(this.windowSize().h) + DOCK_PHONE },
+  );
 
   constructor() {
     // The panel and highlighting follow the focus a few frames later (at
@@ -164,7 +192,11 @@ export class Home {
       const area = this.activeArea();
       const project = this.project();
       const experience = this.experience();
-      if (experience) {
+      const post = this.post();
+      if (post) {
+        title.setTitle(`${post.title} · ${name}`);
+        meta.updateTag({ name: 'description', content: post.summary || t.areas.blog.blurb });
+      } else if (experience) {
         const where = experience.role.toLowerCase().includes(experience.organization.toLowerCase()) ? '' : ` · ${experience.organization}`;
         title.setTitle(`${experience.role}${where} · ${name}`);
         meta.updateTag({ name: 'description', content: experience.overview });
@@ -197,14 +229,16 @@ export class Home {
 
   private moveFocus(prev: OfficeFocus, current: OfficeFocus): void {
     if (current.area) {
-      // On small screens the scene sits at the top of the page; bring it into view.
-      if (!this.wide()) window.scrollTo({ top: 0, behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-      // Back from a case study or an experience: return to it in the list.
+      // A case study or experience: the sheet takes focus (it does so itself when it opens).
+      if (focusItem(current)) return this.sheet()?.focusHeading();
+      // Back from one: return to it in the room's folio.
       const prevItem = focusItem(prev);
-      const backFromItem = prevItem && !focusItem(current) && current.area === prev.area;
-      if (backFromItem && this.panel()?.focusItem(prevItem)) return;
+      if (prevItem && current.area === prev.area && this.panel()?.focusItem(prevItem)) return;
+      // Gliding through the rooms with the dock: stay on the dock.
+      if (document.activeElement?.closest('app-room-dock')) return;
       this.panel()?.focusHeading();
     } else if (prev.area) {
+      if (document.activeElement?.closest('app-room-dock')) return;
       this.host.nativeElement.querySelector<HTMLElement>(`[data-area-link="${prev.area}"]`)?.focus({ preventScroll: true });
     }
   }

@@ -49,7 +49,7 @@ describe('GlobalActions', () => {
     await fixture.whenStable();
     const menu = el.querySelector('#cv-menu')!;
     expect(menu.hasAttribute('inert')).toBe(false);
-    expect(menu.textContent).toContain('Which version would you like?');
+    expect(menu.textContent).toContain('Download PDF');
     const links = [...menu.querySelectorAll('a')];
     expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('download')])).toEqual([
       ['/cv/HamzaLamin_SoftwareDeveloper_CV.pdf', 'HamzaLamin_SoftwareDeveloper_CV.pdf'],

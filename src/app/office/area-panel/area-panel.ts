@@ -13,39 +13,37 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Experience, Project } from '../../../content';
+import { Experience } from '../../../content';
 import { ContentService } from '../../core/content/content.service';
 import { ContentText } from '../../core/content/content-text';
 import { cvOptions, downloadAll } from '../../core/content/cv';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
+import { BlogList } from '../blog-list/blog-list';
 import { journey, periodText } from '../career';
-import { ExperienceDetail } from '../experience-detail/experience-detail';
-import { ProjectCaseStudy } from '../project-case-study/project-case-study';
 import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 
 /**
- * Side panel (desktop) / bottom sheet (mobile) that presents what the focused
- * part of the office holds. All content is shown here, in the office: the
- * panel never sends visitors to a separate page.
+ * The room's folio: one fixed-size card centred on the page (desktop), or a
+ * bottom sheet above the room dock (phones). It presents what
+ * the room holds; deep items (a case study, an experience) open in the
+ * editorial sheet instead (FocusSheet).
  */
 @Component({
   selector: 'app-area-panel',
-  imports: [RouterLink, Icon, ContentText, ProjectCaseStudy, ExperienceDetail],
+  imports: [RouterLink, Icon, ContentText, BlogList],
   templateUrl: './area-panel.html',
   styleUrl: './area-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AreaPanel {
   readonly area = input.required<AreaId>();
-  /** Project opened on the project wall. */
-  readonly project = input<Project | null>(null);
   /** A project URL that matches no project on the wall. */
   readonly projectMissing = input(false);
-  /** Experience opened in the meeting room. */
-  readonly experience = input<Experience | null>(null);
   /** An experience URL that matches no experience. */
   readonly experienceMissing = input(false);
+  /** A blog URL that matches no post. */
+  readonly postMissing = input(false);
 
   protected readonly lang = inject(LanguageService);
   protected readonly content = inject(ContentService);
@@ -55,18 +53,15 @@ export class AreaPanel {
   private readonly body = viewChild.required<ElementRef<HTMLElement>>('body');
 
   protected readonly index = computed(() => AREAS.findIndex((a) => a.id === this.area()));
-  protected readonly prev = computed(() => AREAS[(this.index() - 1 + AREAS.length) % AREAS.length].id);
-  protected readonly next = computed(() => AREAS[(this.index() + 1) % AREAS.length].id);
   protected readonly strings = computed(() => this.lang.t().areas[this.area()]);
   protected readonly position = computed(() =>
     this.lang
       .t()
-      .office.areaOf.replace('{n}', String(this.index() + 1))
-      .replace('{total}', String(AREAS.length)),
+      .office.areaOf.replace('{n}', String(this.index() + 1).padStart(2, '0'))
+      .replace('{total}', String(AREAS.length).padStart(2, '0')),
   );
-  protected readonly backToWall = computed(() => this.lang.t().office.backTo.replace('{place}', this.lang.t().areas.projects.name));
-  /** Changes whenever the panel shows something else. */
-  private readonly view = computed(() => `${this.area()}/${this.project()?.slug ?? this.experience()?.id ?? ''}`);
+  /** Changes whenever the folio shows another room. */
+  private readonly view = computed(() => this.area());
 
   // Content of each area, limited to what can be shown.
   private readonly c = computed(() => this.content.content());
@@ -96,6 +91,8 @@ export class AreaPanel {
         return !this.journeyRows().rows.length && !this.journeyRows().parallel.length;
       case 'library':
         return false; // The CV is always on the shelf, even before its PDF exists.
+      case 'blog':
+        return false; // An empty blog says so itself.
       case 'lounge':
         return !v(this.contact().email) && !this.links().length && !v(this.contact().message);
     }
@@ -105,7 +102,8 @@ export class AreaPanel {
   private copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.copiedTimer));
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => clearTimeout(this.copiedTimer));
 
     // When the panel switches to another area or project, start at the top
     // and let the new content settle in (the panel itself stays in place).
@@ -122,7 +120,7 @@ export class AreaPanel {
           if (!still && el.animate) {
             el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], {
               duration: 260,
-              easing: 'cubic-bezier(0.22, 0.8, 0.3, 1)',
+              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
             });
           }
         });

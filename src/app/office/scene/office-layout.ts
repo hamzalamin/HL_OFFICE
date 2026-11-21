@@ -107,6 +107,22 @@ function furnish(id: AreaId): SceneObject[] {
         F.plant(28.8, 11.4, 'tall'),
         F.plant(23.2, 20.6, 'snake'),
       ];
+    case 'blog':
+      // The writing corner, at the front between the reception and the lounge.
+      return [
+        F.rug(12, 18.6, 21, 21.7, 'rug-library'),
+        F.plant(11.3, 18.5, 'snake'),
+        F.desk(13, 18.9, 4.8, 1.6, { modesty: true }),
+        F.deskLamp(13.2, 19.05, 1.25),
+        F.laptop(14.6, 19.25, 1.25),
+        F.notebook(16.2, 19.3, 1.25),
+        F.mug(17.1, 19.7, 1.25, 'mug-accent'),
+        F.chair(15, 20.6, 'n', 'fabric-dark'),
+        F.sofa(19, 18.9, 1.5, 1.5, 'w', 'fabric-terracotta'),
+        F.floorLamp(20.7, 18.7),
+        F.table(19.1, 20.6, 1, 0.9, 0.6, 'wood'),
+        F.bookStack(19.25, 20.75, 0.6),
+      ];
     case 'reception':
       return [
         // The entrance is in the front, facing the street (see exterior.ts).

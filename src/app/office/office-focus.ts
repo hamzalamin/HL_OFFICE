@@ -9,9 +9,11 @@ export interface OfficeFocus {
   project: string | null;
   /** Experience id, only within the meeting room. */
   experience: string | null;
+  /** Blog post slug, only within the blog. */
+  post: string | null;
 }
 
-export const OVERVIEW: OfficeFocus = { area: null, project: null, experience: null };
+export const OVERVIEW: OfficeFocus = { area: null, project: null, experience: null, post: null };
 
 /**
  * Frames between a new focus and the panel/highlighting following it. The
@@ -25,14 +27,15 @@ export function readOfficeFocus(office: ActivatedRouteSnapshot): OfficeFocus {
   const child = office.firstChild;
   const area = child?.data['area'];
   if (!isAreaId(area)) return OVERVIEW;
-  return { area, project: child?.paramMap.get('slug') ?? null, experience: child?.paramMap.get('experience') ?? null };
+  const param = (name: string) => child?.paramMap.get(name) ?? null;
+  return { area, project: param('slug'), experience: param('experience'), post: param('post') };
 }
 
 export function sameFocus(a: OfficeFocus, b: OfficeFocus): boolean {
-  return a.area === b.area && a.project === b.project && a.experience === b.experience;
+  return a.area === b.area && a.project === b.project && a.experience === b.experience && a.post === b.post;
 }
 
-/** The opened item (project or experience), if any. */
+/** The opened item (project, experience or post), if any. */
 export function focusItem(f: OfficeFocus): string | null {
-  return f.project ?? f.experience;
+  return f.project ?? f.experience ?? f.post;
 }

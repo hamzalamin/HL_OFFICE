@@ -70,3 +70,19 @@ function clamp(v: number, min: number, max: number): number {
 function round(n: number): number {
   return Math.round(n * 10) / 10;
 }
+
+/**
+ * Where `target` (viewBox units) lands in the viewport under `camera`: the
+ * inverse of `frameTarget`, used to anchor floating content beside a room.
+ */
+export function toScreen(viewport: { w: number; h: number }, camera: CameraTransform, target: Rect): Rect {
+  const s0 = Math.min(viewport.w / VIEWBOX.w, viewport.h / VIEWBOX.h);
+  const ox = (viewport.w - VIEWBOX.w * s0) / 2;
+  const oy = (viewport.h - VIEWBOX.h * s0) / 2;
+  return {
+    x: camera.x + camera.k * (ox + target.x * s0),
+    y: camera.y + camera.k * (oy + target.y * s0),
+    w: camera.k * target.w * s0,
+    h: camera.k * target.h * s0,
+  };
+}

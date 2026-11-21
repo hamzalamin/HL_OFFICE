@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../app.routes';
+import { BLOG_SOURCE, BlogSource } from '../../core/content/blog.service';
 import { SHOW_PLACEHOLDERS } from '../../core/content/placeholder';
 import { PANEL_DELAY_FRAMES } from '../../office/office-focus';
 import { WELCOME_STORAGE, WelcomeStorage } from './welcome-memory';
@@ -11,12 +12,21 @@ function memoryStorage(initial: Record<string, string> = {}): WelcomeStorage & {
   return { data, getItem: (k) => data[k] ?? null, setItem: (k, v) => void (data[k] = v) };
 }
 
+/** A draft post in English only, so the tests do not depend on real posts. */
+const BLOG: BlogSource = {
+  posts: [
+    { slug: 'sample-post', lang: 'en', title: 'Sample post', date: '2026-11-21', summary: 'A sample.', tags: ['test'], minutes: 1, draft: true },
+  ],
+  bodies: { 'en/sample-post': () => Promise.resolve('<h3>Sample heading</h3><p>Body.</p>') },
+};
+
 async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memoryStorage()) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter(routes),
       { provide: SHOW_PLACEHOLDERS, useValue: showPlaceholders },
       { provide: WELCOME_STORAGE, useValue: storage },
+      { provide: BLOG_SOURCE, useValue: BLOG },
       // Tests check the panel right after navigating: no frame delay.
       { provide: PANEL_DELAY_FRAMES, useValue: 0 },
     ],
@@ -26,14 +36,14 @@ async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memory
 
 describe('Home (office)', () => {
   const el = (h: RouterTestingHarness) => h.routeNativeElement!;
-  const heading = (h: RouterTestingHarness) => el(h).querySelector('app-area-panel h2')?.textContent ?? '';
+  const heading = (h: RouterTestingHarness) => el(h).querySelector('app-area-panel h2, app-focus-sheet h2')?.textContent ?? '';
   const escape = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
   it('lists every area as a link to its place in the office', async () => {
     const harness = await setup(false);
     await harness.navigateByUrl('/');
     const links = el(harness).querySelectorAll<HTMLAnchorElement>('[data-area-link]');
-    expect(links.length).toBe(6);
+    expect(links.length).toBe(7);
     expect(links[0].getAttribute('href')).toBe('/about');
   });
 
@@ -55,12 +65,64 @@ describe('Home (office)', () => {
     }
   });
 
-  it('opens a project case study on its own URL, next to its board', async () => {
+  it('opens a project case study on its own URL, in a sheet over its board', async () => {
     const harness = await setup(true);
     await harness.navigateByUrl('/projects/qatrat-hayat');
-    expect(el(harness).querySelector('app-project-case-study')).not.toBeNull();
-    expect(el(harness).querySelector('app-area-panel .back')?.getAttribute('href')).toBe('/projects');
+    expect(el(harness).querySelector('app-focus-sheet dialog app-project-case-study')).not.toBeNull();
+    expect(el(harness).querySelector('app-focus-sheet .back')?.getAttribute('href')).toBe('/projects');
     expect(el(harness).querySelector('.board.is-active')?.getAttribute('data-board')).toBe('qatrat-hayat');
+    // The room's folio steps aside while the sheet is open, and comes back after.
+    expect(el(harness).querySelector('app-area-panel')).toBeNull();
+    await harness.navigateByUrl('/projects');
+    expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
+    expect(heading(harness)).toContain('Project wall');
+  });
+
+  it('keeps a dock of the seven rooms, marking the current one', async () => {
+    const harness = await setup(false);
+    const dock = () => el(harness).querySelector('app-room-dock')!;
+    await harness.navigateByUrl('/');
+    const links = [...dock().querySelectorAll<HTMLAnchorElement>('[data-dock-link]')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/about', '/skills', '/projects', '/experience', '/cv', '/blog', '/contact']);
+    expect(dock().querySelector('[aria-current="page"]')?.classList).toContain('is-overview');
+    for (const [url, id] of [['/cv', 'library'], ['/projects/itlens', 'projects'], ['/fr/experience', 'meeting']]) {
+      await harness.navigateByUrl(url);
+      expect(dock().querySelector('[aria-current="page"]')?.getAttribute('data-dock-link'), url).toBe(id);
+    }
+    expect(dock().querySelector('[data-dock-link="reception"]')?.getAttribute('href')).toBe('/fr/about');
+  });
+
+  describe('blog', () => {
+    it('keeps drafts off the live site', async () => {
+      const harness = await setup(false);
+      await harness.navigateByUrl('/blog');
+      expect(heading(harness)).toContain('Blog');
+      expect(el(harness).querySelector('app-blog-list .post-card')).toBeNull();
+      expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
+      // A draft's link falls back to the blog, as an unknown post.
+      await harness.navigateByUrl('/blog/sample-post');
+      expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
+      expect(el(harness).querySelector('app-area-panel .notice')).not.toBeNull();
+    });
+
+    it('lists posts and opens one in the reading sheet', async () => {
+      const harness = await setup(true);
+      await harness.navigateByUrl('/blog');
+      const card = el(harness).querySelector<HTMLAnchorElement>('app-blog-list .post-card');
+      expect(card?.getAttribute('href')).toBe('/blog/sample-post');
+      await harness.navigateByUrl('/blog/sample-post');
+      await harness.fixture.whenStable();
+      expect(heading(harness)).toContain('Sample post');
+      expect(el(harness).querySelector('app-focus-sheet .back')?.getAttribute('href')).toBe('/blog');
+      expect(el(harness).querySelector('.blog-post-prose h3')?.textContent).toContain('Sample heading');
+    });
+
+    it('shows a post written in the other language, and says so', async () => {
+      const harness = await setup(true);
+      await harness.navigateByUrl('/fr/blog/sample-post');
+      await harness.fixture.whenStable();
+      expect(el(harness).querySelector('.blog-post-note')?.textContent).toContain('rédigé en anglais');
+    });
   });
 
   it('falls back to the project wall for an unknown project', async () => {
@@ -87,7 +149,7 @@ describe('Home (office)', () => {
     await harness.navigateByUrl('/experience');
     expect(el(harness).querySelector('app-area-panel .journey')).not.toBeNull();
     const hrefs = [...el(harness).querySelectorAll('app-area-panel a')].map((a) => a.getAttribute('href'));
-    expect(hrefs.every((h) => h === '/' || ['/about', '/skills', '/projects', '/experience', '/cv', '/contact'].includes(h!) || h!.startsWith('/experience/'))).toBe(true);
+    expect(hrefs.every((h) => h === '/' || ['/about', '/skills', '/projects', '/experience', '/cv', '/blog', '/contact'].includes(h!) || h!.startsWith('/experience/'))).toBe(true);
   });
 
   it('never shows placeholder identifiers to visitors in production mode', async () => {
@@ -165,7 +227,7 @@ describe('Home (office)', () => {
     it('opens an experience with an overview, then its responsibilities and technologies', async () => {
       const harness = await setup(false);
       await harness.navigateByUrl('/experience/eurafric-intern');
-      const panel = () => el(harness).querySelector('app-area-panel')!;
+      const panel = () => el(harness).querySelector('app-focus-sheet')!;
       expect(heading(harness)).toContain('Software Developer Intern');
       expect(panel().textContent).toContain('April 2025 – July 2025');
       expect(panel().textContent).toContain('Banking settlement system');
@@ -181,7 +243,7 @@ describe('Home (office)', () => {
     it('shows freelance work without dates, stack or client details', async () => {
       const harness = await setup(false);
       await harness.navigateByUrl('/experience/freelance');
-      const panel = () => el(harness).querySelector('app-area-panel')!;
+      const panel = () => el(harness).querySelector('app-focus-sheet')!;
       expect(panel().querySelector('.when')?.textContent).toContain('Alongside my studies and internships');
       expect(panel().querySelector('.scale')?.textContent).toContain('3+ client projects');
       panel().querySelectorAll<HTMLButtonElement>('[role="tab"]')[1].click();
