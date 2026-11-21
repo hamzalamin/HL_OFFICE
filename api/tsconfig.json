@@ -1,0 +1,15 @@
+{
+  // TypeScript settings for the Vercel functions in this folder. Vercel uses the
+  // tsconfig.json closest to a function; the root one (module: "preserve") is for
+  // Angular and would leave `import` statements that Node cannot load here.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts"]
+}
