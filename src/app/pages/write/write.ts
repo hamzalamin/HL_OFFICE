@@ -226,8 +226,9 @@ export class Write {
 
   private savedText(published: boolean, rebuilding: boolean): string {
     if (!published) return 'Draft saved. It is not visible on the site.';
-    if (!rebuilding) return 'Published, but the site could not be rebuilt automatically (check VERCEL_DEPLOY_HOOK_URL). Redeploy from Vercel to show it.';
-    return 'Published. The site is rebuilding: the post will be live in about a minute.';
+    return rebuilding
+      ? 'Published: it is on the blog now. The site is also rebuilding to give it its own prerendered page.'
+      : 'Published: it is on the blog now (within about 10 seconds).';
   }
 
   protected async remove(): Promise<void> {
@@ -239,7 +240,7 @@ export class Write {
       await this.call('DELETE', `?slug=${encodeURIComponent(p.slug)}&lang=${p.lang}`);
       this.posts.set((await this.call('GET')).posts ?? []);
       this.newPost();
-      this.message.set({ kind: 'ok', text: 'Deleted. The site is rebuilding without it.' });
+      this.message.set({ kind: 'ok', text: 'Deleted: it is gone from the blog (within about 10 seconds).' });
     } catch (e) {
       this.message.set({ kind: 'error', text: (e as Error).message });
     } finally {

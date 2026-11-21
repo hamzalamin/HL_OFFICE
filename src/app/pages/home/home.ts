@@ -104,7 +104,8 @@ export class Home {
   protected readonly experienceMissing = computed(() => !!this.shown().experience && !this.experience());
   /** The opened blog post, if its slug matches a published one. */
   protected readonly post = computed(() => this.blog.find(this.shown().post));
-  protected readonly postMissing = computed(() => !!this.shown().post && !this.post());
+  /** Unknown only once the live list has answered: a post published since the build may still come. */
+  protected readonly postMissing = computed(() => !!this.shown().post && !this.post() && this.blog.settled());
   /** A case study, an experience or a post is open: it gets the editorial sheet, the folio steps aside. */
   protected readonly deep = computed(() => !!this.project() || !!this.experience() || !!this.post());
 
@@ -166,6 +167,11 @@ export class Home {
       });
     });
     this.destroyRef.onDestroy(() => frames && cancelAnimationFrame(this.delayFrame));
+
+    // Entering the blog (or opening a post): fetch what is published right now.
+    effect(() => {
+      if (this.focus().area === 'blog') untracked(() => void this.blog.refresh());
+    });
 
     afterNextRender(() => {
       // A shared link to a specific area should not be covered by the popup.

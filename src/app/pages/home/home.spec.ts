@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../app.routes';
+import { BlogPostMeta } from '../../../content';
 import { BLOG_SOURCE, BlogSource } from '../../core/content/blog.service';
 import { SHOW_PLACEHOLDERS } from '../../core/content/placeholder';
 import { PANEL_DELAY_FRAMES } from '../../office/office-focus';
@@ -15,10 +16,25 @@ function memoryStorage(initial: Record<string, string> = {}): WelcomeStorage & {
 /** A draft post in English only, so the tests do not depend on real posts. */
 const BLOG: BlogSource = {
   posts: [
-    { slug: 'sample-post', lang: 'en', title: 'Sample post', date: '2026-11-21', summary: 'A sample.', tags: ['test'], minutes: 1, draft: true },
+    { slug: 'sample-post', lang: 'en', title: 'Sample post', date: '2026-11-21', summary: 'A sample.', tags: ['test'], minutes: 1, draft: true, source: 'file', updated: '' },
   ],
   bodies: { 'en/sample-post': () => Promise.resolve('<h3>Sample heading</h3><p>Body.</p>') },
+  // No live API, as on the dev server: the built posts are used.
+  live: { list: () => Promise.reject(new Error('offline')), body: () => Promise.reject(new Error('offline')) },
 };
+
+/** A database post that was in the build, and the live API as it is now. */
+const built: BlogPostMeta = { slug: 'old-post', lang: 'en', title: 'Old post', date: '2026-11-01', summary: '', tags: [], minutes: 1, draft: false, source: 'db', updated: '2026-11-01T10:00:00.000Z' };
+const fresh: BlogPostMeta = { ...built, slug: 'new-post', title: 'New post', date: '2026-11-22', updated: '2026-11-22T10:00:00.000Z' };
+function liveBlog(live: BlogPostMeta[]): BlogSource {
+  return {
+    posts: [built],
+    bodies: { 'en/old-post': () => Promise.resolve('<p>Built body.</p>') },
+    live: { list: () => Promise.resolve([...live]), body: (slug) => Promise.resolve(`<p>Live body of ${slug}.</p>`) },
+  };
+}
+
+let blogSource: BlogSource = BLOG;
 
 async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memoryStorage()) {
   TestBed.configureTestingModule({
@@ -26,7 +42,7 @@ async function setup(showPlaceholders: boolean, storage: WelcomeStorage = memory
       provideRouter(routes),
       { provide: SHOW_PLACEHOLDERS, useValue: showPlaceholders },
       { provide: WELCOME_STORAGE, useValue: storage },
-      { provide: BLOG_SOURCE, useValue: BLOG },
+      { provide: BLOG_SOURCE, useFactory: () => blogSource },
       // Tests check the panel right after navigating: no frame delay.
       { provide: PANEL_DELAY_FRAMES, useValue: 0 },
     ],
@@ -93,6 +109,32 @@ describe('Home (office)', () => {
   });
 
   describe('blog', () => {
+    afterEach(() => (blogSource = BLOG));
+
+    it('shows a post published after the build, from the live API', async () => {
+      blogSource = liveBlog([fresh, built]);
+      const harness = await setup(false);
+      await harness.navigateByUrl('/blog/new-post');
+      await harness.fixture.whenStable();
+      expect(heading(harness)).toContain('New post');
+      expect(el(harness).querySelector('.blog-post-prose')?.textContent).toContain('Live body of new-post.');
+    });
+
+    it('keeps the built copy of an unchanged post, and drops a deleted one', async () => {
+      blogSource = liveBlog([built]);
+      const harness = await setup(false);
+      await harness.navigateByUrl('/blog/old-post');
+      await harness.fixture.whenStable();
+      expect(el(harness).querySelector('.blog-post-prose')?.textContent).toContain('Built body.');
+      blogSource = liveBlog([]);
+      TestBed.resetTestingModule();
+      const again = await setup(false);
+      await again.navigateByUrl('/blog/old-post');
+      await again.fixture.whenStable();
+      expect(el(again).querySelector('app-focus-sheet')).toBeNull();
+      expect(el(again).querySelector('app-area-panel .notice')).not.toBeNull();
+    });
+
     it('keeps drafts off the live site', async () => {
       const harness = await setup(false);
       await harness.navigateByUrl('/blog');
@@ -101,6 +143,7 @@ describe('Home (office)', () => {
       expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
       // A draft's link falls back to the blog, as an unknown post.
       await harness.navigateByUrl('/blog/sample-post');
+      await harness.fixture.whenStable();
       expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
       expect(el(harness).querySelector('app-area-panel .notice')).not.toBeNull();
     });

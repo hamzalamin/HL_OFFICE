@@ -205,6 +205,10 @@ export interface BlogPostMeta {
   minutes: number;
   /** Drafts are shown on the dev server only. */
   draft: boolean;
+  /** `file`: a Markdown file in the repository. `db`: written from /write, stored in Neon. */
+  source: 'file' | 'db';
+  /** Last change of a database post (ISO time), to tell a newer live version from the built one. */
+  updated: string;
 }
 
 export interface PortfolioContent {

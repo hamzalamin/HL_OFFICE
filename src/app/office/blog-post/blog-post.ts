@@ -271,7 +271,7 @@ export class BlogPostView {
     effect(() => {
       const p = this.post();
       untracked(() => {
-        const key = `${p.lang}/${p.slug}`;
+        const key = `${p.lang}/${p.slug}/${p.updated}`;
         current = key;
         this.html.set(null);
         this.failed.set(false);

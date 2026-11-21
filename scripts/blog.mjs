@@ -78,7 +78,7 @@ function frontMatter(source, file) {
   return { data, body: source.slice(m[0].length) };
 }
 
-function toPost({ slug, lang, title, date, summary, tags, draft, body }) {
+function toPost({ slug, lang, title, date, summary, tags, draft, body, source, updated }) {
   const words = body.split(/\s+/).filter(Boolean).length;
   return {
     slug,
@@ -89,6 +89,8 @@ function toPost({ slug, lang, title, date, summary, tags, draft, body }) {
     tags: tags ?? [],
     minutes: Math.max(1, Math.round(words / 200)),
     draft: draft === true,
+    source,
+    updated: updated ?? '',
     html: marked.parse(body, { async: false }),
   };
 }
@@ -117,6 +119,7 @@ function readMarkdownPosts() {
           tags: Array.isArray(data.tags) ? data.tags : data.tags ? [String(data.tags)] : [],
           draft: data.draft === true,
           body,
+          source: 'file',
         }),
       );
     }
@@ -134,9 +137,10 @@ async function readDatabasePosts() {
     const [{ found }] = await sql`SELECT to_regclass('public.blog_posts') IS NOT NULL AS found`;
     if (!found) return []; // Nothing written yet: the table is created on the first save.
     const rows = await sql`
-      SELECT slug, lang, title, to_char(date, 'YYYY-MM-DD') AS date, summary, tags, body, draft
+      SELECT slug, lang, title, to_char(date, 'YYYY-MM-DD') AS date, summary, tags, body, draft,
+             to_char(updated_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS updated
       FROM blog_posts`;
-    return rows.map(toPost);
+    return rows.map((r) => toPost({ ...r, source: 'db' }));
   } catch (e) {
     throw new Error(`cannot read the posts from Neon (DATABASE_URL): ${e.message}`);
   }

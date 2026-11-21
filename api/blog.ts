@@ -5,17 +5,17 @@
 //   DELETE /api/blog?slug=..&lang=..       delete a post
 //
 // Every request needs `Authorization: Bearer <BLOG_ADMIN_PASSWORD>`.
-// After a change it calls the Vercel deploy hook: the site rebuilds and the
-// build reads the posts from Neon (scripts/blog.mjs), so every post is a
-// prerendered page.
+// Published posts show on the site at once (it reads them from /api/posts).
+// If a deploy hook is configured, a change also rebuilds the site, so every
+// post gets its own prerendered page right away; otherwise at the next deploy.
 //
 // Environment variables (Vercel → Project → Settings → Environment Variables):
 //   DATABASE_URL            Neon connection string
 //   BLOG_ADMIN_PASSWORD     the /write password (at least 16 characters)
-//   VERCEL_DEPLOY_HOOK_URL  Vercel → Settings → Git → Deploy Hooks
+//   VERCEL_DEPLOY_HOOK_URL  optional: a Vercel deploy hook URL
 
-import { neon } from '@neondatabase/serverless';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { database, json } from './_shared';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -32,13 +32,6 @@ interface PostInput {
   draft: boolean;
 }
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
-  });
-}
-
 /** Constant-time password check. A wrong password also waits a second, to slow down guessing. */
 async function authorized(request: Request): Promise<boolean> {
   const expected = process.env['BLOG_ADMIN_PASSWORD'] ?? '';
@@ -47,27 +40,6 @@ async function authorized(request: Request): Promise<boolean> {
   const ok = expected.length >= 16 && timingSafeEqual(digest(given), digest(expected));
   if (!ok) await new Promise((r) => setTimeout(r, 1000));
   return ok;
-}
-
-async function database() {
-  const url = process.env['DATABASE_URL'];
-  if (!url) throw new Error('DATABASE_URL is not set.');
-  const sql = neon(url);
-  await sql`
-    CREATE TABLE IF NOT EXISTS blog_posts (
-      slug       text        NOT NULL,
-      lang       text        NOT NULL CHECK (lang IN ('en', 'fr')),
-      title      text        NOT NULL,
-      date       date        NOT NULL,
-      summary    text        NOT NULL DEFAULT '',
-      tags       text[]      NOT NULL DEFAULT '{}',
-      body       text        NOT NULL,
-      draft      boolean     NOT NULL DEFAULT true,
-      created_at timestamptz NOT NULL DEFAULT now(),
-      updated_at timestamptz NOT NULL DEFAULT now(),
-      PRIMARY KEY (slug, lang)
-    )`;
-  return sql;
 }
 
 /** Asks Vercel to rebuild the site, so the change goes live. */
