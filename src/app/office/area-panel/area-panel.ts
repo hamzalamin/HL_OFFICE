@@ -19,13 +19,12 @@ import { ContentText } from '../../core/content/content-text';
 import { cvOptions, downloadAll } from '../../core/content/cv';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
-import { BlogList } from '../blog-list/blog-list';
 import { journey, periodText } from '../career';
 import { AREAS, AREA_BY_ID, AreaId } from '../scene/areas';
 
 @Component({
   selector: 'app-area-panel',
-  imports: [RouterLink, Icon, ContentText, BlogList],
+  imports: [RouterLink, Icon, ContentText],
   templateUrl: './area-panel.html',
   styleUrl: './area-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

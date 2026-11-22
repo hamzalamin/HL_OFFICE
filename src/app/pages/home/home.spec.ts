@@ -109,11 +109,15 @@ describe('Home (office)', () => {
   describe('blog', () => {
     afterEach(() => (blogSource = BLOG));
     const page = (h: RouterTestingHarness) => (h.fixture.nativeElement as HTMLElement).querySelector('app-blog-post-page');
+    const index = (h: RouterTestingHarness) => (h.fixture.nativeElement as HTMLElement).querySelector('app-blog-index-page');
 
-    it('lists posts in the office and opens one on its own article page', async () => {
+    it('has its own blog page, outside the office, and an article page per post', async () => {
       const harness = await setup(true);
       await harness.navigateByUrl('/blog');
-      const card = el(harness).querySelector<HTMLAnchorElement>('app-blog-list .post-card');
+      await harness.fixture.whenStable();
+      expect((harness.fixture.nativeElement as HTMLElement).querySelector('app-office-scene')).toBeNull();
+      expect(index(harness)?.querySelector('h1')?.textContent).toContain('Ideas & notes');
+      const card = index(harness)?.querySelector<HTMLAnchorElement>('.featured');
       expect(card?.getAttribute('href')).toBe('/blog/sample-post');
       await harness.navigateByUrl('/blog/sample-post');
       await harness.fixture.whenStable();
@@ -126,8 +130,9 @@ describe('Home (office)', () => {
     it('keeps drafts off the live site', async () => {
       const harness = await setup(false);
       await harness.navigateByUrl('/blog');
-      expect(el(harness).querySelector('app-blog-list .post-card')).toBeNull();
-      expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
+      await harness.fixture.whenStable();
+      expect(index(harness)?.querySelector('.featured')).toBeNull();
+      expect(index(harness)?.querySelector('.empty')).not.toBeNull();
       await harness.navigateByUrl('/blog/sample-post');
       await harness.fixture.whenStable();
       expect(page(harness)?.querySelector('.article-missing')).not.toBeNull();
@@ -143,6 +148,10 @@ describe('Home (office)', () => {
     it('shows a post published after the build, from the live API', async () => {
       blogSource = liveBlog([fresh, built]);
       const harness = await setup(false);
+      await harness.navigateByUrl('/blog');
+      await harness.fixture.whenStable();
+      expect(index(harness)?.querySelector('.featured')?.textContent).toContain('New post');
+      expect(index(harness)?.querySelector('.list')?.textContent).toContain('Old post');
       await harness.navigateByUrl('/blog/new-post');
       await harness.fixture.whenStable();
       expect(page(harness)?.querySelector('h1')?.textContent).toContain('New post');

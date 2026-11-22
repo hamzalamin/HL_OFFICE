@@ -109,6 +109,8 @@ export interface UiStrings {
     loadError: string;
     more: string;
     portfolio: string;
+    latest: string;
+    allPosts: string;
   };
   notFound: { title: string; text: string; back: string };
 }
@@ -254,6 +256,8 @@ const en: UiStrings = {
     loadError: 'This post could not be loaded. Please try again.',
     more: 'Keep reading',
     portfolio: 'Portfolio',
+    latest: 'Latest',
+    allPosts: 'All posts',
   },
   notFound: {
     title: 'This room does not exist',
@@ -403,6 +407,8 @@ const fr: UiStrings = {
     loadError: 'Impossible de charger cet article. Veuillez réessayer.',
     more: 'À lire aussi',
     portfolio: 'Portfolio',
+    latest: 'Dernier article',
+    allPosts: 'Tous les articles',
   },
   notFound: {
     title: 'Cette pièce n’existe pas',

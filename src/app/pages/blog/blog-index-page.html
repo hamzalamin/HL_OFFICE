@@ -1,0 +1,87 @@
+@let t = lang.t();
+@let a = author();
+
+<app-blog-header />
+
+<div class="blog">
+  <header class="hero">
+    <p class="kicker">{{ t.areas.blog.name }}</p>
+    <h1>{{ t.areas.blog.section }}</h1>
+    <p class="lead">{{ t.areas.blog.blurb }}</p>
+    @if (a.name) {
+      <p class="by">
+        <span class="avatar" aria-hidden="true">{{ a.initials }}</span>
+        <span>
+          <strong>{{ a.name }}</strong>
+          @if (a.title) {
+            <span>{{ a.title }}</span>
+          }
+        </span>
+      </p>
+    }
+  </header>
+
+  @if (featured(); as f) {
+    <a class="featured" [routerLink]="postPath(f.slug)" [attr.lang]="f.lang">
+      <span class="featured-label">{{ t.blog.latest }}</span>
+      @if (f.tags.length) {
+        <span class="tags">
+          @for (tag of f.tags; track tag) {
+            <span>{{ tag }}</span>
+          }
+        </span>
+      }
+      <span class="featured-title">{{ f.title }}</span>
+      @if (f.summary) {
+        <span class="featured-summary">{{ f.summary }}</span>
+      }
+      <span class="meta">
+        <time [attr.datetime]="f.date">{{ dateOf(f.date) }}</time> · {{ minutesOf(f.minutes) }}
+        @if (f.draft) {
+          · <span class="draft">{{ t.blog.draft }}</span>
+        }
+      </span>
+      <span class="read">{{ t.blog.read }} <app-icon name="arrow-right" /></span>
+    </a>
+
+    @if (rest().length) {
+      <section class="list" [attr.aria-label]="t.blog.allPosts">
+        <h2>{{ t.blog.allPosts }}</h2>
+        <ol>
+          @for (p of rest(); track p.slug) {
+            <li>
+              <a [routerLink]="postPath(p.slug)" [attr.lang]="p.lang">
+                <time class="list-date" [attr.datetime]="p.date">{{ dateOf(p.date) }}</time>
+                <span class="list-body">
+                  <span class="list-title">{{ p.title }}</span>
+                  @if (p.summary) {
+                    <span class="list-summary">{{ p.summary }}</span>
+                  }
+                  <span class="meta">
+                    {{ minutesOf(p.minutes) }}
+                    @for (tag of p.tags; track tag) {
+                      · #{{ tag }}
+                    }
+                    @if (p.draft) {
+                      · <span class="draft">{{ t.blog.draft }}</span>
+                    }
+                  </span>
+                </span>
+                <app-icon name="arrow-right" />
+              </a>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+  } @else if (loading()) {
+    <div class="loading" aria-hidden="true"><i></i><i></i><i></i></div>
+  } @else {
+    <p class="empty">{{ t.blog.empty }}</p>
+  }
+</div>
+
+<footer class="foot">
+  <a [routerLink]="lang.path('/')">← {{ t.blog.portfolio }}</a>
+  <span>© {{ a.name }}</span>
+</footer>

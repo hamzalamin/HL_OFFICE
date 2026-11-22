@@ -21,10 +21,11 @@ import { BlogService } from '../../core/content/blog.service';
 import { ContentService } from '../../core/content/content.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { Icon } from '../../layout/icon';
+import { BlogHeader, initialsOf } from '../blog/blog-header';
 
 @Component({
   selector: 'app-blog-post-page',
-  imports: [RouterLink, Icon],
+  imports: [RouterLink, Icon, BlogHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: { class: 'article-page' },
@@ -48,12 +49,7 @@ export class BlogPostPage {
   protected readonly author = computed(() => {
     const p = this.content.profile();
     const name = this.content.real(p.name) ?? '';
-    const initials = name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]!.toUpperCase())
-      .join('');
+    const initials = initialsOf(name);
     return { name, title: this.content.real(p.title) ?? '', initials, portrait: p.portrait && this.content.real(p.portrait.src) ? p.portrait : null };
   });
 

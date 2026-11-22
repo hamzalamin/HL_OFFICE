@@ -3,16 +3,7 @@
 
 <div class="article-progress" aria-hidden="true" [style.transform]="'scaleX(' + progress() + ')'"></div>
 
-<header class="article-bar">
-  <a class="article-brand" [routerLink]="path('/')">
-    <span class="article-mark" aria-hidden="true">{{ a.initials || 'B' }}</span>
-    <span>{{ a.name || t.home.titleFallback }}</span>
-  </a>
-  <nav class="article-nav" [attr.aria-label]="t.areas.blog.name">
-    <a [routerLink]="path('/blog')">{{ t.areas.blog.name }}</a>
-    <a [routerLink]="path('/')">{{ t.blog.portfolio }}</a>
-  </nav>
-</header>
+<app-blog-header />
 
 @if (post(); as p) {
   <article class="article" [attr.lang]="p.lang">

@@ -16,7 +16,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { BlogService } from '../../core/content/blog.service';
 import { ContentService } from '../../core/content/content.service';
 import { ContentText } from '../../core/content/content-text';
 import { LanguageService } from '../../core/i18n/language.service';
@@ -53,7 +52,6 @@ function phoneSheetHeight(h: number): number {
 export class Home {
   protected readonly lang = inject(LanguageService);
   protected readonly content = inject(ContentService);
-  private readonly blog = inject(BlogService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly injector = inject(Injector);
@@ -137,10 +135,6 @@ export class Home {
       });
     });
     this.destroyRef.onDestroy(() => frames && cancelAnimationFrame(this.delayFrame));
-
-    effect(() => {
-      if (this.focus().area === 'blog') untracked(() => void this.blog.refresh());
-    });
 
     afterNextRender(() => {
 
