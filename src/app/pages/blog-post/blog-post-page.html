@@ -1,0 +1,134 @@
+@let t = lang.t();
+@let a = author();
+
+<div class="article-progress" aria-hidden="true" [style.transform]="'scaleX(' + progress() + ')'"></div>
+
+<header class="article-bar">
+  <a class="article-brand" [routerLink]="path('/')">
+    <span class="article-mark" aria-hidden="true">{{ a.initials || 'B' }}</span>
+    <span>{{ a.name || t.home.titleFallback }}</span>
+  </a>
+  <nav class="article-nav" [attr.aria-label]="t.areas.blog.name">
+    <a [routerLink]="path('/blog')">{{ t.areas.blog.name }}</a>
+    <a [routerLink]="path('/')">{{ t.blog.portfolio }}</a>
+  </nav>
+</header>
+
+@if (post(); as p) {
+  <article class="article" [attr.lang]="p.lang">
+    <header class="article-head">
+      <a class="article-back" [routerLink]="path('/blog')">
+        <app-icon name="arrow-left" />
+        {{ t.blog.back }}
+      </a>
+      @if (p.tags.length) {
+        <p class="article-kicker">
+          @for (tag of p.tags; track tag) {
+            <span>{{ tag }}</span>
+          }
+        </p>
+      }
+      <h1>{{ p.title }}</h1>
+      @if (p.summary) {
+        <p class="article-dek">{{ p.summary }}</p>
+      }
+      <div class="article-byline">
+        @if (a.portrait; as img) {
+          <img class="article-avatar" [src]="img.src" [alt]="img.alt" width="44" height="44" />
+        } @else {
+          <span class="article-avatar" aria-hidden="true">{{ a.initials }}</span>
+        }
+        <span class="article-byline-text">
+          @if (a.name) {
+            <strong>{{ a.name }}</strong>
+          }
+          <span>
+            <time [attr.datetime]="p.date">{{ dateOf(p.date) }}</time>
+            · {{ minutesOf(p.minutes) }}
+            @if (p.draft) {
+              · <span class="article-draft">{{ t.blog.draft }}</span>
+            }
+          </span>
+        </span>
+        <button type="button" class="article-share" (click)="share()">
+          <app-icon [name]="copied() ? 'check' : 'share'" />
+          {{ copied() ? t.blog.copied : t.blog.share }}
+        </button>
+      </div>
+      @if (writtenIn(); as note) {
+        <p class="article-note" [attr.lang]="lang.lang()">{{ note }}</p>
+      }
+    </header>
+
+    @if (html(); as body) {
+      <div class="article-body" [innerHTML]="body"></div>
+    } @else if (failed()) {
+      <p class="article-note" role="alert">{{ t.blog.loadError }}</p>
+    } @else {
+      <div class="article-loading" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    }
+
+    <footer class="article-foot">
+      @if (p.tags.length) {
+        <ul class="article-tags">
+          @for (tag of p.tags; track tag) {
+            <li>#{{ tag }}</li>
+          }
+        </ul>
+      }
+      <div class="article-author">
+        @if (a.portrait; as img) {
+          <img class="article-avatar is-large" [src]="img.src" [alt]="img.alt" width="64" height="64" />
+        } @else {
+          <span class="article-avatar is-large" aria-hidden="true">{{ a.initials }}</span>
+        }
+        <span>
+          <strong>{{ a.name }}</strong>
+          @if (a.title) {
+            <span>{{ a.title }}</span>
+          }
+        </span>
+        <button type="button" class="article-share" (click)="share()">
+          <app-icon [name]="copied() ? 'check' : 'share'" />
+          {{ copied() ? t.blog.copied : t.blog.share }}
+        </button>
+      </div>
+    </footer>
+  </article>
+} @else if (missing()) {
+  <section class="article article-missing">
+    <h1>{{ t.blog.notFound }}</h1>
+    <a class="article-back" [routerLink]="path('/blog')">
+      <app-icon name="arrow-left" />
+      {{ t.blog.back }}
+    </a>
+  </section>
+} @else {
+  <section class="article">
+    <div class="article-loading is-head" aria-hidden="true"><i></i><i></i><i></i></div>
+  </section>
+}
+
+@if (more().length) {
+  <aside class="article-more" [attr.aria-label]="t.blog.more">
+    <h2>{{ t.blog.more }}</h2>
+    <ul>
+      @for (m of more(); track m.slug) {
+        <li>
+          <a [routerLink]="path('/blog/' + m.slug)" [attr.lang]="m.lang">
+            <span class="article-more-meta">{{ dateOf(m.date) }} · {{ minutesOf(m.minutes) }}</span>
+            <strong>{{ m.title }}</strong>
+            @if (m.summary) {
+              <span class="article-more-summary">{{ m.summary }}</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  </aside>
+}
+
+<footer class="article-site-foot">
+  <a [routerLink]="path('/blog')">← {{ t.areas.blog.name }}</a>
+  <span>© {{ a.name }}</span>
+</footer>

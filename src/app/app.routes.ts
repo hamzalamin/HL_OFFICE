@@ -7,10 +7,12 @@ const officeRoutes: Routes = [
   ...AREAS.map((a) => ({ path: a.route.slice(1), data: { area: a.id }, children: [] })),
   { path: 'projects/:slug', data: { area: 'projects' }, children: [] },
   { path: 'experience/:experience', data: { area: 'meeting' }, children: [] },
-  { path: 'blog/:post', data: { area: 'blog' }, children: [] },
 ];
 
-const languageRoutes: Routes = [{ path: '', component: Home, children: officeRoutes }];
+const languageRoutes: Routes = [
+  { path: 'blog/:post', loadComponent: () => import('./pages/blog-post/blog-post-page').then((m) => m.BlogPostPage) },
+  { path: '', component: Home, children: officeRoutes },
+];
 
 export const routes: Routes = [
 

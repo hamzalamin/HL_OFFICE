@@ -90,11 +90,7 @@ export class Home {
   });
   protected readonly experienceMissing = computed(() => !!this.shown().experience && !this.experience());
 
-  protected readonly post = computed(() => this.blog.find(this.shown().post));
-
-  protected readonly postMissing = computed(() => !!this.shown().post && !this.post() && this.blog.settled());
-
-  protected readonly deep = computed(() => !!this.project() || !!this.experience() || !!this.post());
+  protected readonly deep = computed(() => !!this.project() || !!this.experience());
 
   protected readonly welcomeOpen = signal(false);
 
@@ -112,8 +108,7 @@ export class Home {
     const f = this.focus();
     const item =
       !!this.findProject(f.project) ||
-      (!!f.experience && this.content.content().experience.some((e) => e.id === f.experience)) ||
-      !!this.blog.find(f.post);
+      (!!f.experience && this.content.content().experience.some((e) => e.id === f.experience));
     if (this.wide()) {
       if (!f.area) return { ...NO_INSETS, bottom: DOCK };
       return item ? { ...NO_INSETS, top: TOP, bottom: DOCK } : this.roomInsets();
@@ -171,11 +166,7 @@ export class Home {
       const area = this.activeArea();
       const project = this.project();
       const experience = this.experience();
-      const post = this.post();
-      if (post) {
-        title.setTitle(`${post.title} · ${name}`);
-        meta.updateTag({ name: 'description', content: post.summary || t.areas.blog.blurb });
-      } else if (experience) {
+      if (experience) {
         const where = experience.role.toLowerCase().includes(experience.organization.toLowerCase()) ? '' : ` · ${experience.organization}`;
         title.setTitle(`${experience.role}${where} · ${name}`);
         meta.updateTag({ name: 'description', content: experience.overview });

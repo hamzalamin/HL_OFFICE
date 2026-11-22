@@ -80,13 +80,12 @@
         [area]="area"
         [projectMissing]="projectMissing()"
         [experienceMissing]="experienceMissing()"
-        [postMissing]="postMissing()"
       />
     }
   }
 
   @if (deep()) {
-    <app-focus-sheet [project]="project()" [experience]="experience()" [post]="post()" />
+    <app-focus-sheet [project]="project()" [experience]="experience()" />
   }
 
   <app-room-dock class="room-dock" [active]="activeArea()" />

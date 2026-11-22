@@ -236,9 +236,6 @@
 
         @case ('blog') {
 
-          @if (postMissing()) {
-            <p class="notice" role="status">{{ t.blog.notFound }}</p>
-          }
           <app-blog-list />
         }
 

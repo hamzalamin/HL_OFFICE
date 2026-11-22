@@ -21,9 +21,6 @@
         } @else if (experience(); as x) {
           <h2 id="sheet-heading" #heading tabindex="-1">{{ x.role }}</h2>
           <app-experience-detail [experience]="x" />
-        } @else if (post(); as b) {
-          <h2 id="sheet-heading" #heading tabindex="-1" [attr.lang]="b.lang">{{ b.title }}</h2>
-          <app-blog-post [post]="b" />
         }
       </div>
     </div>

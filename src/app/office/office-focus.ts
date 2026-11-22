@@ -8,11 +8,9 @@ export interface OfficeFocus {
   project: string | null;
 
   experience: string | null;
-
-  post: string | null;
 }
 
-export const OVERVIEW: OfficeFocus = { area: null, project: null, experience: null, post: null };
+export const OVERVIEW: OfficeFocus = { area: null, project: null, experience: null };
 
 export const PANEL_DELAY_FRAMES = new InjectionToken<number>('PANEL_DELAY_FRAMES', { providedIn: 'root', factory: () => 2 });
 
@@ -21,13 +19,13 @@ export function readOfficeFocus(office: ActivatedRouteSnapshot): OfficeFocus {
   const area = child?.data['area'];
   if (!isAreaId(area)) return OVERVIEW;
   const param = (name: string) => child?.paramMap.get(name) ?? null;
-  return { area, project: param('slug'), experience: param('experience'), post: param('post') };
+  return { area, project: param('slug'), experience: param('experience') };
 }
 
 export function sameFocus(a: OfficeFocus, b: OfficeFocus): boolean {
-  return a.area === b.area && a.project === b.project && a.experience === b.experience && a.post === b.post;
+  return a.area === b.area && a.project === b.project && a.experience === b.experience;
 }
 
 export function focusItem(f: OfficeFocus): string | null {
-  return f.project ?? f.experience ?? f.post;
+  return f.project ?? f.experience;
 }

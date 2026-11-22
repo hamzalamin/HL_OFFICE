@@ -37,8 +37,6 @@ export class AreaPanel {
 
   readonly experienceMissing = input(false);
 
-  readonly postMissing = input(false);
-
   protected readonly lang = inject(LanguageService);
   protected readonly content = inject(ContentService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);

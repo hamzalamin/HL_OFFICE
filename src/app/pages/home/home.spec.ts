@@ -108,14 +108,46 @@ describe('Home (office)', () => {
 
   describe('blog', () => {
     afterEach(() => (blogSource = BLOG));
+    const page = (h: RouterTestingHarness) => (h.fixture.nativeElement as HTMLElement).querySelector('app-blog-post-page');
+
+    it('lists posts in the office and opens one on its own article page', async () => {
+      const harness = await setup(true);
+      await harness.navigateByUrl('/blog');
+      const card = el(harness).querySelector<HTMLAnchorElement>('app-blog-list .post-card');
+      expect(card?.getAttribute('href')).toBe('/blog/sample-post');
+      await harness.navigateByUrl('/blog/sample-post');
+      await harness.fixture.whenStable();
+      expect((harness.fixture.nativeElement as HTMLElement).querySelector('app-office-scene')).toBeNull();
+      expect(page(harness)?.querySelector('h1')?.textContent).toContain('Sample post');
+      expect(page(harness)?.querySelector('.article-body h3')?.textContent).toContain('Sample heading');
+      expect(page(harness)?.querySelector('.article-back')?.getAttribute('href')).toBe('/blog');
+    });
+
+    it('keeps drafts off the live site', async () => {
+      const harness = await setup(false);
+      await harness.navigateByUrl('/blog');
+      expect(el(harness).querySelector('app-blog-list .post-card')).toBeNull();
+      expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
+      await harness.navigateByUrl('/blog/sample-post');
+      await harness.fixture.whenStable();
+      expect(page(harness)?.querySelector('.article-missing')).not.toBeNull();
+    });
+
+    it('shows a post written in the other language, and says so', async () => {
+      const harness = await setup(true);
+      await harness.navigateByUrl('/fr/blog/sample-post');
+      await harness.fixture.whenStable();
+      expect(page(harness)?.querySelector('.article-note')?.textContent).toContain('rédigé en anglais');
+    });
 
     it('shows a post published after the build, from the live API', async () => {
       blogSource = liveBlog([fresh, built]);
       const harness = await setup(false);
       await harness.navigateByUrl('/blog/new-post');
       await harness.fixture.whenStable();
-      expect(heading(harness)).toContain('New post');
-      expect(el(harness).querySelector('.blog-post-prose')?.textContent).toContain('Live body of new-post.');
+      expect(page(harness)?.querySelector('h1')?.textContent).toContain('New post');
+      expect(page(harness)?.querySelector('.article-body')?.textContent).toContain('Live body of new-post.');
+      expect(page(harness)?.querySelector('.article-more')?.textContent).toContain('Old post');
     });
 
     it('keeps the built copy of an unchanged post, and drops a deleted one', async () => {
@@ -123,46 +155,13 @@ describe('Home (office)', () => {
       const harness = await setup(false);
       await harness.navigateByUrl('/blog/old-post');
       await harness.fixture.whenStable();
-      expect(el(harness).querySelector('.blog-post-prose')?.textContent).toContain('Built body.');
+      expect(page(harness)?.querySelector('.article-body')?.textContent).toContain('Built body.');
       blogSource = liveBlog([]);
       TestBed.resetTestingModule();
       const again = await setup(false);
       await again.navigateByUrl('/blog/old-post');
       await again.fixture.whenStable();
-      expect(el(again).querySelector('app-focus-sheet')).toBeNull();
-      expect(el(again).querySelector('app-area-panel .notice')).not.toBeNull();
-    });
-
-    it('keeps drafts off the live site', async () => {
-      const harness = await setup(false);
-      await harness.navigateByUrl('/blog');
-      expect(heading(harness)).toContain('Blog');
-      expect(el(harness).querySelector('app-blog-list .post-card')).toBeNull();
-      expect(el(harness).querySelector('app-blog-list .empty')).not.toBeNull();
-
-      await harness.navigateByUrl('/blog/sample-post');
-      await harness.fixture.whenStable();
-      expect(el(harness).querySelector('app-focus-sheet')).toBeNull();
-      expect(el(harness).querySelector('app-area-panel .notice')).not.toBeNull();
-    });
-
-    it('lists posts and opens one in the reading sheet', async () => {
-      const harness = await setup(true);
-      await harness.navigateByUrl('/blog');
-      const card = el(harness).querySelector<HTMLAnchorElement>('app-blog-list .post-card');
-      expect(card?.getAttribute('href')).toBe('/blog/sample-post');
-      await harness.navigateByUrl('/blog/sample-post');
-      await harness.fixture.whenStable();
-      expect(heading(harness)).toContain('Sample post');
-      expect(el(harness).querySelector('app-focus-sheet .back')?.getAttribute('href')).toBe('/blog');
-      expect(el(harness).querySelector('.blog-post-prose h3')?.textContent).toContain('Sample heading');
-    });
-
-    it('shows a post written in the other language, and says so', async () => {
-      const harness = await setup(true);
-      await harness.navigateByUrl('/fr/blog/sample-post');
-      await harness.fixture.whenStable();
-      expect(el(harness).querySelector('.blog-post-note')?.textContent).toContain('rédigé en anglais');
+      expect(page(again)?.querySelector('.article-missing')).not.toBeNull();
     });
   });
 
